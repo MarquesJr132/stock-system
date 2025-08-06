@@ -14,16 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          email: string
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          tenant_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          full_name: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_profile: {
+        Args: { user_uuid: string }
+        Returns: {
+          created_at: string | null
+          created_by: string | null
+          email: string
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          tenant_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+      }
+      get_user_tenant_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      has_role: {
+        Args: { check_role: Database["public"]["Enums"]["user_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "superuser" | "administrator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +214,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["superuser", "administrator", "user"],
+    },
   },
 } as const
