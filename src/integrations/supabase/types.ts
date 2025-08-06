@@ -85,6 +85,10 @@ export type Database = {
         Args: { check_role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
       }
+      promote_to_superuser: {
+        Args: { user_email: string }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "superuser" | "administrator" | "user"
