@@ -372,14 +372,14 @@ const SalesManagement = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="customerId">Cliente (Opcional)</Label>
-                  <Select value={formData.customerId} onValueChange={(value) => 
-                    setFormData(prev => ({ ...prev, customerId: value }))
+                  <Select value={formData.customerId || "no-customer"} onValueChange={(value) => 
+                    setFormData(prev => ({ ...prev, customerId: value === "no-customer" ? "" : value }))
                   }>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecionar cliente" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sem cliente</SelectItem>
+                      <SelectItem value="no-customer">Sem cliente</SelectItem>
                       {customers.map(customer => (
                         <SelectItem key={customer.id} value={customer.id}>
                           {customer.name} - Limite: {formatCurrency(customer.creditLimit)} 
