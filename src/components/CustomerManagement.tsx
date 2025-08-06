@@ -1,0 +1,339 @@
+
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Search, Edit, Trash2, Users, Phone, Mail, MapPin, CreditCard } from "lucide-react";
+import { useStockData, Customer } from "@/hooks/useStockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { formatCurrency } from "@/lib/currency";
+
+const CustomerManagement = () => {
+  const { customers, sales, addCustomer, updateCustomer, deleteCustomer } = useStockData();
+  const { isAdmin } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    creditLimit: ""
+  });
+
+  const filteredCustomers = customers.filter(customer =>
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.phone.includes(searchTerm)
+  );
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      creditLimit: ""
+    });
+    setEditingCustomer(null);
+  };
+
+  const handleEdit = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setFormData({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      creditLimit: customer.creditLimit.toString()
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.phone) {
+      toast.error("Por favor, preencha todos os campos obrigatórios");
+      return;
+    }
+
+    const customerData = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      creditLimit: parseFloat(formData.creditLimit) || 0,
+      currentDebt: editingCustomer?.currentDebt || 0
+    };
+
+    if (editingCustomer) {
+      updateCustomer(editingCustomer.id, customerData);
+      toast.success("Cliente atualizado com sucesso!");
+    } else {
+      addCustomer(customerData);
+      toast.success("Cliente adicionado com sucesso!");
+    }
+
+    setDialogOpen(false);
+    resetForm();
+  };
+
+  const handleDelete = (customer: Customer) => {
+    if (customer.currentDebt > 0) {
+      toast.error("Não é possível eliminar clientes com dívidas pendentes");
+      return;
+    }
+
+    if (window.confirm(`Tem certeza que deseja eliminar o cliente "${customer.name}"?`)) {
+      deleteCustomer(customer.id);
+      toast.success("Cliente eliminado com sucesso!");
+    }
+  };
+
+  const getCustomerSales = (customerId: string) => {
+    return sales.filter(sale => sale.customerId === customerId);
+  };
+
+  const getCreditStatus = (customer: Customer) => {
+    const percentage = (customer.currentDebt / customer.creditLimit) * 100;
+    if (percentage >= 90) return { status: "critical", color: "destructive" };
+    if (percentage >= 70) return { status: "warning", color: "secondary" };
+    return { status: "good", color: "default" };
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+            Gestão de Clientes
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400">
+            Gerir clientes e controlar créditos
+          </p>
+        </div>
+        
+        {isAdmin && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Novo Cliente
+              </Button>
+            </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingCustomer ? "Editar Cliente" : "Novo Cliente"}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Nome Completo *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Ex: João Silva"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="joao@email.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Telefone *</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="+351 912 345 678"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="creditLimit">Limite de Crédito (MZN)</Label>
+                  <Input
+                    id="creditLimit"
+                    type="number"
+                    step="0.01"
+                    value={formData.creditLimit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, creditLimit: e.target.value }))}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="address">Morada</Label>
+                <Textarea
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Rua, número, código postal, cidade"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button type="submit" className="flex-1">
+                  {editingCustomer ? "Atualizar" : "Adicionar"} Cliente
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+        )}
+      </div>
+
+      {/* Search */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+            <Input
+              placeholder="Procurar clientes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Customers Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCustomers.map((customer) => {
+          const customerSales = getCustomerSales(customer.id);
+          const creditStatus = getCreditStatus(customer);
+          
+          return (
+            <Card key={customer.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      {customer.name}
+                    </CardTitle>
+                    {customer.currentDebt > 0 && (
+                      <Badge variant={creditStatus.color as any} className="mt-1">
+                        Dívida: {formatCurrency(customer.currentDebt)}
+                      </Badge>
+                    )}
+                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(customer)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(customer)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-slate-400" />
+                    <span className="truncate">{customer.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-slate-400" />
+                    <span>{customer.phone}</span>
+                  </div>
+                  {customer.address && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
+                      <span className="text-xs leading-relaxed">{customer.address}</span>
+                    </div>
+                  )}
+                </div>
+
+                {customer.creditLimit > 0 && (
+                  <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CreditCard className="h-4 w-4 text-slate-400" />
+                      <span className="text-sm font-medium">Crédito</span>
+                    </div>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Limite:</span>
+                        <span>{formatCurrency(customer.creditLimit)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Dívida:</span>
+                        <span className={customer.currentDebt > 0 ? "text-red-600" : "text-green-600"}>
+                          {formatCurrency(customer.currentDebt)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Disponível:</span>
+                        <span>{formatCurrency(customer.creditLimit - customer.currentDebt)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs text-slate-500 pt-2 border-t">
+                  <p>Cliente desde: {customer.createdAt.toLocaleDateString('pt-PT')}</p>
+                  <p>Vendas: {customerSales.length}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {filteredCustomers.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Users className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Nenhum cliente encontrado
+            </h3>
+            <p className="text-slate-500">
+              {searchTerm 
+                ? "Tente ajustar os termos de pesquisa"
+                : "Adicione o seu primeiro cliente para começar"
+              }
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default CustomerManagement;
