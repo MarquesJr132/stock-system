@@ -371,6 +371,26 @@ const SalesManagement = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
+                  <Label htmlFor="customerId">Cliente (Opcional)</Label>
+                  <Select value={formData.customerId} onValueChange={(value) => 
+                    setFormData(prev => ({ ...prev, customerId: value }))
+                  }>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sem cliente</SelectItem>
+                      {customers.map(customer => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name} - Limite: {formatCurrency(customer.creditLimit)} 
+                          (Dívida: {formatCurrency(customer.currentDebt)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label htmlFor="paymentMethod">Método de Pagamento *</Label>
                   <Select value={formData.paymentMethod} onValueChange={(value: any) => 
                     setFormData(prev => ({ ...prev, paymentMethod: value }))
@@ -385,28 +405,15 @@ const SalesManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {formData.paymentMethod === "credit" && (
-                  <div>
-                    <Label htmlFor="customerId">Cliente *</Label>
-                    <Select value={formData.customerId} onValueChange={(value) => 
-                      setFormData(prev => ({ ...prev, customerId: value }))
-                    }>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecionar cliente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {customers.map(customer => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.name} - Limite: {formatCurrency(customer.creditLimit)} 
-                            (Dívida: {formatCurrency(customer.currentDebt)})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
               </div>
+
+              {formData.paymentMethod === "credit" && !formData.customerId && (
+                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <p className="text-sm text-orange-700 dark:text-orange-300">
+                    Para vendas a crédito, selecione um cliente acima.
+                  </p>
+                </div>
+              )}
 
               {formData.items.length > 0 && (
                 <Card className="bg-slate-50 dark:bg-slate-800">
