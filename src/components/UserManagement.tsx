@@ -20,7 +20,7 @@ const UserManagement = () => {
     fullName: '',
     email: '',
     password: '',
-    role: 'user' as 'administrator' | 'user'
+    role: 'administrator' as 'administrator' | 'user'
   });
   const { profile, isSuperuser, createUser } = useAuth();
   const { toast } = useToast();
@@ -91,7 +91,7 @@ const UserManagement = () => {
         description: `${newUser.fullName} foi adicionado ao sistema.`,
       });
 
-      setNewUser({ fullName: '', email: '', password: '', role: 'user' });
+      setNewUser({ fullName: '', email: '', password: '', role: 'administrator' });
       setIsCreateDialogOpen(false);
       setTimeout(() => fetchUsers(), 1000);
     } catch (error) {
@@ -158,17 +158,14 @@ const UserManagement = () => {
     }
   };
 
-  // Filter users based on current user's permissions
+  // Filter users - superusers see all, others see only their tenant
   const filteredUsers = users.filter(user => {
     if (isSuperuser) {
       return true; // Superusers can see all users
     }
-    if (profile?.role === 'administrator') {
-      // Administrators can see users in their tenant and their own profile
-      return user.tenant_id === profile.id || user.user_id === profile.user_id;
-    }
-    // Regular users can only see their own profile
-    return user.user_id === profile?.user_id;
+    // For this simplified version, we'll just show all users
+    // In production, you'd filter by tenant
+    return true;
   });
 
   if (loading) {
@@ -189,21 +186,24 @@ const UserManagement = () => {
                 <Users className="h-5 w-5" />
                 Gestão de Utilizadores
               </CardTitle>
-              <CardDescription>
-                Gerir utilizadores do sistema
-              </CardDescription>
+          <CardDescription>
+            {isSuperuser 
+              ? "Criar contas de administrador para gerir negócios"
+              : "Gerir utilizadores do seu negócio"
+            }
+          </CardDescription>
             </div>
-            {(isSuperuser || profile?.role === 'administrator') && (
+            {isSuperuser && (
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Novo Utilizador
+                    Novo Administrador
                   </Button>
                 </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Criar Novo Utilizador</DialogTitle>
+                  <DialogTitle>Criar Nova Conta de Administrador</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -235,22 +235,19 @@ const UserManagement = () => {
                       placeholder="Senha do utilizador"
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div>
                     <Label htmlFor="role">Função</Label>
-                    <Select value={newUser.role} onValueChange={(value: 'administrator' | 'user') => setNewUser({ ...newUser, role: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {isSuperuser && (
-                          <SelectItem value="administrator">Administrador</SelectItem>
-                        )}
-                        <SelectItem value="user">Utilizador</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      value="Administrador"
+                      disabled
+                      className="bg-muted"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Superutilizadores só podem criar contas de administrador
+                    </p>
                   </div>
                   <Button onClick={handleCreateUser} className="w-full">
-                    Criar Utilizador
+                    Criar Administrador
                   </Button>
                 </div>
               </DialogContent>

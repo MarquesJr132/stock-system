@@ -10,14 +10,15 @@ import CustomerManagement from "@/components/CustomerManagement";
 import Reports from "@/components/Reports";
 import StockMovements from "@/components/StockMovements";
 import UserManagement from "@/components/UserManagement";
+import ProfileManagement from "@/components/ProfileManagement";
 import Login from "@/components/Login";
 import { useAuth } from "@/contexts/AuthContext";
-import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, LogOut, Menu } from "lucide-react";
+import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, LogOut, Menu, User as UserIcon } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, isAdministrator, profile, signOut, loading } = useAuth();
+  const { isAuthenticated, isAdministrator, isSuperuser, profile, signOut, loading } = useAuth();
 
   if (loading) {
     return (
@@ -106,7 +107,8 @@ const Index = () => {
                     { value: "customers", icon: Users, label: "Clientes" },
                     { value: "movements", icon: History, label: "Movimentos" },
                     { value: "reports", icon: TrendingUp, label: "Relatórios" },
-                    ...(isAdministrator ? [{ value: "users", icon: Settings, label: "Utilizadores" }] : [])
+                    { value: "profile", icon: UserIcon, label: "Perfil" },
+                    ...(isSuperuser ? [{ value: "users", icon: Settings, label: "Administradores" }] : [])
                   ].map((item) => (
                     <button
                       key={item.value}
@@ -130,7 +132,7 @@ const Index = () => {
           )}
 
           {/* Desktop Navigation */}
-          <TabsList className={`hidden lg:grid w-full ${isAdministrator ? 'grid-cols-7' : 'grid-cols-6'} lg:w-auto`}>
+          <TabsList className={`hidden lg:grid w-full ${isSuperuser ? 'grid-cols-8' : 'grid-cols-7'} lg:w-auto`}>
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Dashboard
@@ -155,10 +157,14 @@ const Index = () => {
               <TrendingUp className="h-4 w-4" />
               Relatórios
             </TabsTrigger>
-            {isAdministrator && (
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <UserIcon className="h-4 w-4" />
+              Perfil
+            </TabsTrigger>
+            {isSuperuser && (
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                Utilizadores
+                Administradores
               </TabsTrigger>
             )}
           </TabsList>
@@ -187,7 +193,11 @@ const Index = () => {
             <Reports />
           </TabsContent>
 
-          {isAdministrator && (
+          <TabsContent value="profile" className="space-y-6">
+            <ProfileManagement />
+          </TabsContent>
+
+          {isSuperuser && (
             <TabsContent value="users" className="space-y-6">
               <UserManagement />
             </TabsContent>
