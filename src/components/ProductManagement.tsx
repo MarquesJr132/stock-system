@@ -16,7 +16,7 @@ import { formatCurrency } from "@/lib/currency";
 
 const ProductManagement = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useStockData();
-  const { user, isAdmin } = useAuth();
+  const { profile, isAdministrator } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -93,8 +93,8 @@ const ProductManagement = () => {
       updateProduct(editingProduct.id, productData);
       toast.success("Produto atualizado com sucesso!");
     } else {
-      if (user) {
-        addProduct(productData, { id: user.id, name: user.name });
+      if (profile) {
+        addProduct(productData, { id: profile.id, name: profile.full_name });
         toast.success("Produto adicionado com sucesso!");
       } else {
         toast.error("Erro: Usuário não autenticado");
@@ -125,7 +125,7 @@ const ProductManagement = () => {
           </p>
         </div>
         
-        {isAdmin && (
+        {isAdministrator && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={resetForm} className="flex items-center gap-2">
@@ -161,7 +161,7 @@ const ProductManagement = () => {
                     required
                   />
                 </div>
-                {isAdmin && (
+                {isAdministrator && (
                   <div>
                     <Label htmlFor="purchasePrice">Preço de Compra (MZN) *</Label>
                     <Input
@@ -289,7 +289,7 @@ const ProductManagement = () => {
                       {product.category}
                     </Badge>
                   </div>
-                  {isAdmin && (
+                  {isAdministrator && (
                     <div className="flex gap-1 flex-shrink-0">
                       <Button
                         variant="ghost"
@@ -313,7 +313,7 @@ const ProductManagement = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-2 sm:gap-4 text-sm">
-                {isAdmin && (
+                {isAdministrator && (
                   <div>
                     <p className="text-slate-600 dark:text-slate-400">Preço Compra</p>
                     <p className="font-medium">{formatCurrency(product.purchasePrice)}</p>
@@ -344,7 +344,7 @@ const ProductManagement = () => {
                 </p>
               )}
 
-              {isAdmin && (
+              {isAdministrator && (
                 <div className="bg-slate-50 dark:bg-slate-800 p-2 rounded text-xs">
                   <p className="text-green-600 dark:text-green-400">
                     Margem: {formatCurrency(product.salePrice - product.purchasePrice)} 

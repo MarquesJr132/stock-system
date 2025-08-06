@@ -17,12 +17,20 @@ import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings,
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const { isAuthenticated, isAdministrator, profile, signOut, loading } = useAuth();
 
-  console.log("Index component rendering", { isAuthenticated, user });
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
-    console.log("User not authenticated, showing Login");
     return <Login />;
   }
 
@@ -47,9 +55,9 @@ const Index = () => {
           
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground hidden sm:block">
-              {user?.name}
+              {profile?.full_name}
             </span>
-            <Button variant="ghost" size="sm" onClick={logout} className="p-2">
+            <Button variant="ghost" size="sm" onClick={signOut} className="p-2">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -70,9 +78,9 @@ const Index = () => {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
-                Bem-vindo, {user?.name}
+                Bem-vindo, {profile?.full_name}
               </span>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={signOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </Button>
@@ -98,7 +106,7 @@ const Index = () => {
                     { value: "customers", icon: Users, label: "Clientes" },
                     { value: "movements", icon: History, label: "Movimentos" },
                     { value: "reports", icon: TrendingUp, label: "Relatórios" },
-                    ...(isAdmin ? [{ value: "users", icon: Settings, label: "Utilizadores" }] : [])
+                    ...(isAdministrator ? [{ value: "users", icon: Settings, label: "Utilizadores" }] : [])
                   ].map((item) => (
                     <button
                       key={item.value}
@@ -122,7 +130,7 @@ const Index = () => {
           )}
 
           {/* Desktop Navigation */}
-          <TabsList className={`hidden lg:grid w-full ${isAdmin ? 'grid-cols-7' : 'grid-cols-6'} lg:w-auto`}>
+          <TabsList className={`hidden lg:grid w-full ${isAdministrator ? 'grid-cols-7' : 'grid-cols-6'} lg:w-auto`}>
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Dashboard
@@ -147,7 +155,7 @@ const Index = () => {
               <TrendingUp className="h-4 w-4" />
               Relatórios
             </TabsTrigger>
-            {isAdmin && (
+            {isAdministrator && (
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 Utilizadores
@@ -179,7 +187,7 @@ const Index = () => {
             <Reports />
           </TabsContent>
 
-          {isAdmin && (
+          {isAdministrator && (
             <TabsContent value="users" className="space-y-6">
               <UserManagement />
             </TabsContent>

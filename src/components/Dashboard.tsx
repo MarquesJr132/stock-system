@@ -29,7 +29,7 @@ const Dashboard = () => {
     getTopSellingProducts,
     getSalesData
   } = useStockData();
-  const { isAdmin } = useAuth();
+  const { isAdministrator } = useAuth();
 
   const totalStock = getTotalStock();
   const totalValue = getTotalValue();
@@ -60,7 +60,7 @@ const Dashboard = () => {
       change: "+12.5%",
       changeType: "positive"
     },
-    ...(isAdmin ? [{
+    ...(isAdministrator ? [{
       title: "Lucro Hoje",
       value: formatCurrency(dailyProfit),
       icon: Target,
@@ -213,7 +213,7 @@ const Dashboard = () => {
                 <Pie
                   data={products.reduce((acc, product) => {
                     const category = acc.find(item => item.name === product.category);
-                    const value = isAdmin ? 
+                    const value = isAdministrator ? 
                       product.quantity * product.purchasePrice :
                       product.quantity * product.salePrice;
                     

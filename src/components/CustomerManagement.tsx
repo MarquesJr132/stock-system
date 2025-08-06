@@ -15,7 +15,7 @@ import { formatCurrency } from "@/lib/currency";
 
 const CustomerManagement = () => {
   const { customers, sales, addCustomer, updateCustomer, deleteCustomer } = useStockData();
-  const { isAdmin } = useAuth();
+  const { isAdministrator } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -120,7 +120,7 @@ const CustomerManagement = () => {
           </p>
         </div>
         
-        {isAdmin && (
+        {isAdministrator && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={resetForm} className="flex items-center gap-2">
@@ -243,7 +243,7 @@ const CustomerManagement = () => {
                       </Badge>
                     )}
                   </div>
-                  {isAdmin && (
+                  {isAdministrator && (
                     <div className="flex gap-1">
                       <Button
                         variant="ghost"

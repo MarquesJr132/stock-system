@@ -18,7 +18,7 @@ import jsPDF from 'jspdf';
 
 const SalesManagement = () => {
   const { products, customers, sales, addSale } = useStockData();
-  const { isAdmin } = useAuth();
+  const { isAdministrator } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -434,7 +434,7 @@ const SalesManagement = () => {
                         <span>Total:</span>
                         <span>{formatCurrency(totalAmount)}</span>
                       </div>
-                      {isAdmin && (
+                      {isAdministrator && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
                           <span>Lucro Total:</span>
                           <span>{formatCurrency(totalProfit)}</span>
@@ -526,7 +526,7 @@ const SalesManagement = () => {
                           <p className="font-medium">{formatCurrency(sale.totalVATAmount)}</p>
                         </div>
                       )}
-                      {isAdmin && (
+                      {isAdministrator && (
                         <div>
                           <p className="text-slate-600 dark:text-slate-400">Lucro</p>
                           <p className="font-medium text-green-600 dark:text-green-400">
