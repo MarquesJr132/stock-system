@@ -27,9 +27,9 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen transition-smooth">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3">
+      <div className="lg:hidden bg-card/80 backdrop-blur-sm border-b border-border px-4 py-3 shadow-card">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button
@@ -40,13 +40,13 @@ const Index = () => {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+            <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Sistema de Stock
             </h1>
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:block">
+            <span className="text-xs text-muted-foreground hidden sm:block">
               {user?.name}
             </span>
             <Button variant="ghost" size="sm" onClick={logout} className="p-2">
@@ -61,15 +61,15 @@ const Index = () => {
         <div className="mb-8">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
                 Sistema de Gestão de Stock
               </h1>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-muted-foreground">
                 Controle completo do seu inventário, vendas e clientes
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-600 dark:text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 Bem-vindo, {user?.name}
               </span>
               <Button variant="outline" onClick={logout}>
@@ -86,9 +86,9 @@ const Index = () => {
           {/* Mobile Navigation Menu */}
           {mobileMenuOpen && (
             <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setMobileMenuOpen(false)}>
-              <div className="bg-white dark:bg-slate-800 w-64 h-full shadow-xl" onClick={(e) => e.stopPropagation()}>
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                  <h2 className="font-semibold text-slate-800 dark:text-slate-100">Menu</h2>
+              <div className="bg-card/95 backdrop-blur-md w-64 h-full shadow-elegant border-r border-border" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4 border-b border-border gradient-primary">
+                  <h2 className="font-semibold text-primary-foreground">Menu</h2>
                 </div>
                 <nav className="p-4 space-y-2">
                   {[
@@ -106,10 +106,10 @@ const Index = () => {
                         setActiveTab(item.value);
                         setMobileMenuOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-smooth ${
                         activeTab === item.value 
-                          ? "bg-primary text-primary-foreground" 
-                          : "hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+                          ? "gradient-primary text-primary-foreground shadow-elegant" 
+                          : "hover:bg-accent/20 dark:hover:bg-accent/10 text-foreground"
                       }`}
                     >
                       <item.icon className="h-5 w-5" />

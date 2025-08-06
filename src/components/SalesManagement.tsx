@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatCurrency, formatDateTime } from "@/lib/currency";
 import SaleItemForm from "./SaleItemForm";
+import InvoicePreview from "./InvoicePreview";
 import jsPDF from 'jspdf';
 
 const SalesManagement = () => {
@@ -20,6 +21,8 @@ const SalesManagement = () => {
   const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<any>(null);
   const [formData, setFormData] = useState({
     items: [] as SaleItem[],
     customerId: "",
@@ -138,78 +141,199 @@ const SalesManagement = () => {
     
     const pdf = new jsPDF();
     
-    // Header
-    pdf.setFontSize(20);
-    pdf.text('FACTURA DE VENDA', 105, 30, { align: 'center' });
+    // Add colors and styling
+    const primaryColor: [number, number, number] = [34, 59, 93]; // Dark blue
+    const accentColor: [number, number, number] = [59, 130, 246]; // Blue
+    const grayColor: [number, number, number] = [107, 114, 128]; // Gray
     
-    // Company info
+    // Header with company logo area (you can add actual logo later)
+    pdf.setFillColor(...primaryColor);
+    pdf.rect(0, 0, 210, 45, 'F');
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(24);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('SISTEMA DE STOCK', 105, 25, { align: 'center' });
+    
     pdf.setFontSize(12);
-    pdf.text('Sua Empresa Lda.', 20, 50);
-    pdf.text('Endereço da empresa', 20, 60);
-    pdf.text('Telefone: +258 XXX XXX XXX', 20, 70);
-    pdf.text('Email: empresa@email.com', 20, 80);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('FACTURA DE VENDA', 105, 35, { align: 'center' });
     
-    // Sale info
-    pdf.text(`Factura Nº: ${sale.id}`, 120, 50);
-    pdf.text(`Data: ${formatDateTime(sale.createdAt)}`, 120, 60);
-    pdf.text(`Método: ${getPaymentLabel(sale.paymentMethod)}`, 120, 70);
+    // Company info section
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('EMPRESA:', 20, 60);
     
-    // Customer info
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.text('Sistema de Gestão de Stock Lda.', 20, 68);
+    pdf.text('Maputo, Moçambique', 20, 75);
+    pdf.text('Tel: +258 84 123 4567', 20, 82);
+    pdf.text('Email: info@stocksystem.co.mz', 20, 89);
+    pdf.text('NUIT: 123456789', 20, 96);
+    
+    // Invoice details box
+    pdf.setFillColor(248, 250, 252);
+    pdf.rect(120, 55, 70, 45, 'F');
+    
+    pdf.setTextColor(...primaryColor);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('DETALHES DA FACTURA:', 125, 63);
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.text(`Factura Nº: #${sale.id}`, 125, 71);
+    pdf.text(`Data: ${formatDateTime(sale.createdAt)}`, 125, 78);
+    pdf.text(`Método: ${getPaymentLabel(sale.paymentMethod)}`, 125, 85);
+    
+    // Payment status indicator
+    const statusColor: [number, number, number] = sale.paymentMethod === 'cash' ? [34, 197, 94] : 
+                       sale.paymentMethod === 'card' ? [59, 130, 246] : [245, 158, 11];
+    pdf.setFillColor(...statusColor);
+    pdf.circle(125, 93, 2, 'F');
+    pdf.text(`Status: ${getPaymentLabel(sale.paymentMethod)}`, 130, 95);
+    
+    // Customer info section
+    let customerYStart = 115;
+    pdf.setTextColor(...primaryColor);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('CLIENTE:', 20, customerYStart);
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    
     if (customer) {
-      pdf.text('CLIENTE:', 20, 100);
-      pdf.text(`Nome: ${customer.name}`, 20, 110);
-      pdf.text(`Email: ${customer.email}`, 20, 120);
-      pdf.text(`Telefone: ${customer.phone}`, 20, 130);
+      pdf.text(`Nome: ${customer.name}`, 20, customerYStart + 8);
+      pdf.text(`Email: ${customer.email}`, 20, customerYStart + 15);
+      pdf.text(`Telefone: ${customer.phone}`, 20, customerYStart + 22);
+      pdf.text(`Endereço: ${customer.address}`, 20, customerYStart + 29);
+      if (sale.paymentMethod === 'credit') {
+        pdf.setTextColor(...accentColor);
+        pdf.text(`Limite Crédito: ${formatCurrency(customer.creditLimit)}`, 20, customerYStart + 36);
+        pdf.text(`Dívida Actual: ${formatCurrency(customer.currentDebt)}`, 20, customerYStart + 43);
+      }
     } else {
-      pdf.text('CLIENTE: Cliente Anónimo', 20, 100);
+      pdf.text('Cliente Anónimo', 20, customerYStart + 8);
+      pdf.text('Sem informações adicionais', 20, customerYStart + 15);
     }
     
+    // Products table
+    const tableYStart = customer && sale.paymentMethod === 'credit' ? 175 : 155;
+    
     // Table header
-    pdf.setFontSize(10);
-    pdf.text('PRODUTO', 20, 150);
-    pdf.text('QTD', 80, 150);
-    pdf.text('PREÇO UNIT.', 100, 150);
-    pdf.text('IVA', 130, 150);
-    pdf.text('TOTAL', 160, 150);
+    pdf.setFillColor(...primaryColor);
+    pdf.rect(20, tableYStart, 170, 12, 'F');
     
-    pdf.line(20, 155, 190, 155);
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('PRODUTO', 25, tableYStart + 8);
+    pdf.text('QTD', 85, tableYStart + 8);
+    pdf.text('PREÇO UNIT.', 105, tableYStart + 8);
+    pdf.text('IVA', 135, tableYStart + 8);
+    pdf.text('SUBTOTAL', 155, tableYStart + 8);
+    pdf.text('TOTAL', 175, tableYStart + 8);
     
-    // Products
-    let yPosition = 165;
-    sale.items.forEach((item: SaleItem) => {
+    // Products rows
+    let yPosition = tableYStart + 20;
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    
+    sale.items.forEach((item: SaleItem, index: number) => {
       const product = products.find(p => p.id === item.productId);
       if (product) {
-        pdf.text(product.name, 20, yPosition);
-        pdf.text(item.quantity.toString(), 80, yPosition);
-        pdf.text(formatCurrency(item.unitPrice), 100, yPosition);
-        pdf.text(item.includesVAT ? 'Sim' : 'Não', 130, yPosition);
-        pdf.text(formatCurrency(item.total), 160, yPosition);
-        yPosition += 10;
+        // Alternate row colors
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 250, 252);
+          pdf.rect(20, yPosition - 5, 170, 10, 'F');
+        }
+        
+        // Product name (truncate if too long)
+        const productName = product.name.length > 20 ? 
+          product.name.substring(0, 17) + '...' : product.name;
+        
+        pdf.text(productName, 25, yPosition);
+        pdf.text(item.quantity.toString(), 88, yPosition);
+        pdf.text(formatCurrency(item.unitPrice), 105, yPosition);
+        
+        // IVA indicator with color
+        if (item.includesVAT) {
+          pdf.setTextColor(...accentColor);
+          pdf.text('Sim', 137, yPosition);
+          pdf.setTextColor(0, 0, 0);
+        } else {
+          pdf.setTextColor(...grayColor);
+          pdf.text('Não', 137, yPosition);
+          pdf.setTextColor(0, 0, 0);
+        }
+        
+        pdf.text(formatCurrency(item.subtotal), 155, yPosition);
+        pdf.text(formatCurrency(item.total), 175, yPosition);
+        
+        yPosition += 12;
       }
     });
     
-    pdf.line(20, yPosition, 190, yPosition);
-    yPosition += 15;
+    // Table border
+    pdf.setDrawColor(...primaryColor);
+    pdf.setLineWidth(0.5);
+    pdf.rect(20, tableYStart, 170, yPosition - tableYStart);
     
-    // Footer totals
-    pdf.setFontSize(12);
+    // Totals section
+    yPosition += 10;
+    pdf.setFillColor(248, 250, 252);
+    pdf.rect(120, yPosition, 70, 35, 'F');
+    
+    pdf.setTextColor(...primaryColor);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    
     if (sale.totalVATAmount > 0) {
       const subtotal = sale.totalAmount - sale.totalVATAmount;
-      pdf.text(`SUBTOTAL: ${formatCurrency(subtotal)}`, 120, yPosition);
-      yPosition += 10;
-      pdf.text(`IVA TOTAL: ${formatCurrency(sale.totalVATAmount)}`, 120, yPosition);
-      yPosition += 10;
+      pdf.text(`SUBTOTAL:`, 125, yPosition + 8);
+      pdf.text(`${formatCurrency(subtotal)}`, 170, yPosition + 8, { align: 'right' });
+      
+      pdf.setTextColor(...accentColor);
+      pdf.text(`IVA TOTAL:`, 125, yPosition + 16);
+      pdf.text(`${formatCurrency(sale.totalVATAmount)}`, 170, yPosition + 16, { align: 'right' });
+      yPosition += 8;
     }
     
-    pdf.text(`TOTAL: ${formatCurrency(sale.totalAmount)}`, 120, yPosition);
+    // Total with emphasis
+    pdf.setFillColor(...primaryColor);
+    pdf.rect(120, yPosition + 16, 70, 12, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`TOTAL:`, 125, yPosition + 24);
+    pdf.text(`${formatCurrency(sale.totalAmount)}`, 185, yPosition + 24, { align: 'right' });
     
-    // Footer
+    // Footer section
+    yPosition += 45;
+    pdf.setTextColor(...grayColor);
     pdf.setFontSize(8);
-    pdf.text('Obrigado pela sua preferência!', 105, 250, { align: 'center' });
-    pdf.text('Esta factura foi gerada automaticamente.', 105, 260, { align: 'center' });
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Obrigado pela sua preferência!', 105, yPosition, { align: 'center' });
+    pdf.text('Esta factura foi gerada automaticamente pelo Sistema de Stock.', 105, yPosition + 8, { align: 'center' });
+    pdf.text(`Gerado em: ${new Date().toLocaleString('pt-MZ')}`, 105, yPosition + 16, { align: 'center' });
     
-    pdf.save(`factura_${sale.id}.pdf`);
-    toast.success("PDF gerado com sucesso!");
+    // Add watermark
+    pdf.setTextColor(240, 240, 240);
+    pdf.setFontSize(48);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('ORIGINAL', 105, 150, { align: 'center', angle: 45 });
+    
+    // Save with better filename
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `Factura_${sale.id}_${timestamp}.pdf`;
+    pdf.save(filename);
+    toast.success("Factura PDF gerada com sucesso!");
   };
 
   return (
@@ -231,9 +355,12 @@ const SalesManagement = () => {
               Nova Venda
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4" aria-describedby="dialog-description">
             <DialogHeader>
               <DialogTitle>Registar Nova Venda</DialogTitle>
+              <p id="dialog-description" className="text-sm text-muted-foreground">
+                Selecione produtos, defina quantidades e método de pagamento para registar uma nova venda.
+              </p>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <SaleItemForm
@@ -424,15 +551,20 @@ const SalesManagement = () => {
                       </p>
                     </div>
                     
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => generateSalePDF(sale)}
-                      className="flex items-center gap-2 w-full sm:w-auto min-h-[44px]"
-                    >
-                      <Printer className="h-4 w-4" />
-                      <span className="sm:hidden">Imprimir </span>PDF
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSale(sale);
+                          setPreviewOpen(true);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Printer className="h-4 w-4" />
+                        <span className="hidden sm:inline">Pré-visualizar</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -457,6 +589,23 @@ const SalesManagement = () => {
           </CardContent>
         </Card>
       )}
+
+      <InvoicePreview
+        sale={selectedSale}
+        products={products}
+        customers={customers}
+        isOpen={previewOpen}
+        onClose={() => {
+          setPreviewOpen(false);
+          setSelectedSale(null);
+        }}
+        onGeneratePDF={() => {
+          if (selectedSale) {
+            generateSalePDF(selectedSale);
+            setPreviewOpen(false);
+          }
+        }}
+      />
     </div>
   );
 };
