@@ -213,7 +213,9 @@ const Dashboard = () => {
                 <Pie
                   data={products.reduce((acc, product) => {
                     const category = acc.find(item => item.name === product.category);
-                    const value = product.quantity * product.purchasePrice;
+                    const value = isAdmin ? 
+                      product.quantity * product.purchasePrice :
+                      product.quantity * product.salePrice;
                     
                     if (category) {
                       category.value += value;

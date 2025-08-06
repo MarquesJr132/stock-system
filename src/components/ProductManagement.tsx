@@ -161,18 +161,20 @@ const ProductManagement = () => {
                     required
                   />
                 </div>
-                <div>
-                  <Label htmlFor="purchasePrice">Preço de Compra (MZN) *</Label>
-                  <Input
-                    id="purchasePrice"
-                    type="number"
-                    step="0.01"
-                    value={formData.purchasePrice}
-                    onChange={(e) => setFormData(prev => ({ ...prev, purchasePrice: e.target.value }))}
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
+                {isAdmin && (
+                  <div>
+                    <Label htmlFor="purchasePrice">Preço de Compra (MZN) *</Label>
+                    <Input
+                      id="purchasePrice"
+                      type="number"
+                      step="0.01"
+                      value={formData.purchasePrice}
+                      onChange={(e) => setFormData(prev => ({ ...prev, purchasePrice: e.target.value }))}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="salePrice">Preço de Venda (MZN) *</Label>
                   <Input
@@ -310,11 +312,13 @@ const ProductManagement = () => {
                 </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-2 sm:gap-4 text-sm">{/* Smaller spacing on mobile */}
-                <div>
-                  <p className="text-slate-600 dark:text-slate-400">Preço Compra</p>
-                  <p className="font-medium">{formatCurrency(product.purchasePrice)}</p>
-                </div>
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 text-sm">
+                {isAdmin && (
+                  <div>
+                    <p className="text-slate-600 dark:text-slate-400">Preço Compra</p>
+                    <p className="font-medium">{formatCurrency(product.purchasePrice)}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-slate-600 dark:text-slate-400">Preço Venda</p>
                   <p className="font-medium">{formatCurrency(product.salePrice)}</p>
