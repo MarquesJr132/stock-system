@@ -29,25 +29,33 @@ export function formatNumber(value: number, minimumFractionDigits: number = 0): 
 /**
  * Format date according to Mozambique standards
  */
-export function formatDate(date: Date): string {
+export function formatDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) {
+    return 'Data inválida';
+  }
   return new Intl.DateTimeFormat(MOZAMBIQUE_LOCALE, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(date);
+  }).format(dateObj);
 }
 
 /**
  * Format date and time according to Mozambique standards
  */
-export function formatDateTime(date: Date): string {
+export function formatDateTime(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) {
+    return 'Data inválida';
+  }
   return new Intl.DateTimeFormat(MOZAMBIQUE_LOCALE, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(date);
+  }).format(dateObj);
 }
 
 /**
