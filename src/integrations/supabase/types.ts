@@ -63,6 +63,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_is_superuser: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_user_profile: {
         Args: { user_uuid: string }
         Returns: {
@@ -83,10 +87,6 @@ export type Database = {
       }
       has_role: {
         Args: { check_role: Database["public"]["Enums"]["user_role"] }
-        Returns: boolean
-      }
-      is_superuser: {
-        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       promote_to_superuser: {
