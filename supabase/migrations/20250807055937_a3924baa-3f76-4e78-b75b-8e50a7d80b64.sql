@@ -1,0 +1,1 @@
+SELECT promote_to_superuser('marquesjr898@gmail.com');
