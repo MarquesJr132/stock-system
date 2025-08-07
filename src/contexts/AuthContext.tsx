@@ -197,31 +197,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Assigning user to current admin tenant');
         // Get current user's tenant info
         const currentUserTenant = profile?.tenant_id || profile?.id;
+        const currentUserEmail = profile?.email;
+        const newUserEmail = email;
         
-        // Wait a bit for the trigger to create the profile, then update it
-        const updateProfile = async (retries = 3) => {
-          for (let i = 0; i < retries; i++) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Wait 1s, 2s, 3s
+        // Use the database function for reliable tenant assignment
+        const assignTenant = async () => {
+          try {
+            const { error: functionError } = await supabase.rpc('assign_user_to_admin_tenant', {
+              user_email: newUserEmail,
+              admin_email: currentUserEmail
+            });
             
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .update({ 
-                tenant_id: currentUserTenant,
-                created_by: profile?.id 
-              })
-              .eq('user_id', authData.user.id);
-              
-            if (!profileError) {
-              console.log('Profile updated successfully with tenant:', currentUserTenant);
-              break;
-            } else if (i === retries - 1) {
-              console.error('Profile update error after retries:', profileError);
+            if (functionError) {
+              console.error('Tenant assignment error:', functionError);
+              // Fallback to direct update
+              await supabase
+                .from('profiles')
+                .update({ 
+                  tenant_id: currentUserTenant,
+                  created_by: profile?.id 
+                })
+                .eq('email', newUserEmail);
+            } else {
+              console.log('User successfully assigned to tenant via function');
             }
+          } catch (error) {
+            console.error('Error in tenant assignment:', error);
           }
         };
         
-        // Start the update process without blocking the response
-        updateProfile();
+        // Wait a moment for the trigger to create the profile, then assign tenant
+        setTimeout(assignTenant, 2000);
       }
       
       return { error: null };
