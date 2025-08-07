@@ -12,6 +12,10 @@ import ProfileManagement from "@/components/ProfileManagement";
 import SuperuserManagement from "@/components/SuperuserManagement";
 import Login from "@/components/Login";
 import CompanySettings from "@/components/CompanySettings";
+import { NotificationCenter } from "@/components/NotificationCenter";
+import { SupplierManagement } from "@/components/SupplierManagement";
+import { PurchaseOrderManagement } from "@/components/PurchaseOrderManagement";
+import { AuditLogs } from "@/components/AuditLogs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/layout/Header";
 import { Navigation } from "@/components/layout/Navigation";
@@ -47,6 +51,8 @@ const Index = () => {
       />
       
       <Header />
+      
+      <NotificationCenter />
 
       <div className="container mx-auto px-4 lg:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -95,6 +101,18 @@ const Index = () => {
               
               <TabsContent value="users" className="space-y-6">
                 <UserManagement />
+              </TabsContent>
+              
+              <TabsContent value="suppliers" className="space-y-6">
+                <SupplierManagement />
+              </TabsContent>
+              
+              <TabsContent value="purchase-orders" className="space-y-6">
+                <PurchaseOrderManagement />
+              </TabsContent>
+              
+              <TabsContent value="audit" className="space-y-6">
+                <AuditLogs />
               </TabsContent>
             </>
           )}

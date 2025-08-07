@@ -1,5 +1,5 @@
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, User as UserIcon, Building } from "lucide-react";
+import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, User as UserIcon, Building, Truck, FileText, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface NavigationProps {
@@ -10,7 +10,7 @@ export const Navigation = ({ activeTab }: NavigationProps) => {
   const { isAdministrator, isSuperuser } = useAuth();
 
   return (
-    <TabsList className={`hidden lg:grid w-full ${isAdministrator && !isSuperuser ? 'grid-cols-9' : 'grid-cols-7'} lg:w-auto`}>
+    <TabsList className={`hidden lg:grid w-full ${isAdministrator && !isSuperuser ? 'grid-cols-12' : 'grid-cols-7'} lg:w-auto`}>
       <TabsTrigger value="dashboard" className="flex items-center gap-2">
         <BarChart3 className="h-4 w-4" />
         Dashboard
@@ -48,6 +48,18 @@ export const Navigation = ({ activeTab }: NavigationProps) => {
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Usuários
+          </TabsTrigger>
+          <TabsTrigger value="suppliers" className="flex items-center gap-2">
+            <Truck className="h-4 w-4" />
+            Fornecedores
+          </TabsTrigger>
+          <TabsTrigger value="purchase-orders" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Compras
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Auditoria
           </TabsTrigger>
         </>
       )}

@@ -1,4 +1,4 @@
-import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, User as UserIcon, Building } from "lucide-react";
+import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, User as UserIcon, Building, Truck, FileText, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface MobileMenuProps {
@@ -23,7 +23,10 @@ export const MobileMenu = ({ isOpen, onClose, activeTab, onTabChange }: MobileMe
     { value: "profile", icon: UserIcon, label: "Perfil" },
     ...(isAdministrator && !isSuperuser ? [
       { value: "company", icon: Building, label: "Empresa" },
-      { value: "users", icon: Settings, label: "Usuários" }
+      { value: "users", icon: Settings, label: "Usuários" },
+      { value: "suppliers", icon: Truck, label: "Fornecedores" },
+      { value: "purchase-orders", icon: FileText, label: "Compras" },
+      { value: "audit", icon: Shield, label: "Auditoria" }
     ] : [])
   ];
 

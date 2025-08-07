@@ -32,7 +32,7 @@ interface AuditLog {
   } | null;
 }
 
-const actionMap = {
+const actionMap: Record<string, { label: string; color: string }> = {
   INSERT: { label: 'Criação', color: 'bg-green-500' },
   UPDATE: { label: 'Atualização', color: 'bg-blue-500' },
   DELETE: { label: 'Exclusão', color: 'bg-red-500' },
@@ -127,7 +127,7 @@ export const AuditLogs: React.FC = () => {
         new Date(log.timestamp).toLocaleString('pt-BR'),
         log.profiles?.full_name || 'Sistema',
         tableMap[log.table_name] || log.table_name,
-        actionMap[log.action].label,
+        actionMap[log.action]?.label || log.action,
         log.record_id,
         log.ip_address || '-',
       ]);
@@ -305,9 +305,9 @@ export const AuditLogs: React.FC = () => {
                     <TableCell>
                       <Badge 
                         variant="outline" 
-                        className={`text-white ${actionMap[log.action].color}`}
+                        className={`text-white ${actionMap[log.action]?.color || 'bg-gray-500'}`}
                       >
-                        {actionMap[log.action].label}
+                        {actionMap[log.action]?.label || log.action}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -371,8 +371,8 @@ export const AuditLogs: React.FC = () => {
                 </div>
                 <div>
                   <Label>Ação</Label>
-                  <Badge className={`${actionMap[selectedLog.action].color} text-white`}>
-                    {actionMap[selectedLog.action].label}
+                  <Badge className={`${actionMap[selectedLog.action]?.color || 'bg-gray-500'} text-white`}>
+                    {actionMap[selectedLog.action]?.label || selectedLog.action}
                   </Badge>
                 </div>
                 <div>
