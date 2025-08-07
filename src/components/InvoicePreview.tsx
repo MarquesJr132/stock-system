@@ -117,192 +117,147 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
           </p>
         </DialogHeader>
 
-        <div id="invoice-content" className="space-y-6 bg-white p-6"  style={{ color: '#000' }}>
-          {/* Invoice Header */}
-          <div className="bg-slate-800 p-6 rounded-lg text-white">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-2xl font-bold mb-2">SISTEMA DE STOCK</h1>
-                <p className="text-lg font-medium">FACTURA DE VENDA</p>
+        <div id="invoice-content" className="space-y-6 bg-white p-8" style={{ color: '#000', fontFamily: 'Arial, sans-serif' }}>
+          {/* Header */}
+          <div className="bg-slate-700 text-white text-center py-6">
+            <h1 className="text-3xl font-bold mb-2">SISTEMA DE STOCK</h1>
+            <p className="text-lg">FACTURA DE VENDA</p>
+          </div>
+
+          {/* Company and Invoice Details */}
+          <div className="grid grid-cols-2 gap-8 mt-8">
+            {/* Company Info */}
+            <div>
+              <h3 className="font-bold text-slate-700 mb-4 text-lg">EMPRESA:</h3>
+              <div className="space-y-1 text-sm text-black">
+                <p className="font-bold">Sistema de Gestão de Stock Lda.</p>
+                <p>Maputo, Moçambique</p>
+                <p>Tel: +258 84 123 4567</p>
+                <p>Email: info@stocksystem.co.mz</p>
+                <p>NUIT: 123456789</p>
               </div>
-              <div className="text-right">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-white text-slate-800">
-                  <div className="w-2 h-2 bg-slate-800 rounded-full"></div>
-                  {formatPaymentMethod(sale.payment_method)}
+            </div>
+
+            {/* Invoice Details */}
+            <div>
+              <h3 className="font-bold text-slate-700 mb-4 text-lg">DETALHES DA FACTURA:</h3>
+              <div className="space-y-1 text-sm text-black">
+                <p><span className="font-semibold">Factura Nº:</span> #{sale.id.slice(-8)}</p>
+                <p><span className="font-semibold">Data:</span> {formatDateTime(sale.created_at)}</p>
+                <p><span className="font-semibold">Método:</span> {formatPaymentMethod(sale.payment_method)}</p>
+                <div className="mt-2">
+                  <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs">
+                    Status: {formatPaymentMethod(sale.payment_method)}
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Company and Customer Info */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Company Info */}
-            <Card className="border-2 border-slate-800">
-              <CardContent className="p-4">
-                <h3 className="font-bold text-slate-800 mb-3 text-lg">EMPRESA:</h3>
-                <div className="space-y-1 text-sm text-slate-800">
-                  <p className="font-medium text-base">Sistema de Gestão de Stock Lda.</p>
-                  <p>Maputo, Moçambique</p>
-                  <p>Tel: +258 84 123 4567</p>
-                  <p>Email: info@stocksystem.co.mz</p>
-                  <p>NUIT: 123456789</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Invoice Details */}
-            <Card className="border-2 border-slate-800">
-              <CardContent className="p-4">
-                <h3 className="font-bold text-slate-800 mb-3 text-lg">DETALHES DA FACTURA:</h3>
-                <div className="space-y-2 text-sm text-slate-800">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Factura Nº:</span>
-                    <span className="font-bold">#{sale.id.slice(-8)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Data:</span>
-                    <span className="font-bold">{formatDateTime(sale.created_at)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Método:</span>
-                    <span className="font-bold bg-slate-800 text-white px-2 py-1 rounded text-xs">{formatPaymentMethod(sale.payment_method)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Gerado em:</span>
-                    <span className="font-bold">{new Date().toLocaleString("pt-MZ")}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Customer Info */}
-          <Card className="border-2 border-slate-800">
-            <CardContent className="p-4">
-              <h3 className="font-bold text-slate-800 mb-3 text-lg">CLIENTE:</h3>
-              {customer ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-800">
-                  <div>
-                    <p><span className="font-medium">Nome:</span> <span className="font-bold">{customer.name}</span></p>
-                    <p><span className="font-medium">Email:</span> <span className="font-bold">{customer.email || "N/A"}</span></p>
-                  </div>
-                  <div>
-                    <p><span className="font-medium">Telefone:</span> <span className="font-bold">{customer.phone || "N/A"}</span></p>
-                    <p><span className="font-medium">Endereço:</span> <span className="font-bold">{customer.address || "N/A"}</span></p>
-                  </div>
+          <div className="mt-8">
+            <h3 className="font-bold text-slate-700 mb-4 text-lg">CLIENTE:</h3>
+            {customer ? (
+              <div className="grid grid-cols-2 gap-8 text-sm text-black">
+                <div className="space-y-1">
+                  <p><span className="font-semibold">Nome:</span> {customer.name}</p>
+                  <p><span className="font-semibold">Email:</span> {customer.email || 'N/A'}</p>
+                  <p><span className="font-semibold">Telefone:</span> {customer.phone || 'N/A'}</p>
+                  <p><span className="font-semibold">Endereço:</span> {customer.address || 'N/A'}</p>
                 </div>
-              ) : (
-                <div className="text-slate-800">
-                  <p className="font-bold">Cliente Anónimo</p>
-                  <p className="text-sm">Sem informações adicionais</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <div className="text-black">
+                <p><span className="font-semibold">Nome:</span> Cliente Anônimo</p>
+              </div>
+            )}
+          </div>
 
           {/* Products Table */}
-          <Card className="border-2 border-slate-800">
-            <CardContent className="p-0">
-              <div className="bg-slate-800 p-4 text-white">
-                <h3 className="font-bold text-lg">PRODUTOS</h3>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-white border-b-2 border-slate-800">
-                      <th className="text-left p-4 font-bold text-slate-800 border-r border-slate-300">PRODUTO</th>
-                      <th className="text-center p-4 font-bold text-slate-800 border-r border-slate-300">QTD</th>
-                      <th className="text-right p-4 font-bold text-slate-800 border-r border-slate-300">PREÇO UNIT.</th>
-                      <th className="text-center p-4 font-bold text-slate-800 border-r border-slate-300">IVA</th>
-                      <th className="text-right p-4 font-bold text-slate-800 border-r border-slate-300">SUBTOTAL</th>
-                      <th className="text-right p-4 font-bold text-slate-800">TOTAL</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr className="border-b border-slate-300">
-                        <td colSpan={6} className="p-8 text-center text-slate-800">
-                          <p className="font-medium">Carregando itens da venda...</p>
+          <div className="mt-8">
+            <table className="w-full border-collapse border border-slate-400">
+              <thead>
+                <tr className="bg-slate-700 text-white">
+                  <th className="border border-slate-400 p-3 text-left font-bold">PRODUTO</th>
+                  <th className="border border-slate-400 p-3 text-center font-bold">QTD</th>
+                  <th className="border border-slate-400 p-3 text-center font-bold">PREÇO UNIT.</th>
+                  <th className="border border-slate-400 p-3 text-center font-bold">IVA</th>
+                  <th className="border border-slate-400 p-3 text-center font-bold">SUBTOTAL</th>
+                  <th className="border border-slate-400 p-3 text-center font-bold">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="border border-slate-400 p-8 text-center text-black">
+                      Carregando itens da venda...
+                    </td>
+                  </tr>
+                ) : saleItems.length > 0 ? (
+                  saleItems.map((item, index) => {
+                    const product = products.find(p => p.id === item.product_id);
+                    return (
+                      <tr key={index} className="text-black">
+                        <td className="border border-slate-400 p-3">
+                          <div>
+                            <p className="font-semibold">{product?.name || "Produto não encontrado"}</p>
+                            {product?.description && (
+                              <p className="text-xs text-gray-600">{product.description}</p>
+                            )}
+                          </div>
                         </td>
-                      </tr>
-                    ) : saleItems.length > 0 ? (
-                      saleItems.map((item, index) => {
-                        const product = products.find(p => p.id === item.product_id);
-                        return (
-                          <tr key={index} className="border-b border-slate-300">
-                            <td className="p-4 text-slate-800 border-r border-slate-300">
-                              <div>
-                                <p className="font-bold text-base">{product?.name || "Produto não encontrado"}</p>
-                                {product?.description && (
-                                  <p className="text-sm text-slate-600 mt-1">{product.description}</p>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-4 text-center font-bold text-slate-800 border-r border-slate-300 text-base">{item.quantity}</td>
-                            <td className="p-4 text-right text-slate-800 font-bold border-r border-slate-300 text-base">{formatCurrency(item.unit_price)}</td>
-                            <td className="p-4 text-center border-r border-slate-300">
-                              {item.includes_vat ? (
-                                <span className="bg-slate-800 text-white px-2 py-1 rounded text-xs font-bold">SIM</span>
-                              ) : (
-                                <span className="border border-slate-800 text-slate-800 px-2 py-1 rounded text-xs font-bold">NÃO</span>
-                              )}
-                            </td>
-                            <td className="p-4 text-right text-slate-800 font-bold border-r border-slate-300 text-base">{formatCurrency(item.subtotal)}</td>
-                            <td className="p-4 text-right font-bold text-slate-800 text-base">{formatCurrency(item.total)}</td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <tr className="border-b border-slate-300">
-                        <td colSpan={6} className="p-8 text-center text-slate-800">
-                          <p className="font-medium">Nenhum item encontrado para esta venda.</p>
+                        <td className="border border-slate-400 p-3 text-center font-semibold">{item.quantity}</td>
+                        <td className="border border-slate-400 p-3 text-center">{formatCurrency(item.unit_price)}</td>
+                        <td className="border border-slate-400 p-3 text-center">
+                          {item.includes_vat ? 'SIM' : 'NÃO'}
                         </td>
+                        <td className="border border-slate-400 p-3 text-center">{formatCurrency(item.subtotal)}</td>
+                        <td className="border border-slate-400 p-3 text-center font-semibold">{formatCurrency(item.total)}</td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="border border-slate-400 p-8 text-center text-black">
+                      Nenhum item encontrado para esta venda.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
           {/* Totals */}
-          <Card className="border-2 border-slate-800">
-            <CardContent className="p-0">
-              <div className="p-6 space-y-4">
-                {sale.total_vat_amount > 0 && (
-                  <div className="flex justify-between text-lg">
-                    <span className="font-bold text-slate-800">SUBTOTAL:</span>
-                    <span className="font-bold text-slate-800">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
-                  </div>
-                )}
-                
-                {sale.total_vat_amount > 0 && (
-                  <div className="flex justify-between text-lg">
-                    <span className="font-bold text-slate-800">IVA TOTAL:</span>
-                    <span className="font-bold text-slate-800">{formatCurrency(sale.total_vat_amount)}</span>
-                  </div>
-                )}
-                
-                <div className="border-t-2 border-slate-800 pt-4">
-                  <div className="bg-slate-800 p-4 rounded-lg text-white">
-                    <div className="flex justify-between items-center">
-                      <span className="text-2xl font-bold">TOTAL:</span>
-                      <span className="text-3xl font-bold">{formatCurrency(sale.total_amount)}</span>
-                    </div>
-                  </div>
+          <div className="mt-8 flex justify-end">
+            <div className="w-80">
+              {sale.total_vat_amount > 0 && (
+                <div className="flex justify-between py-2 text-black">
+                  <span className="font-semibold">SUBTOTAL:</span>
+                  <span className="font-semibold">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
+                </div>
+              )}
+              
+              {sale.total_vat_amount > 0 && (
+                <div className="flex justify-between py-2 text-black">
+                  <span className="font-semibold">IVA TOTAL:</span>
+                  <span className="font-semibold">{formatCurrency(sale.total_vat_amount)}</span>
+                </div>
+              )}
+              
+              <div className="bg-slate-700 text-white p-4 mt-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xl font-bold">TOTAL:</span>
+                  <span className="text-2xl font-bold">{formatCurrency(sale.total_amount)}</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Footer */}
-          <div className="text-center text-slate-800 space-y-3 border-t-2 border-slate-800 pt-6">
-            <p className="font-bold text-lg">Obrigado pela sua preferência!</p>
-            <p className="font-medium">Esta factura foi gerada automaticamente pelo Sistema de Stock.</p>
-            <div className="inline-block px-4 py-2 bg-slate-800 text-white rounded-lg">
-              <p className="text-sm font-bold">ORIGINAL</p>
-            </div>
+          <div className="text-center mt-12 text-black">
+            <p className="font-semibold mb-2">Obrigado pela sua preferência!</p>
+            <p className="text-sm mb-4">Esta factura foi gerada automaticamente pelo Sistema de Stock.</p>
+            <p className="text-xs text-gray-600">Gerado em: {new Date().toLocaleString('pt-MZ')}</p>
           </div>
         </div>
 
