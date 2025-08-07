@@ -316,6 +316,14 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      get_current_user_tenant: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_profile: {
         Args: { user_uuid: string }
         Returns: {
@@ -336,6 +344,14 @@ export type Database = {
       }
       has_role: {
         Args: { check_role: Database["public"]["Enums"]["user_role"] }
+        Returns: boolean
+      }
+      is_administrator: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_superuser: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       promote_to_superuser: {
