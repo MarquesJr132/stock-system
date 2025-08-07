@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UserPlus, Users, Shield, LogOut } from 'lucide-react';
+import { UserPlus, Users, Shield, LogOut, Edit, Eye, EyeOff } from 'lucide-react';
 
 interface Administrator {
   id: string;
+  user_id: string;
   email: string;
   full_name: string;
   created_at: string;
@@ -22,9 +23,13 @@ interface Administrator {
 const SuperuserManagement = () => {
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<Administrator | null>(null);
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminName, setNewAdminName] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [editAdminName, setEditAdminName] = useState('');
+  const [editAdminPassword, setEditAdminPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingAdmins, setIsLoadingAdmins] = useState(true);
   const { createUser, signOut, profile } = useAuth();
@@ -35,7 +40,7 @@ const SuperuserManagement = () => {
       console.log('Fetching administrators...');
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id, email, full_name, created_at, tenant_id')
         .eq('role', 'administrator')
         .order('created_at', { ascending: false });
 
@@ -87,6 +92,76 @@ const SuperuserManagement = () => {
     }
 
     setIsLoading(false);
+  };
+
+  const handleEditAdmin = (admin: Administrator) => {
+    setEditingAdmin(admin);
+    setEditAdminName(admin.full_name);
+    setEditAdminPassword('');
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAdmin) return;
+    
+    setIsLoading(true);
+
+    try {
+      // Update profile information
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editAdminName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingAdmin.id);
+
+      if (profileError) throw profileError;
+
+      // Update password if provided
+      if (editAdminPassword.trim()) {
+        const { error: passwordError } = await supabase.auth.admin.updateUserById(
+          editingAdmin.user_id,
+          { password: editAdminPassword }
+        );
+
+        if (passwordError) {
+          console.error('Password update error:', passwordError);
+          // Continue with profile update even if password fails
+          toast({
+            title: "Perfil atualizado parcialmente",
+            description: "Nome atualizado, mas houve erro ao alterar a senha.",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Administrador atualizado!",
+            description: "Nome e senha foram atualizados com sucesso.",
+          });
+        }
+      } else {
+        toast({
+          title: "Administrador atualizado!",
+          description: "Nome foi atualizado com sucesso.",
+        });
+      }
+
+      setEditAdminName('');
+      setEditAdminPassword('');
+      setIsEditDialogOpen(false);
+      setEditingAdmin(null);
+      fetchAdministrators();
+    } catch (error: any) {
+      console.error('Error updating administrator:', error);
+      toast({
+        title: "Erro ao atualizar administrador",
+        description: error.message || "Não foi possível atualizar o administrador.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deleteAdministrator = async (adminId: string) => {
@@ -273,6 +348,63 @@ const SuperuserManagement = () => {
                   </form>
                 </DialogContent>
               </Dialog>
+
+              {/* Edit Administrator Dialog */}
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Editar Administrador</DialogTitle>
+                    <DialogDescription>
+                      Atualize as informações do administrador
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleUpdateAdmin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="editName">Nome Completo</Label>
+                      <Input
+                        id="editName"
+                        value={editAdminName}
+                        onChange={(e) => setEditAdminName(e.target.value)}
+                        placeholder="Digite o nome completo"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="editPassword">Nova Senha (opcional)</Label>
+                      <div className="relative">
+                        <Input
+                          id="editPassword"
+                          type="password"
+                          value={editAdminPassword}
+                          onChange={(e) => setEditAdminPassword(e.target.value)}
+                          placeholder="Deixe em branco para manter a senha atual"
+                          minLength={6}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Deixe em branco se não quiser alterar a senha
+                      </p>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditDialogOpen(false);
+                          setEditingAdmin(null);
+                          setEditAdminName('');
+                          setEditAdminPassword('');
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? "Atualizando..." : "Atualizar"}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardHeader>
           <CardContent>
@@ -310,13 +442,23 @@ const SuperuserManagement = () => {
                           <Badge variant="secondary">Ativo</Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => deleteAdministrator(admin.id)}
-                          >
-                            Remover
-                          </Button>
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditAdmin(admin)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Editar
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteAdministrator(admin.id)}
+                            >
+                              Remover
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
