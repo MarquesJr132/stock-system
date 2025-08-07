@@ -85,6 +85,10 @@ export type Database = {
         Args: { check_role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
       }
+      is_superuser: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       promote_to_superuser: {
         Args: { user_email: string }
         Returns: undefined
