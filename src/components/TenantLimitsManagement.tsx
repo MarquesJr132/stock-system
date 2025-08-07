@@ -49,9 +49,15 @@ const TenantLimitsManagement = () => {
   const loadTenantLimits = async () => {
     setLoading(true);
     try {
+      console.log('Loading tenant limits...');
       const result = await getAllTenantLimits();
+      console.log('Tenant limits result:', result);
       if (result.data) {
         setTenantLimits(result.data);
+        console.log('Set tenant limits:', result.data);
+      } else if (result.error) {
+        console.error('Error loading tenant limits:', result.error);
+        toast.error(result.error);
       }
     } catch (error) {
       console.error('Error loading tenant limits:', error);
@@ -74,14 +80,20 @@ const TenantLimitsManagement = () => {
       return;
     }
     
+    console.log('Submitting tenant limit for admin:', selectedAdmin);
     const result = await updateTenantLimits(selectedAdmin.tenant_id || selectedAdmin.id, {
       monthly_data_limit: formData.monthly_data_limit
     });
 
+    console.log('Update result:', result);
     if (result.data) {
       setDialogOpen(false);
       setFormData({ selected_admin: "", monthly_data_limit: 1000 });
-      loadTenantLimits();
+      toast.success("Limite definido com sucesso!");
+      // Recarregar dados após update
+      setTimeout(() => {
+        loadTenantLimits();
+      }, 500);
     }
   };
 
@@ -221,9 +233,9 @@ const TenantLimitsManagement = () => {
                         <Users className="h-5 w-5" />
                         Tenant #{limit.tenant_id.slice(-8)}
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Admin: {limit.profiles?.full_name || 'Nome não disponível'}
-                      </p>
+                       <p className="text-sm text-muted-foreground mt-1">
+                         Admin: {administrators.find(a => a.tenant_id === limit.tenant_id || a.id === limit.tenant_id)?.full_name || 'Nome não disponível'}
+                       </p>
                     </div>
                     {isNearLimit && (
                       <AlertTriangle className="h-5 w-5 text-yellow-500" />

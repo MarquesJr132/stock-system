@@ -643,22 +643,21 @@ export const useSupabaseData = () => {
 
   const getAllTenantLimits = async () => {
     if (!profile?.role || profile.role !== 'superuser') {
+      console.log('User is not superuser, role:', profile?.role);
       return { error: 'Apenas superusers podem ver todos os limites' };
     }
 
+    console.log('Fetching all tenant limits...');
     const { data, error } = await supabase
       .from('tenant_limits')
       .select(`
-        *,
-        profiles!tenant_limits_tenant_id_fkey (
-          id,
-          full_name,
-          email
-        )
+        *
       `)
       .order('created_at', { ascending: false });
 
+    console.log('Tenant limits query result:', { data, error });
     if (error) {
+      console.error('Error fetching tenant limits:', error);
       return { error: error.message };
     }
 
