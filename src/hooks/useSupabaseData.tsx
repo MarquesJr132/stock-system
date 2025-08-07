@@ -656,30 +656,54 @@ export const useSupabaseData = () => {
       return { error: 'Apenas superusers podem alterar limites' };
     }
 
-    const { data, error } = await supabase
+    // First try to update existing record
+    const { data: updateData, error: updateError } = await supabase
       .from('tenant_limits')
-      .upsert({
-        tenant_id: tenantId,
-        ...limitsData,
-        created_by: profile.id
-      })
+      .update(limitsData)
+      .eq('tenant_id', tenantId)
       .select()
       .single();
 
-    if (error) {
+    if (updateError && updateError.code === 'PGRST116') {
+      // Record doesn't exist, create new one
+      const { data: insertData, error: insertError } = await supabase
+        .from('tenant_limits')
+        .insert({
+          tenant_id: tenantId,
+          ...limitsData,
+          created_by: profile.id
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        toast({
+          title: "Erro",
+          description: "Erro ao criar limites do tenant: " + insertError.message,
+          variant: "destructive",
+        });
+        return { error: insertError.message };
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Limites do tenant criados com sucesso",
+      });
+      return { data: insertData };
+    } else if (updateError) {
       toast({
         title: "Erro",
-        description: "Erro ao atualizar limites do tenant",
+        description: "Erro ao atualizar limites do tenant: " + updateError.message,
         variant: "destructive",
       });
-      return { error: error.message };
+      return { error: updateError.message };
     }
 
     toast({
       title: "Sucesso",
       description: "Limites do tenant atualizados com sucesso",
     });
-    return { data };
+    return { data: updateData };
   };
 
   const getAllTenantLimits = async () => {
