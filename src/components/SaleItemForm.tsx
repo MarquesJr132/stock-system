@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
-import { Product, SaleItem } from "@/hooks/useStockData";
+import { Product, SaleItem } from "@/hooks/useSupabaseData";
 import { formatCurrency } from "@/lib/currency";
 
 interface SaleItemFormProps {

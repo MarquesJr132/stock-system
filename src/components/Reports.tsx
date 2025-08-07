@@ -15,7 +15,7 @@ import {
   UserPlus,
   Clock
 } from "lucide-react";
-import { useStockData } from "@/hooks/useStockData";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { 
   LineChart, 
   Line, 
@@ -33,7 +33,7 @@ import {
 import { formatCurrency, formatNumber, formatDate, MOZAMBIQUE_LOCALE } from "@/lib/currency";
 
 const Reports = () => {
-  const { products, customers, sales, getTotalValue, getDailyProfit } = useStockData();
+  const { products, customers, sales, getTotalValue, getDailyProfit } = useSupabaseData();
   const [period, setPeriod] = useState("30");
   const [activeTab, setActiveTab] = useState("overview"); // "overview" | "audit"
 

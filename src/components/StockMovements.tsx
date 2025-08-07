@@ -9,11 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, ArrowUp, ArrowDown, History, Package } from "lucide-react";
-import { useStockData } from "@/hooks/useStockData";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { toast } from "sonner";
 
 const StockMovements = () => {
-  const { products, stockMovements, addStockMovement } = useStockData();
+  const { products, stockMovements, addStockMovement } = useSupabaseData();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);

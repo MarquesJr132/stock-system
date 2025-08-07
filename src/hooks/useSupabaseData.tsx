@@ -53,6 +53,11 @@ export interface SaleItem {
   vat_amount: number;
   includes_vat: boolean;
   tenant_id: string;
+  // For form compatibility
+  productId?: string;
+  unitPrice?: number;
+  vatAmount?: number;
+  includesVAT?: boolean;
 }
 
 export const useSupabaseData = () => {

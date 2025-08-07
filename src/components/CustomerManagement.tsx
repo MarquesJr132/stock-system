@@ -8,13 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Edit, Trash2, Users, Phone, Mail, MapPin, CreditCard } from "lucide-react";
-import { useStockData, Customer } from "@/hooks/useStockData";
+import { useSupabaseData, Customer } from "@/hooks/useSupabaseData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/currency";
 
 const CustomerManagement = () => {
-  const { customers, sales, addCustomer, updateCustomer, deleteCustomer } = useStockData();
+  const { customers, sales, addCustomer, updateCustomer, deleteCustomer } = useSupabaseData();
   const { isAdministrator } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);

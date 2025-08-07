@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Search, ShoppingCart, CreditCard, Banknote, Users, Printer } from "lucide-react";
-import { useStockData, SaleItem } from "@/hooks/useStockData";
+import { useSupabaseData, SaleItem } from "@/hooks/useSupabaseData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatCurrency, formatDateTime } from "@/lib/currency";
@@ -17,7 +17,7 @@ import InvoicePreview from "./InvoicePreview";
 import jsPDF from 'jspdf';
 
 const SalesManagement = () => {
-  const { products, customers, sales, addSale } = useStockData();
+  const { products, customers, sales, addSale } = useSupabaseData();
   const { isAdministrator } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
