@@ -63,9 +63,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       console.log('AuthContext: Profile fetched successfully', data);
       setProfile(data);
+      setLoading(false); // Ensure loading is set to false after profile is fetched
     } catch (error) {
       console.error('AuthContext: Error fetching profile:', error);
       setProfile(null);
+      setLoading(false); // Set loading to false even if there's an error
     }
   };
 
@@ -82,12 +84,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           console.log('AuthContext: Fetching profile for user', session.user.id);
-          await fetchProfile(session.user.id);
+          // Use setTimeout to prevent race conditions
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+          }, 0);
         } else {
           console.log('AuthContext: No session, clearing profile');
           setProfile(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
@@ -101,8 +106,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         console.log('AuthContext: Fetching profile for existing session', session.user.id);
-        fetchProfile(session.user.id);
-      } else {
+        // Don't fetch profile here if we already handled it in the auth state change
+        // fetchProfile(session.user.id);
+      }
+      
+      // Always set loading to false after initial session check
+      if (!session) {
         console.log('AuthContext: No existing session');
         setLoading(false);
       }
@@ -174,22 +183,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
-      console.log('AuthContext: Sending OTP to email', email);
-      // Use signInWithOtp instead of resetPasswordForEmail to send OTP codes
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false, // Don't create new users, only reset existing ones
-          data: {
-            password_reset: true // Add a flag to identify this as password reset
-          }
-        }
+      console.log('AuthContext: Sending password reset email to', email);
+      // Revert back to traditional password reset email
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       
-      console.log('AuthContext: OTP send result', { error });
+      console.log('AuthContext: Password reset email send result', { error });
       return { error: error?.message ?? null };
     } catch (error) {
-      console.error('AuthContext: Error sending OTP', error);
+      console.error('AuthContext: Error sending password reset email', error);
       return { error: 'An unexpected error occurred' };
     }
   };
@@ -197,11 +200,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const verifyOtp = async (email: string, token: string, type: 'recovery') => {
     try {
       console.log('AuthContext: Verifying OTP', { email, token: token.length });
-      // For password reset via OTP, we use 'email' type instead of 'recovery'
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
-        type: 'email', // Use 'email' type for OTP verification
+        type: 'recovery', // Use 'recovery' type for password reset
       });
       
       console.log('AuthContext: OTP verification result', { data: !!data, error });
