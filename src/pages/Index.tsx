@@ -21,6 +21,8 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, isAdministrator, isSuperuser, profile, signOut, loading } = useAuth();
 
+  console.log('Index: Auth state', { isAuthenticated, isAdministrator, isSuperuser, profile: profile?.role, loading });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">

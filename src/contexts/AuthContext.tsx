@@ -62,12 +62,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       console.log('AuthContext: Profile fetched successfully', data);
+      console.log('AuthContext: Profile role is:', data.role);
+      console.log('AuthContext: Is superuser?', data.role === 'superuser');
       setProfile(data);
-      setLoading(false); // Ensure loading is set to false after profile is fetched
+      setLoading(false);
     } catch (error) {
       console.error('AuthContext: Error fetching profile:', error);
       setProfile(null);
-      setLoading(false); // Set loading to false even if there's an error
+      setLoading(false);
     }
   };
 
@@ -230,6 +232,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
+  const isSuperuserCheck = profile?.role === 'superuser';
+  const isAdminCheck = profile?.role === 'administrator' || profile?.role === 'superuser';
+  
+  console.log('AuthContext: Role checks', { 
+    profileRole: profile?.role, 
+    isSuperuser: isSuperuserCheck, 
+    isAdmin: isAdminCheck 
+  });
+
   const value = {
     user,
     profile,
@@ -243,8 +254,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     verifyOtp,
     updatePassword,
     isAuthenticated: !!user,
-    isSuperuser: profile?.role === 'superuser',
-    isAdministrator: profile?.role === 'administrator' || profile?.role === 'superuser'
+    isSuperuser: isSuperuserCheck,
+    isAdministrator: isAdminCheck
   };
 
   return (
