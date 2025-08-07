@@ -247,10 +247,23 @@ export const useSupabaseData = () => {
   const addProduct = async (productData: Omit<Product, 'id' | 'created_at' | 'created_by' | 'tenant_id'>) => {
     if (!profile) return { error: 'User not authenticated' };
 
+    // Check data limit before creating
+    const tenantId = profile.tenant_id || profile.id;
+    const limitCheck = await checkDataLimit(tenantId);
+    
+    if (!limitCheck.canCreate) {
+      toast({
+        title: "Limite Atingido",
+        description: "Você atingiu o limite mensal de dados. Entre em contato com o seu administrador para aumentar o limite.",
+        variant: "destructive",
+      });
+      return { error: 'Data limit exceeded' };
+    }
+
     const newProduct = {
       ...productData,
       created_by: profile.id,
-      tenant_id: profile.tenant_id || profile.id,
+      tenant_id: tenantId,
     };
 
     const { data, error } = await supabase
@@ -328,10 +341,23 @@ export const useSupabaseData = () => {
   const addCustomer = async (customerData: Omit<Customer, 'id' | 'created_at' | 'created_by' | 'tenant_id'>) => {
     if (!profile) return { error: 'User not authenticated' };
 
+    // Check data limit before creating
+    const tenantId = profile.tenant_id || profile.id;
+    const limitCheck = await checkDataLimit(tenantId);
+    
+    if (!limitCheck.canCreate) {
+      toast({
+        title: "Limite Atingido",
+        description: "Você atingiu o limite mensal de dados. Entre em contato com o seu administrador para aumentar o limite.",
+        variant: "destructive",
+      });
+      return { error: 'Data limit exceeded' };
+    }
+
     const newCustomer = {
       ...customerData,
       created_by: profile.id,
-      tenant_id: profile.tenant_id || profile.id,
+      tenant_id: tenantId,
     };
 
     const { data, error } = await supabase
@@ -416,6 +442,19 @@ export const useSupabaseData = () => {
   }) => {
     if (!profile) return { error: 'User not authenticated' };
 
+    // Check data limit before creating
+    const tenantId = profile.tenant_id || profile.id;
+    const limitCheck = await checkDataLimit(tenantId);
+    
+    if (!limitCheck.canCreate) {
+      toast({
+        title: "Limite Atingido",
+        description: "Você atingiu o limite mensal de dados. Entre em contato com o seu administrador para aumentar o limite.",
+        variant: "destructive",
+      });
+      return { error: 'Data limit exceeded' };
+    }
+
     try {
       // First, create the sale
       const newSale = {
@@ -425,7 +464,7 @@ export const useSupabaseData = () => {
         total_profit: saleData.total_profit,
         total_vat_amount: saleData.total_vat_amount,
         created_by: profile.id,
-        tenant_id: profile.tenant_id || profile.id,
+        tenant_id: tenantId,
       };
 
       const { data: sale, error: saleError } = await supabase

@@ -69,6 +69,28 @@ const UserManagement = () => {
       return;
     }
 
+    // Check user limit before creating (only for regular users, not administrators)
+    if (newUser.role === 'user') {
+      try {
+        const tenantId = profile?.tenant_id || profile?.id;
+        const { data: canCreate, error: limitError } = await supabase
+          .rpc('check_user_limit', {
+            tenant_uuid: tenantId
+          });
+
+        if (limitError || !canCreate) {
+          toast({
+            title: "Limite de Usuários Atingido",
+            description: "Você atingiu o limite mensal de usuários. Entre em contato com o seu administrador para aumentar o limite.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking user limit:', error);
+      }
+    }
+
     try {
       const { error } = await createUser(
         newUser.email,
