@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, ArrowLeft } from 'lucide-react';
+import OtpPasswordReset from './OtpPasswordReset';
 
 interface ForgotPasswordProps {
   onBack: () => void;
@@ -33,8 +34,8 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
     } else {
       setEmailSent(true);
       toast({
-        title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para o link de redefinição de senha.",
+        title: "Código enviado!",
+        description: "Verifique sua caixa de entrada para o código de 6 dígitos.",
       });
     }
 
@@ -42,40 +43,7 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
   };
 
   if (emailSent) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <Mail className="h-12 w-12 text-primary" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Email Enviado!</CardTitle>
-          <CardDescription>
-            Verifique sua caixa de entrada e clique no link para redefinir sua senha.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full" 
-              onClick={onBack}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar ao Login
-            </Button>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              className="w-full" 
-              onClick={() => setEmailSent(false)}
-            >
-              Enviar novamente
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <OtpPasswordReset email={email} onBack={onBack} />;
   }
 
   return (
@@ -86,7 +54,7 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
         </div>
         <CardTitle className="text-2xl font-bold">Esqueceu a Senha?</CardTitle>
         <CardDescription>
-          Digite seu email para receber um link de redefinição de senha
+          Digite seu email para receber um código de 6 dígitos
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -103,7 +71,7 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Enviando..." : "Enviar Link de Redefinição"}
+            {isLoading ? "Enviando..." : "Enviar Código"}
           </Button>
           <Button 
             type="button" 

@@ -183,16 +183,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
-      console.log('AuthContext: Sending password reset email to', email);
-      // Revert back to traditional password reset email
+      console.log('AuthContext: Sending OTP for password reset to', email);
+      // Use OTP for password reset
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       
-      console.log('AuthContext: Password reset email send result', { error });
+      console.log('AuthContext: OTP send result', { error });
       return { error: error?.message ?? null };
     } catch (error) {
-      console.error('AuthContext: Error sending password reset email', error);
+      console.error('AuthContext: Error sending OTP', error);
       return { error: 'An unexpected error occurred' };
     }
   };
