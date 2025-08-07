@@ -65,7 +65,7 @@ const SaleItemForm: React.FC<SaleItemFormProps> = ({ products, items, onItemsCha
     if (item.includes_vat) {
       item.vat_amount = subtotal * 0.16; // 16% VAT
       item.vatAmount = item.vat_amount;
-      item.total = subtotal;
+      item.total = subtotal + item.vat_amount; // Subtotal + IVA
     } else {
       item.vat_amount = 0;
       item.vatAmount = 0;
