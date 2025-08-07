@@ -104,6 +104,33 @@ export type Database = {
           },
         ]
       }
+      data_usage_log: {
+        Row: {
+          action_type: string
+          created_at: string
+          created_by: string
+          data_type: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          created_by: string
+          data_type: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          created_by?: string
+          data_type?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null
@@ -336,6 +363,39 @@ export type Database = {
           },
         ]
       }
+      tenant_limits: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_month_usage: number
+          id: string
+          limit_period_start: string
+          monthly_data_limit: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_month_usage?: number
+          id?: string
+          limit_period_start?: string
+          monthly_data_limit?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_month_usage?: number
+          id?: string
+          limit_period_start?: string
+          monthly_data_limit?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -344,6 +404,10 @@ export type Database = {
       assign_user_to_admin_tenant: {
         Args: { user_email: string; admin_email: string }
         Returns: undefined
+      }
+      check_data_limit: {
+        Args: { tenant_uuid: string; data_type_param: string }
+        Returns: boolean
       }
       get_administrators: {
         Args: Record<PropertyKey, never>
@@ -399,6 +463,10 @@ export type Database = {
       }
       promote_to_superuser: {
         Args: { user_email: string }
+        Returns: undefined
+      }
+      reset_monthly_usage: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
