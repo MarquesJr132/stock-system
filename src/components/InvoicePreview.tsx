@@ -117,27 +117,28 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
           </p>
         </DialogHeader>
 
-        <div id="invoice-content" className="relative space-y-6 bg-white p-8" style={{ color: '#000', fontFamily: 'Arial, sans-serif' }}>
+        <div id="invoice-content" className="relative space-y-4 bg-white p-6" style={{ color: '#000', fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
           {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-            <div className="text-gray-200 text-9xl font-bold transform rotate-45 opacity-30 select-none">
+            <div className="text-gray-200 text-6xl font-bold transform rotate-45 opacity-20 select-none">
               ORIGINAL
             </div>
           </div>
           
           {/* Content with higher z-index */}
           <div className="relative z-10">
-          <div className="bg-slate-700 text-white text-center py-6">
-            <h1 className="text-3xl font-bold mb-2">SISTEMA DE STOCK</h1>
-            <p className="text-lg">FACTURA DE VENDA</p>
-          </div>
+            {/* Header */}
+            <div className="bg-slate-700 text-white text-center py-4">
+              <h1 className="text-xl font-bold mb-1">SISTEMA DE STOCK</h1>
+              <p className="text-sm">FACTURA DE VENDA</p>
+            </div>
 
-            {/* Company and Invoice Details */}
-            <div className="grid grid-cols-2 gap-8 mt-8">
+            {/* Company, Invoice Details and Customer Info in 3 columns */}
+            <div className="grid grid-cols-3 gap-4 mt-4">
               {/* Company Info */}
               <div>
-                <h3 className="font-bold text-slate-700 mb-4 text-lg">EMPRESA:</h3>
-                <div className="space-y-1 text-sm text-black">
+                <h3 className="font-bold text-slate-700 mb-2 text-sm">EMPRESA:</h3>
+                <div className="space-y-0.5 text-xs text-black">
                   <p className="font-bold">Sistema de Gestão de Stock Lda.</p>
                   <p>Maputo, Moçambique</p>
                   <p>Tel: +258 84 123 4567</p>
@@ -148,21 +149,19 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
 
               {/* Invoice Details */}
               <div>
-                <h3 className="font-bold text-slate-700 mb-4 text-lg">DETALHES DA FACTURA:</h3>
-                <div className="space-y-1 text-sm text-black">
+                <h3 className="font-bold text-slate-700 mb-2 text-sm">DETALHES DA FACTURA:</h3>
+                <div className="space-y-0.5 text-xs text-black">
                   <p><span className="font-semibold">Factura Nº:</span> #{sale.id.slice(-8)}</p>
                   <p><span className="font-semibold">Data:</span> {formatDateTime(sale.created_at)}</p>
                   <p><span className="font-semibold">Método:</span> {formatPaymentMethod(sale.payment_method)}</p>
                 </div>
               </div>
-            </div>
 
-            {/* Customer Info */}
-            <div className="mt-8">
-              <h3 className="font-bold text-slate-700 mb-4 text-lg">CLIENTE:</h3>
-              {customer ? (
-                <div className="grid grid-cols-2 gap-8 text-sm text-black">
-                  <div className="space-y-1">
+              {/* Customer Info */}
+              <div>
+                <h3 className="font-bold text-slate-700 mb-2 text-sm">CLIENTE:</h3>
+                {customer ? (
+                  <div className="space-y-0.5 text-xs text-black">
                     <p><span className="font-semibold">Nome:</span> {customer.name}</p>
                     <p><span className="font-semibold">Email:</span> {customer.email || 'N/A'}</p>
                     <p><span className="font-semibold">Telefone:</span> {customer.phone || 'N/A'}</p>
@@ -171,98 +170,98 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                       <p><span className="font-semibold">NUIT:</span> {customer.nuit}</p>
                     )}
                   </div>
-                </div>
-              ) : (
-                <div className="text-black">
-                  <p><span className="font-semibold">Nome:</span> Cliente Anônimo</p>
-                </div>
-              )}
+                ) : (
+                  <div className="text-black text-xs">
+                    <p><span className="font-semibold">Nome:</span> Cliente Anônimo</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Products Table */}
-            <div className="mt-8">
+            <div className="mt-4">
               <table className="w-full border-collapse border border-slate-400">
                 <thead>
                   <tr className="bg-slate-700 text-white">
-                    <th className="border border-slate-400 p-3 text-left font-bold">PRODUTO</th>
-                    <th className="border border-slate-400 p-3 text-center font-bold">QTD</th>
-                    <th className="border border-slate-400 p-3 text-center font-bold">PREÇO UNIT.</th>
-                    <th className="border border-slate-400 p-3 text-center font-bold">IVA</th>
-                    <th className="border border-slate-400 p-3 text-center font-bold">SUBTOTAL</th>
-                    <th className="border border-slate-400 p-3 text-center font-bold">TOTAL</th>
+                    <th className="border border-slate-400 p-2 text-left font-bold text-xs">PRODUTO</th>
+                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">QTD</th>
+                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">PREÇO UNIT.</th>
+                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">IVA</th>
+                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">SUBTOTAL</th>
+                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">TOTAL</th>
                   </tr>
                 </thead>
                 <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="border border-slate-400 p-8 text-center text-black">
-                      Carregando itens da venda...
-                    </td>
-                  </tr>
-                ) : saleItems.length > 0 ? (
-                  saleItems.map((item, index) => {
-                    const product = products.find(p => p.id === item.product_id);
-                    return (
-                      <tr key={index} className="text-black">
-                        <td className="border border-slate-400 p-3">
-                          <div>
-                            <p className="font-semibold">{product?.name || "Produto não encontrado"}</p>
-                            {product?.description && (
-                              <p className="text-xs text-gray-600">{product.description}</p>
-                            )}
-                          </div>
-                        </td>
-                        <td className="border border-slate-400 p-3 text-center font-semibold">{item.quantity}</td>
-                        <td className="border border-slate-400 p-3 text-center">{formatCurrency(item.unit_price)}</td>
-                        <td className="border border-slate-400 p-3 text-center">
-                          {item.includes_vat ? 'SIM' : 'NÃO'}
-                        </td>
-                        <td className="border border-slate-400 p-3 text-center">{formatCurrency(item.subtotal)}</td>
-                        <td className="border border-slate-400 p-3 text-center font-semibold">{formatCurrency(item.total)}</td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="border border-slate-400 p-8 text-center text-black">
-                      Nenhum item encontrado para esta venda.
-                    </td>
-                  </tr>
-                )}
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="border border-slate-400 p-4 text-center text-black text-xs">
+                        Carregando itens da venda...
+                      </td>
+                    </tr>
+                  ) : saleItems.length > 0 ? (
+                    saleItems.map((item, index) => {
+                      const product = products.find(p => p.id === item.product_id);
+                      return (
+                        <tr key={index} className="text-black">
+                          <td className="border border-slate-400 p-2">
+                            <div>
+                              <p className="font-semibold text-xs">{product?.name || "Produto não encontrado"}</p>
+                              {product?.description && (
+                                <p className="text-xs text-gray-600">{product.description}</p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="border border-slate-400 p-2 text-center font-semibold text-xs">{item.quantity}</td>
+                          <td className="border border-slate-400 p-2 text-center text-xs">{formatCurrency(item.unit_price)}</td>
+                          <td className="border border-slate-400 p-2 text-center text-xs">
+                            {item.includes_vat ? 'SIM' : 'NÃO'}
+                          </td>
+                          <td className="border border-slate-400 p-2 text-center text-xs">{formatCurrency(item.subtotal)}</td>
+                          <td className="border border-slate-400 p-2 text-center font-semibold text-xs">{formatCurrency(item.total)}</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="border border-slate-400 p-4 text-center text-black text-xs">
+                        Nenhum item encontrado para esta venda.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
 
             {/* Totals */}
-            <div className="mt-8 flex justify-end">
-              <div className="w-80">
+            <div className="mt-4 flex justify-end">
+              <div className="w-64">
                 {sale.total_vat_amount > 0 && (
-                  <div className="flex justify-between py-2 text-black">
+                  <div className="flex justify-between py-1 text-black text-sm">
                     <span className="font-semibold">SUBTOTAL:</span>
                     <span className="font-semibold">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
                   </div>
                 )}
                 
                 {sale.total_vat_amount > 0 && (
-                  <div className="flex justify-between py-2 text-black">
+                  <div className="flex justify-between py-1 text-black text-sm">
                     <span className="font-semibold">IVA TOTAL:</span>
                     <span className="font-semibold">{formatCurrency(sale.total_vat_amount)}</span>
                   </div>
                 )}
                 
-                <div className="bg-slate-700 text-white p-4 mt-4">
+                <div className="bg-slate-700 text-white p-3 mt-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold">TOTAL:</span>
-                    <span className="text-2xl font-bold">{formatCurrency(sale.total_amount)}</span>
+                    <span className="text-sm font-bold">TOTAL:</span>
+                    <span className="text-lg font-bold">{formatCurrency(sale.total_amount)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="text-center mt-12 text-black">
-              <p className="font-semibold mb-2">Obrigado pela sua preferência!</p>
-              <p className="text-sm mb-4">Esta factura foi gerada automaticamente pelo Sistema de Stock.</p>
+            <div className="text-center mt-6 text-black">
+              <p className="font-semibold mb-1 text-sm">Obrigado pela sua preferência!</p>
+              <p className="text-xs mb-2">Esta factura foi gerada automaticamente pelo Sistema de Stock.</p>
               <p className="text-xs text-gray-600">Gerado em: {new Date().toLocaleString('pt-MZ')}</p>
             </div>
           </div>
