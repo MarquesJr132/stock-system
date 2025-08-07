@@ -657,44 +657,18 @@ export const useSupabaseData = () => {
     }
 
     try {
-      // First check if record exists
-      const { data: existingRecord, error: checkError } = await supabase
+      console.log('Updating tenant limits for:', tenantId, 'with data:', limitsData);
+      
+      // Use a direct update with ON CONFLICT to avoid race conditions
+      const { data, error } = await supabase
         .from('tenant_limits')
-        .select('id')
+        .update(limitsData)
         .eq('tenant_id', tenantId)
+        .select()
         .maybeSingle();
 
-      if (checkError) {
-        console.error('Error checking existing record:', checkError);
-        throw checkError;
-      }
-
-      let result;
-      if (existingRecord) {
-        // Record exists, update it
-        result = await supabase
-          .from('tenant_limits')
-          .update(limitsData)
-          .eq('tenant_id', tenantId)
-          .select()
-          .single();
-      } else {
-        // Record doesn't exist, create new one
-        result = await supabase
-          .from('tenant_limits')
-          .insert({
-            tenant_id: tenantId,
-            ...limitsData,
-            created_by: profile.id
-          })
-          .select()
-          .single();
-      }
-
-      const { data, error } = result;
-
       if (error) {
-        console.error('Error updating/creating tenant limits:', error);
+        console.error('Error updating tenant limits:', error);
         toast({
           title: "Erro",
           description: "Erro ao atualizar limites do tenant: " + error.message,
@@ -703,6 +677,36 @@ export const useSupabaseData = () => {
         return { error: error.message };
       }
 
+      if (!data) {
+        // No record was updated, this means it doesn't exist - create it
+        const { data: insertData, error: insertError } = await supabase
+          .from('tenant_limits')
+          .insert({
+            tenant_id: tenantId,
+            ...limitsData,
+            created_by: profile.id
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Error inserting tenant limits:', insertError);
+          toast({
+            title: "Erro",
+            description: "Erro ao criar limites do tenant: " + insertError.message,
+            variant: "destructive",
+          });
+          return { error: insertError.message };
+        }
+
+        toast({
+          title: "Sucesso",
+          description: "Limites do tenant criados com sucesso",
+        });
+        return { data: insertData };
+      }
+
+      console.log('Tenant limits updated successfully:', data);
       toast({
         title: "Sucesso",
         description: "Limites do tenant atualizados com sucesso",
@@ -743,30 +747,46 @@ export const useSupabaseData = () => {
   };
 
   const checkUserLimit = async (tenantId: string) => {
-    const { data, error } = await supabase
-      .rpc('check_user_limit', {
-        tenant_uuid: tenantId
-      });
+    try {
+      console.log('Checking user limit for tenant:', tenantId);
+      const { data, error } = await supabase
+        .rpc('check_user_limit', {
+          tenant_uuid: tenantId
+        });
 
-    if (error) {
+      console.log('User limit check result:', { data, error, tenantId });
+      if (error) {
+        console.error('Error checking user limit:', error);
+        return { canCreate: false, error: error.message };
+      }
+
+      return { canCreate: data };
+    } catch (error: any) {
+      console.error('Exception checking user limit:', error);
       return { canCreate: false, error: error.message };
     }
-
-    return { canCreate: data };
   };
 
   const checkDataLimit = async (tenantId: string) => {
-    const { data, error } = await supabase
-      .rpc('check_data_limit', {
-        tenant_uuid: tenantId,
-        data_type_param: 'check'
-      });
+    try {
+      console.log('Checking data limit for tenant:', tenantId);
+      const { data, error } = await supabase
+        .rpc('check_data_limit', {
+          tenant_uuid: tenantId,
+          data_type_param: 'check'
+        });
 
-    if (error) {
+      console.log('Data limit check result:', { data, error, tenantId });
+      if (error) {
+        console.error('Error checking data limit:', error);
+        return { canCreate: false, error: error.message };
+      }
+
+      return { canCreate: data };
+    } catch (error: any) {
+      console.error('Exception checking data limit:', error);
       return { canCreate: false, error: error.message };
     }
-
-    return { canCreate: data };
   };
 
   // Helper functions for data analysis
