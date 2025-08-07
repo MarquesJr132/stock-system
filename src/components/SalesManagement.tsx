@@ -86,7 +86,7 @@ const SalesManagement = () => {
       'Dinheiro': 'Dinheiro',
       'Cartão': 'Cartão',
       'Transferência': 'Transferência',
-      'Mbway': 'MBWay'
+      'Mpesa': 'Mpesa'
     };
     return methods[method] || method;
   };
@@ -160,7 +160,7 @@ const SalesManagement = () => {
                         <SelectItem value="Dinheiro">💵 Dinheiro</SelectItem>
                         <SelectItem value="Cartão">💳 Cartão</SelectItem>
                         <SelectItem value="Transferência">🏦 Transferência</SelectItem>
-                        <SelectItem value="Mbway">📱 MBWay</SelectItem>
+                        <SelectItem value="Mpesa">📱 Mpesa</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -265,7 +265,7 @@ const SalesManagement = () => {
                     {sale.payment_method === "Dinheiro" && "💵"}
                     {sale.payment_method === "Cartão" && "💳"}
                     {sale.payment_method === "Transferência" && "🏦"}
-                    {sale.payment_method === "Mbway" && "📱"}
+                    {sale.payment_method === "Mpesa" && "📱"}
                     {" "}
                     {formatPaymentMethod(sale.payment_method)}
                   </Badge>
