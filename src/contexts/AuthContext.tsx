@@ -55,12 +55,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('AuthContext: Error fetching profile', error);
-        throw error;
+        setProfile(null);
+        setLoading(false);
+        return;
       }
+
+      if (!data) {
+        console.log('AuthContext: No profile found for user', userId);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
       console.log('AuthContext: Profile fetched successfully', data);
       console.log('AuthContext: Profile role is:', data.role);
       console.log('AuthContext: Is superuser?', data.role === 'superuser');
