@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { KeyRound, Eye, EyeOff } from 'lucide-react';
 
 const ResetPassword = () => {
@@ -14,25 +15,93 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isValidSession, setIsValidSession] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { updatePassword } = useAuth();
+  const { updatePassword, session } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have the required tokens for password reset
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    
-    if (!accessToken || !refreshToken) {
-      toast({
-        title: "Link inválido",
-        description: "Este link de redefinição de senha é inválido ou expirou.",
-        variant: "destructive",
-      });
-      navigate('/');
+    const handlePasswordReset = async () => {
+      console.log('Current URL params:', Object.fromEntries(searchParams.entries()));
+      console.log('Current session:', session);
+      
+      // Check if we have the recovery session
+      const type = searchParams.get('type');
+      const tokenHash = searchParams.get('token_hash');
+      
+      console.log('Type:', type, 'Token hash:', tokenHash);
+      
+      if (type === 'recovery' && tokenHash) {
+        try {
+          // Verify the session with Supabase
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery'
+          });
+          
+          console.log('Verify OTP result:', { data, error });
+          
+          if (error) {
+            console.error('Session verification failed:', error);
+            toast({
+              title: "Link inválido",
+              description: "Este link de redefinição de senha é inválido ou expirou.",
+              variant: "destructive",
+            });
+            navigate('/');
+          } else {
+            console.log('Session verified successfully');
+            setIsValidSession(true);
+          }
+        } catch (error) {
+          console.error('Error verifying session:', error);
+          toast({
+            title: "Erro",
+            description: "Ocorreu um erro ao verificar o link.",
+            variant: "destructive",
+          });
+          navigate('/');
+        }
+      } else if (session) {
+        // If there's already an active session, allow password reset
+        console.log('Active session found, allowing password reset');
+        setIsValidSession(true);
+      } else {
+        console.log('No valid recovery parameters or session found');
+        toast({
+          title: "Link inválido",
+          description: "Este link de redefinição de senha é inválido ou expirou.",
+          variant: "destructive",
+        });
+        navigate('/');
+      }
+      
+      setSessionChecked(true);
+    };
+
+    if (!sessionChecked) {
+      handlePasswordReset();
     }
-  }, [searchParams, navigate, toast]);
+  }, [searchParams, navigate, toast, session, sessionChecked]);
+
+  // Show loading while checking session
+  if (!sessionChecked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Verificando link...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the form if the session is not valid
+  if (!isValidSession) {
+    return null;
+  }
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
