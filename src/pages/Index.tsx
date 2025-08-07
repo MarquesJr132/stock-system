@@ -12,9 +12,10 @@ import StockMovements from "@/components/StockMovements";
 import UserManagement from "@/components/UserManagement";
 import ProfileManagement from "@/components/ProfileManagement";
 import SuperuserManagement from "@/components/SuperuserManagement";
+import CompanySettings from "@/components/CompanySettings";
 import Login from "@/components/Login";
 import { useAuth } from "@/contexts/AuthContext";
-import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, LogOut, Menu, User as UserIcon } from "lucide-react";
+import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, LogOut, Menu, User as UserIcon, Building } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -116,7 +117,10 @@ const Index = () => {
                     { value: "movements", icon: History, label: "Movimentos" },
                     { value: "reports", icon: TrendingUp, label: "Relatórios" },
                     { value: "profile", icon: UserIcon, label: "Perfil" },
-                    ...(isAdministrator && !isSuperuser ? [{ value: "users", icon: Settings, label: "Usuários" }] : [])
+                    ...(isAdministrator && !isSuperuser ? [
+                      { value: "company", icon: Building, label: "Empresa" },
+                      { value: "users", icon: Settings, label: "Usuários" }
+                    ] : [])
                   ].map((item) => (
                     <button
                       key={item.value}
@@ -140,7 +144,7 @@ const Index = () => {
           )}
 
           {/* Desktop Navigation */}
-          <TabsList className={`hidden lg:grid w-full ${isAdministrator && !isSuperuser ? 'grid-cols-8' : 'grid-cols-7'} lg:w-auto`}>
+          <TabsList className={`hidden lg:grid w-full ${isAdministrator && !isSuperuser ? 'grid-cols-9' : 'grid-cols-7'} lg:w-auto`}>
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Dashboard
@@ -170,10 +174,16 @@ const Index = () => {
               Perfil
             </TabsTrigger>
             {isAdministrator && !isSuperuser && (
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Usuários
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="company" className="flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Empresa
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Usuários
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
@@ -206,9 +216,15 @@ const Index = () => {
           </TabsContent>
 
           {isAdministrator && !isSuperuser && (
-            <TabsContent value="users" className="space-y-6">
-              <UserManagement />
-            </TabsContent>
+            <>
+              <TabsContent value="company" className="space-y-6">
+                <CompanySettings />
+              </TabsContent>
+              
+              <TabsContent value="users" className="space-y-6">
+                <UserManagement />
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </div>

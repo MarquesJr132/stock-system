@@ -61,11 +61,24 @@ export interface SaleItem {
   includesVAT?: boolean;
 }
 
+export interface CompanySettings {
+  id: string;
+  tenant_id: string;
+  company_name: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  nuit: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useSupabaseData = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
+  const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [loading, setLoading] = useState(true);
   const { profile, user } = useAuth();
   const { toast } = useToast();
@@ -84,7 +97,8 @@ export const useSupabaseData = () => {
         fetchProducts(),
         fetchCustomers(),
         fetchSales(),
-        fetchSaleItems()
+        fetchSaleItems(),
+        fetchCompanySettings()
       ]);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -165,6 +179,21 @@ export const useSupabaseData = () => {
       return [];
     }
     return data || [];
+  };
+
+  const fetchCompanySettings = async () => {
+    const { data, error } = await supabase
+      .from('company_settings')
+      .select('*')
+      .single();
+
+    if (error) {
+      if (error.code !== 'PGRST116') { // Not found error
+        console.error('Error fetching company settings:', error);
+      }
+      return;
+    }
+    setCompanySettings(data);
   };
 
   // CRUD operations for products
@@ -416,6 +445,57 @@ export const useSupabaseData = () => {
     }
   };
 
+  const updateCompanySettings = async (settingsData: Partial<CompanySettings>) => {
+    if (!profile) return { error: 'User not authenticated' };
+
+    // First try to update existing settings
+    const { data: existingData } = await supabase
+      .from('company_settings')
+      .select('id')
+      .eq('tenant_id', profile.tenant_id || profile.id)
+      .single();
+
+    let result;
+    if (existingData) {
+      // Update existing
+      result = await supabase
+        .from('company_settings')
+        .update(settingsData)
+        .eq('tenant_id', profile.tenant_id || profile.id)
+        .select()
+        .single();
+    } else {
+      // Create new
+      const newSettings = {
+        ...settingsData,
+        tenant_id: profile.tenant_id || profile.id,
+      };
+      result = await supabase
+        .from('company_settings')
+        .insert([newSettings])
+        .select()
+        .single();
+    }
+
+    const { data, error } = result;
+
+    if (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar configurações da empresa",
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+
+    setCompanySettings(data);
+    toast({
+      title: "Sucesso",
+      description: "Configurações da empresa atualizadas com sucesso",
+    });
+    return { data };
+  };
+
   // Helper functions for data analysis
   const getTotalStock = () => {
     return products.reduce((total, product) => total + product.quantity, 0);
@@ -480,6 +560,7 @@ export const useSupabaseData = () => {
     customers,
     sales,
     saleItems,
+    companySettings,
     loading,
     
     // CRUD operations
@@ -490,6 +571,7 @@ export const useSupabaseData = () => {
     updateCustomer,
     deleteCustomer,
     addSale,
+    updateCompanySettings,
     
     // Helper functions
     getTotalStock,

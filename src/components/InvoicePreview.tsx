@@ -19,7 +19,7 @@ interface InvoicePreviewProps {
 }
 
 const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGeneratePDF }: InvoicePreviewProps) => {
-  const { fetchSaleItemsBySaleId } = useSupabaseData();
+  const { fetchSaleItemsBySaleId, companySettings } = useSupabaseData();
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -139,11 +139,11 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
               <div>
                 <h3 className="font-bold text-slate-700 mb-2 text-sm">EMPRESA:</h3>
                 <div className="space-y-0.5 text-xs text-black">
-                  <p className="font-bold">Sistema de Gestão de Stock Lda.</p>
-                  <p>Maputo, Moçambique</p>
-                  <p>Tel: +258 84 123 4567</p>
-                  <p>Email: info@stocksystem.co.mz</p>
-                  <p>NUIT: 123456789</p>
+                  <p className="font-bold">{companySettings?.company_name || 'Sistema de Gestão de Stock Lda.'}</p>
+                  <p>{companySettings?.address || 'Maputo, Moçambique'}</p>
+                  <p>Tel: {companySettings?.phone || '+258 84 123 4567'}</p>
+                  <p>Email: {companySettings?.email || 'info@stocksystem.co.mz'}</p>
+                  <p>NUIT: {companySettings?.nuit || '123456789'}</p>
                 </div>
               </div>
 
