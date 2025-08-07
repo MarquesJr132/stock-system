@@ -19,7 +19,7 @@ interface AuditLog {
   id: string;
   table_name: string;
   record_id: string;
-  action: 'INSERT' | 'UPDATE' | 'DELETE';
+  action: string;
   old_data?: any;
   new_data?: any;
   timestamp: string;
@@ -29,7 +29,7 @@ interface AuditLog {
   profiles?: {
     full_name: string;
     email: string;
-  };
+  } | null;
 }
 
 const actionMap = {
@@ -65,7 +65,16 @@ export const AuditLogs: React.FC = () => {
       const { data, error } = await supabase
         .from('audit_logs')
         .select(`
-          *,
+          id,
+          table_name,
+          record_id,
+          action,
+          old_data,
+          new_data,
+          timestamp,
+          user_id,
+          ip_address,
+          user_agent,
           profiles (
             full_name,
             email
@@ -75,7 +84,22 @@ export const AuditLogs: React.FC = () => {
         .limit(1000);
 
       if (error) throw error;
-      setLogs(data as AuditLog[] || []);
+      
+      const formattedLogs: AuditLog[] = (data || []).map(log => ({
+        id: log.id,
+        table_name: log.table_name,
+        record_id: log.record_id,
+        action: log.action,
+        old_data: log.old_data,
+        new_data: log.new_data,
+        timestamp: log.timestamp,
+        user_id: log.user_id,
+        ip_address: typeof log.ip_address === 'string' ? log.ip_address : null,
+        user_agent: log.user_agent,
+        profiles: Array.isArray(log.profiles) && log.profiles.length > 0 ? log.profiles[0] : null
+      }));
+      
+      setLogs(formattedLogs);
     } catch (error) {
       console.error('Erro ao buscar logs de auditoria:', error);
       toast({
