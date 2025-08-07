@@ -93,6 +93,7 @@ export const useSupabaseData = () => {
   };
 
   const fetchProducts = async () => {
+    console.log('Fetching products for user:', profile?.email, 'tenant:', profile?.tenant_id || profile?.id);
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -102,10 +103,12 @@ export const useSupabaseData = () => {
       console.error('Error fetching products:', error);
       throw error;
     }
+    console.log('Products fetched:', data?.length, 'products for tenant');
     setProducts(data || []);
   };
 
   const fetchCustomers = async () => {
+    console.log('Fetching customers for user:', profile?.email, 'tenant:', profile?.tenant_id || profile?.id);
     const { data, error } = await supabase
       .from('customers')
       .select('*')
@@ -115,6 +118,7 @@ export const useSupabaseData = () => {
       console.error('Error fetching customers:', error);
       throw error;
     }
+    console.log('Customers fetched:', data?.length, 'customers for tenant');
     setCustomers(data || []);
   };
 
