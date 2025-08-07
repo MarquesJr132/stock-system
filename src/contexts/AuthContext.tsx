@@ -24,6 +24,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   createUser: (email: string, password: string, fullName: string, role: 'administrator' | 'user') => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
+  verifyOtp: (email: string, token: string, type: 'recovery') => Promise<{ error: string | null }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
   isAuthenticated: boolean;
   isSuperuser: boolean;
@@ -155,7 +156,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: undefined, // Don't use redirect, we'll use OTP instead
+      });
+      
+      return { error: error?.message ?? null };
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const verifyOtp = async (email: string, token: string, type: 'recovery') => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type,
       });
       
       return { error: error?.message ?? null };
@@ -190,6 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     createUser,
     resetPassword,
+    verifyOtp,
     updatePassword,
     isAuthenticated: !!user,
     isSuperuser: profile?.role === 'superuser',
