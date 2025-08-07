@@ -21,7 +21,8 @@ const TenantLimitsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     selected_admin: "",
-    monthly_data_limit: 1000
+    monthly_data_limit: 1000,
+    monthly_user_limit: 10
   });
 
   useEffect(() => {
@@ -82,13 +83,14 @@ const TenantLimitsManagement = () => {
     
     console.log('Submitting tenant limit for admin:', selectedAdmin);
     const result = await updateTenantLimits(selectedAdmin.tenant_id || selectedAdmin.id, {
-      monthly_data_limit: formData.monthly_data_limit
+      monthly_data_limit: formData.monthly_data_limit,
+      monthly_user_limit: formData.monthly_user_limit
     });
 
     console.log('Update result:', result);
     if (result.data) {
       setDialogOpen(false);
-      setFormData({ selected_admin: "", monthly_data_limit: 1000 });
+      setFormData({ selected_admin: "", monthly_data_limit: 1000, monthly_user_limit: 10 });
       toast.success("Limite definido com sucesso!");
       // Recarregar dados após update
       setTimeout(() => {
@@ -133,7 +135,22 @@ const TenantLimitsManagement = () => {
           <p className="text-slate-600 dark:text-slate-400">
             Controle os limites de dados para cada administrador
           </p>
-        </div>
+              </div>
+
+              <div>
+                <Label htmlFor="monthly_user_limit">Limite Mensal de Usuários</Label>
+                <Input
+                  id="monthly_user_limit"
+                  type="number"
+                  value={formData.monthly_user_limit}
+                  onChange={(e) => setFormData(prev => ({ ...prev, monthly_user_limit: parseInt(e.target.value) }))}
+                  min={1}
+                  required
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Número máximo de usuários que podem ser criados por mês
+                </p>
+              </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -243,9 +260,10 @@ const TenantLimitsManagement = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Uso de Dados */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Uso Mensal:</span>
+                      <span className="text-sm text-muted-foreground">Dados Mensais:</span>
                       <span className="font-semibold">
                         {limit.current_month_usage} / {limit.monthly_data_limit}
                       </span>
@@ -262,6 +280,29 @@ const TenantLimitsManagement = () => {
                       <Badge variant={usagePercentage >= 90 ? "destructive" : usagePercentage >= 70 ? "secondary" : "default"}>
                         {usagePercentage}% usado
                       </Badge>
+                    </div>
+                  </div>
+
+                  {/* Uso de Usuários */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Usuários Mensais:</span>
+                      <span className="font-semibold">
+                        {limit.current_month_users || 0} / {limit.monthly_user_limit || 10}
+                      </span>
+                    </div>
+                    
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${getUsageColor(getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10))}`}
+                        style={{ width: `${Math.min(getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10), 100)}%` }}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <Badge variant={getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10) >= 90 ? "destructive" : getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10) >= 70 ? "secondary" : "default"}>
+                        {getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10)}% usado
+                      </Badge>
                       <span className="text-xs text-muted-foreground">
                         Período: {new Date(limit.limit_period_start).toLocaleDateString('pt-PT')}
                       </span>
@@ -269,11 +310,19 @@ const TenantLimitsManagement = () => {
                   </div>
 
                   <div className="pt-2 border-t">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Restante:</span>
-                      <span className="font-medium">
-                        {Math.max(0, limit.monthly_data_limit - limit.current_month_usage)} dados
-                      </span>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Dados restantes:</span>
+                        <span className="font-medium">
+                          {Math.max(0, limit.monthly_data_limit - limit.current_month_usage)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Usuários restantes:</span>
+                        <span className="font-medium">
+                          {Math.max(0, (limit.monthly_user_limit || 10) - (limit.current_month_users || 0))}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

@@ -66,6 +66,8 @@ export interface TenantLimits {
   tenant_id: string;
   monthly_data_limit: number;
   current_month_usage: number;
+  monthly_user_limit: number;
+  current_month_users: number;
   limit_period_start: string;
   created_at: string;
   updated_at: string;
@@ -664,6 +666,19 @@ export const useSupabaseData = () => {
     return { data };
   };
 
+  const checkUserLimit = async (tenantId: string) => {
+    const { data, error } = await supabase
+      .rpc('check_user_limit', {
+        tenant_uuid: tenantId
+      });
+
+    if (error) {
+      return { canCreate: false, error: error.message };
+    }
+
+    return { canCreate: data };
+  };
+
   const checkDataLimit = async (tenantId: string) => {
     const { data, error } = await supabase
       .rpc('check_data_limit', {
@@ -786,6 +801,7 @@ export const useSupabaseData = () => {
     updateTenantLimits,
     getAllTenantLimits,
     checkDataLimit,
+    checkUserLimit,
     
     // Helper functions
     getTotalStock,

@@ -368,9 +368,11 @@ export type Database = {
           created_at: string
           created_by: string
           current_month_usage: number
+          current_month_users: number
           id: string
           limit_period_start: string
           monthly_data_limit: number
+          monthly_user_limit: number
           tenant_id: string
           updated_at: string
         }
@@ -378,9 +380,11 @@ export type Database = {
           created_at?: string
           created_by: string
           current_month_usage?: number
+          current_month_users?: number
           id?: string
           limit_period_start?: string
           monthly_data_limit?: number
+          monthly_user_limit?: number
           tenant_id: string
           updated_at?: string
         }
@@ -388,9 +392,11 @@ export type Database = {
           created_at?: string
           created_by?: string
           current_month_usage?: number
+          current_month_users?: number
           id?: string
           limit_period_start?: string
           monthly_data_limit?: number
+          monthly_user_limit?: number
           tenant_id?: string
           updated_at?: string
         }
@@ -407,6 +413,10 @@ export type Database = {
       }
       check_data_limit: {
         Args: { tenant_uuid: string; data_type_param: string }
+        Returns: boolean
+      }
+      check_user_limit: {
+        Args: { tenant_uuid: string }
         Returns: boolean
       }
       get_administrators: {
@@ -451,6 +461,10 @@ export type Database = {
       }
       has_role: {
         Args: { check_role: Database["public"]["Enums"]["user_role"] }
+        Returns: boolean
+      }
+      increment_user_count: {
+        Args: { tenant_uuid: string }
         Returns: boolean
       }
       is_administrator: {
