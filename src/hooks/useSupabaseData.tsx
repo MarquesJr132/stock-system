@@ -61,6 +61,26 @@ export interface SaleItem {
   includesVAT?: boolean;
 }
 
+export interface TenantLimits {
+  id: string;
+  tenant_id: string;
+  monthly_data_limit: number;
+  current_month_usage: number;
+  limit_period_start: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
+export interface DataUsageLog {
+  id: string;
+  tenant_id: string;
+  data_type: string;
+  action_type: string;
+  created_at: string;
+  created_by: string;
+}
+
 export interface CompanySettings {
   id: string;
   tenant_id: string;
@@ -79,6 +99,8 @@ export const useSupabaseData = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
+  const [tenantLimits, setTenantLimits] = useState<TenantLimits | null>(null);
+  const [dataUsage, setDataUsage] = useState<DataUsageLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { profile, user } = useAuth();
   const { toast } = useToast();
@@ -93,13 +115,15 @@ export const useSupabaseData = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      await Promise.all([
-        fetchProducts(),
-        fetchCustomers(),
-        fetchSales(),
-        fetchSaleItems(),
-        fetchCompanySettings()
-      ]);
+    await Promise.all([
+      fetchProducts(),
+      fetchCustomers(), 
+      fetchSales(),
+      fetchSaleItems(),
+      fetchCompanySettings(),
+      fetchTenantLimits(),
+      fetchDataUsage()
+    ]);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -194,6 +218,27 @@ export const useSupabaseData = () => {
       return;
     }
     setCompanySettings(data);
+  };
+
+  const fetchTenantLimits = async () => {
+    const { data } = await supabase
+      .from('tenant_limits')
+      .select('*')
+      .eq('tenant_id', profile?.tenant_id || profile?.id)
+      .single();
+    
+    setTenantLimits(data);
+  };
+
+  const fetchDataUsage = async () => {
+    const { data } = await supabase
+      .from('data_usage_log')
+      .select('*')
+      .eq('tenant_id', profile?.tenant_id || profile?.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    
+    setDataUsage(data || []);
   };
 
   // CRUD operations for products
@@ -565,6 +610,75 @@ export const useSupabaseData = () => {
     return { data };
   };
 
+  const updateTenantLimits = async (tenantId: string, limitsData: Partial<TenantLimits>) => {
+    if (!profile?.role || profile.role !== 'superuser') {
+      return { error: 'Apenas superusers podem alterar limites' };
+    }
+
+    const { data, error } = await supabase
+      .from('tenant_limits')
+      .upsert({
+        tenant_id: tenantId,
+        ...limitsData,
+        created_by: profile.id
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar limites do tenant",
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+
+    toast({
+      title: "Sucesso",
+      description: "Limites do tenant atualizados com sucesso",
+    });
+    return { data };
+  };
+
+  const getAllTenantLimits = async () => {
+    if (!profile?.role || profile.role !== 'superuser') {
+      return { error: 'Apenas superusers podem ver todos os limites' };
+    }
+
+    const { data, error } = await supabase
+      .from('tenant_limits')
+      .select(`
+        *,
+        profiles!tenant_limits_tenant_id_fkey (
+          id,
+          full_name,
+          email
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { data };
+  };
+
+  const checkDataLimit = async (tenantId: string) => {
+    const { data, error } = await supabase
+      .rpc('check_data_limit', {
+        tenant_uuid: tenantId,
+        data_type_param: 'check'
+      });
+
+    if (error) {
+      return { canCreate: false, error: error.message };
+    }
+
+    return { canCreate: data };
+  };
+
   // Helper functions for data analysis
   const getTotalStock = () => {
     return products.reduce((total, product) => total + product.quantity, 0);
@@ -655,6 +769,8 @@ export const useSupabaseData = () => {
     sales,
     saleItems,
     companySettings,
+    tenantLimits,
+    dataUsage,
     loading,
     
     // CRUD operations
@@ -668,6 +784,9 @@ export const useSupabaseData = () => {
     updateSale,
     fetchSaleItemsBySaleId,
     updateCompanySettings,
+    updateTenantLimits,
+    getAllTenantLimits,
+    checkDataLimit,
     
     // Helper functions
     getTotalStock,

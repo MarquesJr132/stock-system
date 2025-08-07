@@ -12,8 +12,9 @@ import StockMovements from "@/components/StockMovements";
 import UserManagement from "@/components/UserManagement";
 import ProfileManagement from "@/components/ProfileManagement";
 import SuperuserManagement from "@/components/SuperuserManagement";
-import CompanySettings from "@/components/CompanySettings";
+import TenantLimitsManagement from "@/components/TenantLimitsManagement";
 import Login from "@/components/Login";
+import CompanySettings from "@/components/CompanySettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, LogOut, Menu, User as UserIcon, Building } from "lucide-react";
 
