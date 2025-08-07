@@ -232,36 +232,33 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
               </table>
             </div>
 
-            {/* Totals */}
-            <div className="mt-4 flex justify-end">
-              <div className="w-64">
-                {sale.total_vat_amount > 0 && (
-                  <div className="flex justify-between py-1 text-black text-sm">
-                    <span className="font-semibold">SUBTOTAL:</span>
-                    <span className="font-semibold">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
-                  </div>
-                )}
-                
-                {sale.total_vat_amount > 0 && (
-                  <div className="flex justify-between py-1 text-black text-sm">
-                    <span className="font-semibold">IVA TOTAL:</span>
-                    <span className="font-semibold">{formatCurrency(sale.total_vat_amount)}</span>
-                  </div>
-                )}
-                
-                <div className="bg-slate-700 text-white p-3 mt-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold">TOTAL:</span>
-                    <span className="text-lg font-bold">{formatCurrency(sale.total_amount)}</span>
-                  </div>
+            {/* Totals - Always at bottom */}
+            <div className="absolute bottom-20 right-6 w-64">
+              {sale.total_vat_amount > 0 && (
+                <div className="flex justify-between py-1 text-black text-sm">
+                  <span className="font-semibold">SUBTOTAL:</span>
+                  <span className="font-semibold">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
+                </div>
+              )}
+              
+              {sale.total_vat_amount > 0 && (
+                <div className="flex justify-between py-1 text-black text-sm">
+                  <span className="font-semibold">IVA TOTAL:</span>
+                  <span className="font-semibold">{formatCurrency(sale.total_vat_amount)}</span>
+                </div>
+              )}
+              
+              <div className="bg-slate-700 text-white p-3 mt-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-bold">TOTAL:</span>
+                  <span className="text-lg font-bold">{formatCurrency(sale.total_amount)}</span>
                 </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="text-center mt-6 text-black">
+            {/* Footer - Always at bottom */}
+            <div className="absolute bottom-6 left-0 right-0 text-center text-black">
               <p className="font-semibold mb-1 text-sm">Obrigado pela sua preferência!</p>
-              <p className="text-xs mb-2">Esta factura foi gerada automaticamente pelo Sistema de Stock.</p>
               <p className="text-xs text-gray-600">Gerado em: {new Date().toLocaleString('pt-MZ')}</p>
             </div>
           </div>
