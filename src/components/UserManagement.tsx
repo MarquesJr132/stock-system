@@ -91,7 +91,7 @@ const UserManagement = () => {
         description: `${newUser.fullName} foi adicionado ao sistema.`,
       });
 
-      setNewUser({ fullName: '', email: '', password: '', role: 'administrator' });
+      setNewUser({ fullName: '', email: '', password: '', role: isSuperuser ? 'administrator' : 'user' });
       setIsCreateDialogOpen(false);
       setTimeout(() => fetchUsers(), 1000);
     } catch (error) {
@@ -193,17 +193,19 @@ const UserManagement = () => {
             }
           </CardDescription>
             </div>
-            {isSuperuser && (
+            {(isSuperuser || profile?.role === 'administrator') && (
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Novo Administrador
+                    {isSuperuser ? 'Novo Administrador' : 'Novo Utilizador'}
                   </Button>
                 </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Criar Nova Conta de Administrador</DialogTitle>
+                  <DialogTitle>
+                    {isSuperuser ? 'Criar Nova Conta de Administrador' : 'Criar Novo Utilizador'}
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -237,17 +239,36 @@ const UserManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="role">Função</Label>
-                    <Input
-                      value="Administrador"
-                      disabled
-                      className="bg-muted"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Superutilizadores só podem criar contas de administrador
-                    </p>
+                    {isSuperuser ? (
+                      <>
+                        <Input
+                          value="Administrador"
+                          disabled
+                          className="bg-muted"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Superutilizadores só podem criar contas de administrador
+                        </p>
+                      </>
+                    ) : (
+                      <Select 
+                        value={newUser.role} 
+                        onValueChange={(value: 'administrator' | 'user') => 
+                          setNewUser({ ...newUser, role: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">Utilizador</SelectItem>
+                          <SelectItem value="administrator">Administrador</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <Button onClick={handleCreateUser} className="w-full">
-                    Criar Administrador
+                    {isSuperuser ? 'Criar Administrador' : 'Criar Utilizador'}
                   </Button>
                 </div>
               </DialogContent>
