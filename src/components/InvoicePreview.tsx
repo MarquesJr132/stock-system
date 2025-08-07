@@ -66,7 +66,9 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -117,20 +119,24 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
           </p>
         </DialogHeader>
 
-        <div id="invoice-content" className="relative space-y-4 bg-white p-6" style={{ color: '#000', fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
-          {/* Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
-            <div style={{ 
-              color: '#e5e7eb', 
-              fontSize: '120px', 
-              fontWeight: 'bold', 
-              transform: 'rotate(45deg)', 
-              opacity: 0.15,
-              userSelect: 'none',
-              pointerEvents: 'none'
-            }}>
-              ORIGINAL
-            </div>
+        <div id="invoice-content" className="relative space-y-4 bg-white p-6" style={{ color: '#000', fontFamily: 'Arial, sans-serif', fontSize: '12px', position: 'relative' }}>
+          {/* Watermark - visible in PDF */}
+          <div style={{ 
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) rotate(45deg)',
+            fontSize: '80px',
+            fontWeight: 'bold',
+            color: 'rgba(200, 200, 200, 0.2)',
+            fontFamily: 'Arial, sans-serif',
+            zIndex: 1,
+            pointerEvents: 'none',
+            userSelect: 'none',
+            width: '100%',
+            textAlign: 'center'
+          }}>
+            ORIGINAL
           </div>
           
           {/* Content with higher z-index */}
