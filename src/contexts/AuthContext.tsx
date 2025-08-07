@@ -7,7 +7,7 @@ export interface Profile {
   user_id: string;
   email: string;
   full_name: string;
-  role: 'superuser' | 'administrator' | 'user';
+  role: 'superuser' | 'administrator' | 'gerente' | 'user';
   tenant_id: string | null;
   created_by: string | null;
   created_at: string;
@@ -20,15 +20,16 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, fullName: string, role?: 'administrator' | 'user') => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, fullName: string, role?: 'administrator' | 'gerente' | 'user') => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  createUser: (email: string, password: string, fullName: string, role: 'administrator' | 'user') => Promise<{ error: string | null }>;
+  createUser: (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user') => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   verifyOtp: (email: string, token: string, type: 'recovery') => Promise<{ error: string | null }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
   isAuthenticated: boolean;
   isSuperuser: boolean;
   isAdministrator: boolean;
+  isGerente: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -148,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: 'administrator' | 'user' = 'user') => {
+  const signUp = async (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user' = 'user') => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -168,7 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const createUser = async (email: string, password: string, fullName: string, role: 'administrator' | 'user') => {
+  const createUser = async (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user') => {
     try {
       console.log('Creating user with role:', role);
       
@@ -287,12 +288,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const isSuperuserCheck = profile?.role === 'superuser';
-  const isAdminCheck = profile?.role === 'administrator' || profile?.role === 'superuser';
+  const isAdminCheck = profile?.role === 'administrator' || profile?.role === 'superuser' || profile?.role === 'gerente';
+  const isGerenteCheck = profile?.role === 'gerente';
   
   console.log('AuthContext: Role checks', { 
     profileRole: profile?.role, 
     isSuperuser: isSuperuserCheck, 
-    isAdmin: isAdminCheck 
+    isAdmin: isAdminCheck,
+    isGerente: isGerenteCheck
   });
 
   const value = {
@@ -309,7 +312,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updatePassword,
     isAuthenticated: !!user,
     isSuperuser: isSuperuserCheck,
-    isAdministrator: isAdminCheck
+    isAdministrator: isAdminCheck,
+    isGerente: isGerenteCheck
   };
 
   return (

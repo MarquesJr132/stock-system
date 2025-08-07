@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { Profile, useAuth } from '@/contexts/AuthContext';
-import { UserPlus, Users, Trash2, Shield, Crown, User } from 'lucide-react';
+import { UserPlus, Users, Trash2, Shield, Crown, User, Settings } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 const UserManagement = () => {
@@ -20,9 +20,9 @@ const UserManagement = () => {
     fullName: '',
     email: '',
     password: '',
-    role: 'administrator' as 'administrator' | 'user'
+    role: 'user' as 'administrator' | 'gerente' | 'user'
   });
-  const { profile, isSuperuser, createUser } = useAuth();
+  const { profile, isSuperuser, isAdministrator, isGerente, createUser } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,6 +69,29 @@ const UserManagement = () => {
       return;
     }
 
+    // Validate role permissions
+    if (!isSuperuser) {
+      // Administrators cannot create other administrators  
+      if (profile?.role === 'administrator' && newUser.role === 'administrator') {
+        toast({
+          title: "Erro de permissão",
+          description: "Administradores não podem criar outros administradores.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Gerentes cannot create any users
+      if (profile?.role === 'gerente') {
+        toast({
+          title: "Erro de permissão", 
+          description: "Gerentes não têm permissão para criar usuários.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     // Check user limit before creating (only for regular users, not administrators)
     if (newUser.role === 'user') {
       try {
@@ -113,7 +136,7 @@ const UserManagement = () => {
         description: `${newUser.fullName} foi adicionado ao sistema.`,
       });
 
-      setNewUser({ fullName: '', email: '', password: '', role: isSuperuser ? 'administrator' : 'user' });
+      setNewUser({ fullName: '', email: '', password: '', role: 'user' });
       setIsCreateDialogOpen(false);
       setTimeout(() => fetchUsers(), 1000);
     } catch (error) {
@@ -157,6 +180,7 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return <Crown className="h-4 w-4" />;
       case 'administrator': return <Shield className="h-4 w-4" />;
+      case 'gerente': return <Settings className="h-4 w-4" />;
       case 'user': return <User className="h-4 w-4" />;
       default: return <User className="h-4 w-4" />;
     }
@@ -166,6 +190,7 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return 'destructive';
       case 'administrator': return 'default';
+      case 'gerente': return 'outline';
       case 'user': return 'secondary';
       default: return 'secondary';
     }
@@ -175,10 +200,14 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return 'Superutilizador';
       case 'administrator': return 'Administrador';
+      case 'gerente': return 'Gerente';
       case 'user': return 'Utilizador';
       default: return role;
     }
   };
+
+  // Show create button only for users who can create users
+  const canCreateUsers = isSuperuser || (isAdministrator && !isGerente);
 
   // Filter users - superusers see all, others see only their tenant
   const filteredUsers = users.filter(user => {
@@ -211,11 +240,13 @@ const UserManagement = () => {
           <CardDescription>
             {isSuperuser 
               ? "Criar contas de administrador para gerir negócios"
+              : isGerente
+              ? "Visualizar utilizadores do seu negócio"
               : "Gerir utilizadores do seu negócio"
             }
           </CardDescription>
             </div>
-            {(isSuperuser || profile?.role === 'administrator') && (
+            {canCreateUsers && (
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -262,20 +293,24 @@ const UserManagement = () => {
                   <div>
                     <Label htmlFor="role">Função</Label>
                     {isSuperuser ? (
-                      <>
-                        <Input
-                          value="Administrador"
-                          disabled
-                          className="bg-muted"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Superutilizadores só podem criar contas de administrador
-                        </p>
-                      </>
+                      <Select 
+                        value={newUser.role} 
+                        onValueChange={(value: 'administrator' | 'gerente' | 'user') => 
+                          setNewUser({ ...newUser, role: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="administrator">Administrador</SelectItem>
+                          <SelectItem value="gerente">Gerente</SelectItem>
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <Select 
                         value={newUser.role} 
-                        onValueChange={(value: 'administrator' | 'user') => 
+                        onValueChange={(value: 'user') => 
                           setNewUser({ ...newUser, role: value })
                         }
                       >
@@ -284,13 +319,12 @@ const UserManagement = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="user">Utilizador</SelectItem>
-                          <SelectItem value="administrator">Administrador</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
                   </div>
                   <Button onClick={handleCreateUser} className="w-full">
-                    {isSuperuser ? 'Criar Administrador' : 'Criar Utilizador'}
+                    Criar {isSuperuser ? newUser.role === 'administrator' ? 'Administrador' : 'Gerente' : 'Utilizador'}
                   </Button>
                 </div>
               </DialogContent>
@@ -327,7 +361,7 @@ const UserManagement = () => {
                     {new Date(user.created_at).toLocaleDateString('pt-PT')}
                   </TableCell>
                   <TableCell>
-                    {(isSuperuser || (profile?.role === 'administrator' && user.role === 'user')) && 
+                    {(isSuperuser || (isAdministrator && user.role === 'user')) && 
                      user.user_id !== profile?.user_id && (
                       <Button
                         variant="destructive"
