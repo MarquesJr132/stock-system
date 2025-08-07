@@ -20,7 +20,8 @@ const CustomerManagement = () => {
     name: "",
     email: "",
     phone: "",
-    address: ""
+    address: "",
+    nuit: ""
   });
 
   const filteredCustomers = customers.filter(customer =>
@@ -34,7 +35,8 @@ const CustomerManagement = () => {
       name: "",
       email: "",
       phone: "",
-      address: ""
+      address: "",
+      nuit: ""
     });
     setEditingCustomer(null);
   };
@@ -45,7 +47,8 @@ const CustomerManagement = () => {
       name: customer.name,
       email: customer.email || "",
       phone: customer.phone || "",
-      address: customer.address || ""
+      address: customer.address || "",
+      nuit: customer.nuit || ""
     });
     setDialogOpen(true);
   };
@@ -62,7 +65,8 @@ const CustomerManagement = () => {
       name: formData.name,
       email: formData.email || null,
       phone: formData.phone || null,
-      address: formData.address || null
+      address: formData.address || null,
+      nuit: formData.nuit || null
     };
 
     if (editingCustomer) {
@@ -140,6 +144,15 @@ const CustomerManagement = () => {
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="+258 84 123 4567"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="nuit">NUIT</Label>
+                    <Input
+                      id="nuit"
+                      value={formData.nuit}
+                      onChange={(e) => setFormData(prev => ({ ...prev, nuit: e.target.value }))}
+                      placeholder="123456789"
                     />
                   </div>
                 </div>
@@ -239,6 +252,12 @@ const CustomerManagement = () => {
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
                       <span className="text-xs leading-relaxed">{customer.address}</span>
+                    </div>
+                  )}
+                  {customer.nuit && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 font-medium text-xs">NUIT:</span>
+                      <span className="font-mono text-xs">{customer.nuit}</span>
                     </div>
                   )}
                 </div>

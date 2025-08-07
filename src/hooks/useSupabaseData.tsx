@@ -25,6 +25,7 @@ export interface Customer {
   email: string | null;
   phone: string | null;
   address: string | null;
+  nuit: string | null;
   created_at: string;
   created_by: string;
   tenant_id: string;

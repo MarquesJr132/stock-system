@@ -167,6 +167,9 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                     <p><span className="font-semibold">Email:</span> {customer.email || 'N/A'}</p>
                     <p><span className="font-semibold">Telefone:</span> {customer.phone || 'N/A'}</p>
                     <p><span className="font-semibold">Endereço:</span> {customer.address || 'N/A'}</p>
+                    {customer.nuit && (
+                      <p><span className="font-semibold">NUIT:</span> {customer.nuit}</p>
+                    )}
                   </div>
                 </div>
               ) : (
