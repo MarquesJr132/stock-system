@@ -15,12 +15,13 @@ import InvoicePreview from "./InvoicePreview";
 import { formatCurrency } from "@/lib/currency";
 
 const SalesManagement = () => {
-  const { products, customers, sales, addSale } = useSupabaseData();
+  const { products, customers, sales, addSale, fetchSaleItemsBySaleId } = useSupabaseData();
   const { isAdministrator } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [editingSale, setEditingSale] = useState<any>(null);
   const [currentSale, setCurrentSale] = useState({
     customer_id: "",
     payment_method: "Dinheiro",
@@ -40,6 +41,36 @@ const SalesManagement = () => {
       payment_method: "Dinheiro",
       items: []
     });
+    setEditingSale(null);
+  };
+
+  const loadSaleForEdit = async (sale: any) => {
+    try {
+      const saleItems = await fetchSaleItemsBySaleId(sale.id);
+      const formattedItems = saleItems.map(item => {
+        const product = products.find(p => p.id === item.product_id);
+        return {
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal,
+          total: item.total,
+          vat_amount: item.vat_amount,
+          includes_vat: item.includes_vat
+        };
+      });
+      
+      setCurrentSale({
+        customer_id: sale.customer_id || "",
+        payment_method: sale.payment_method,
+        items: formattedItems
+      });
+      setEditingSale(sale);
+      setDialogOpen(true);
+    } catch (error) {
+      console.error('Error loading sale for edit:', error);
+      toast.error("Erro ao carregar venda para edição");
+    }
   };
 
   const calculateTotals = () => {
@@ -125,7 +156,7 @@ const SalesManagement = () => {
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Nova Venda</DialogTitle>
+                <DialogTitle>{editingSale ? 'Editar Venda' : 'Nova Venda'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,7 +207,7 @@ const SalesManagement = () => {
 
                 <div className="flex gap-2 pt-4">
                   <Button onClick={handleSaveSale} className="flex-1">
-                    Registrar Venda
+                    {editingSale ? 'Atualizar Venda' : 'Registrar Venda'}
                   </Button>
                   <Button 
                     type="button" 
@@ -230,14 +261,7 @@ const SalesManagement = () => {
                      <Button
                        variant="ghost"
                        size="sm"
-                       onClick={() => {
-                         setCurrentSale({
-                           customer_id: sale.customer_id || "",
-                           payment_method: sale.payment_method,
-                           items: []
-                         });
-                         setDialogOpen(true);
-                       }}
+                       onClick={() => loadSaleForEdit(sale)}
                        title="Editar venda"
                      >
                        Editar
