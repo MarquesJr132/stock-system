@@ -130,14 +130,14 @@ const SalesManagement = () => {
                   <div>
                     <Label>Cliente (Opcional)</Label>
                     <Select
-                      value={currentSale.customer_id}
-                      onValueChange={(value) => setCurrentSale(prev => ({ ...prev, customer_id: value }))}
+                      value={currentSale.customer_id || "none"}
+                      onValueChange={(value) => setCurrentSale(prev => ({ ...prev, customer_id: value === "none" ? "" : value }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecionar cliente" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Cliente Geral</SelectItem>
+                        <SelectItem value="none">Cliente Geral</SelectItem>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>
                             {customer.name}
