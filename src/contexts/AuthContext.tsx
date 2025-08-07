@@ -160,8 +160,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const createUser = async (email: string, password: string, fullName: string, role: 'administrator' | 'user') => {
     try {
-      // First create the auth user
-      const { error: authError } = await supabase.auth.signUp({
+      console.log('Creating user with role:', role);
+      
+      // Create the auth user first
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -174,11 +176,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (authError) {
+        console.error('Auth creation error:', authError);
         return { error: authError.message };
+      }
+
+      console.log('Auth user created successfully');
+      
+      // If creating a regular user (not administrator), we need to assign them to current admin's tenant
+      if (role === 'user' && authData.user) {
+        console.log('Assigning user to current admin tenant');
+        // Get current user's tenant info
+        const currentUserTenant = profile?.tenant_id || profile?.id;
+        
+        // Update the created user's profile with correct tenant
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            tenant_id: currentUserTenant,
+            created_by: profile?.id 
+          })
+          .eq('user_id', authData.user.id);
+          
+        if (profileError) {
+          console.error('Profile update error:', profileError);
+          // Don't fail the whole operation for this
+        }
       }
       
       return { error: null };
     } catch (error) {
+      console.error('Unexpected error creating user:', error);
       return { error: 'An unexpected error occurred' };
     }
   };
