@@ -33,23 +33,19 @@ const SuperuserManagement = () => {
   const fetchAdministrators = async () => {
     try {
       console.log('Fetching administrators...');
-      // Use RPC call to bypass potential RLS issues
-      const { data, error } = await supabase.rpc('get_administrators');
-      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'administrator')
+        .order('created_at', { ascending: false });
+
       if (error) {
-        console.error('RPC call failed, trying direct query:', error);
-        // Fallback to direct query
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'administrator')
-          .order('created_at', { ascending: false });
-          
-        if (fallbackError) throw fallbackError;
-        setAdministrators(fallbackData || []);
-      } else {
-        setAdministrators(data || []);
+        console.error('Error fetching administrators:', error);
+        throw error;
       }
+      
+      console.log('Administrators fetched:', data);
+      setAdministrators(data || []);
     } catch (error) {
       console.error('Error fetching administrators:', error);
       toast({

@@ -67,6 +67,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      get_administrators: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          user_id: string
+          email: string
+          full_name: string
+          role: Database["public"]["Enums"]["user_role"]
+          tenant_id: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_user_profile: {
         Args: { user_uuid: string }
         Returns: {
