@@ -16,11 +16,17 @@ const TenantLimitsManagement = () => {
   const { updateTenantLimits, getAllTenantLimits } = useSupabaseData();
   const { isSuperuser } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [tenantLimits, setTenantLimits] = useState<any[]>([]);
   const [administrators, setAdministrators] = useState<any[]>([]);
+  const [editingLimit, setEditingLimit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     selected_admin: "",
+    monthly_data_limit: 1000,
+    monthly_user_limit: 10
+  });
+  const [editFormData, setEditFormData] = useState({
     monthly_data_limit: 1000,
     monthly_user_limit: 10
   });
@@ -92,11 +98,37 @@ const TenantLimitsManagement = () => {
       setDialogOpen(false);
       setFormData({ selected_admin: "", monthly_data_limit: 1000, monthly_user_limit: 10 });
       toast.success("Limite definido com sucesso!");
-      // Recarregar dados após update
       setTimeout(() => {
         loadTenantLimits();
       }, 500);
     }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingLimit) return;
+    
+    console.log('Updating tenant limit:', editingLimit.tenant_id, editFormData);
+    const result = await updateTenantLimits(editingLimit.tenant_id, editFormData);
+
+    if (result.data) {
+      setEditDialogOpen(false);
+      setEditingLimit(null);
+      toast.success("Limite atualizado com sucesso!");
+      setTimeout(() => {
+        loadTenantLimits();
+      }, 500);
+    }
+  };
+
+  const openEditDialog = (limit: any) => {
+    setEditingLimit(limit);
+    setEditFormData({
+      monthly_data_limit: limit.monthly_data_limit,
+      monthly_user_limit: limit.monthly_user_limit || 10
+    });
+    setEditDialogOpen(true);
   };
 
   const getUsagePercentage = (current: number, limit: number) => {
@@ -133,24 +165,9 @@ const TenantLimitsManagement = () => {
             Gestão de Limites
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            Controle os limites de dados para cada administrador
+            Controle os limites de dados e usuários para cada administrador
           </p>
-              </div>
-
-              <div>
-                <Label htmlFor="monthly_user_limit">Limite Mensal de Usuários</Label>
-                <Input
-                  id="monthly_user_limit"
-                  type="number"
-                  value={formData.monthly_user_limit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, monthly_user_limit: parseInt(e.target.value) }))}
-                  min={1}
-                  required
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Número máximo de usuários que podem ser criados por mês
-                </p>
-              </div>
+        </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -161,7 +178,7 @@ const TenantLimitsManagement = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Definir Limite de Dados</DialogTitle>
+              <DialogTitle>Definir Limites do Administrador</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -199,9 +216,24 @@ const TenantLimitsManagement = () => {
                 </p>
               </div>
 
+              <div>
+                <Label htmlFor="monthly_user_limit">Limite Mensal de Usuários</Label>
+                <Input
+                  id="monthly_user_limit"
+                  type="number"
+                  value={formData.monthly_user_limit}
+                  onChange={(e) => setFormData(prev => ({ ...prev, monthly_user_limit: parseInt(e.target.value) }))}
+                  min={1}
+                  required
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Número máximo de usuários que podem ser criados por mês
+                </p>
+              </div>
+
               <div className="flex gap-2 pt-4">
                 <Button type="submit" className="flex-1">
-                  Salvar Limite
+                  Salvar Limites
                 </Button>
                 <Button 
                   type="button" 
@@ -239,7 +271,8 @@ const TenantLimitsManagement = () => {
         ) : (
           tenantLimits.map((limit) => {
             const usagePercentage = getUsagePercentage(limit.current_month_usage, limit.monthly_data_limit);
-            const isNearLimit = usagePercentage >= 80;
+            const userUsagePercentage = getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10);
+            const isNearLimit = usagePercentage >= 80 || userUsagePercentage >= 80;
             
             return (
               <Card key={limit.id} className={`hover:shadow-lg transition-shadow ${isNearLimit ? 'border-yellow-300' : ''}`}>
@@ -250,13 +283,22 @@ const TenantLimitsManagement = () => {
                         <Users className="h-5 w-5" />
                         Tenant #{limit.tenant_id.slice(-8)}
                       </CardTitle>
-                       <p className="text-sm text-muted-foreground mt-1">
-                         Admin: {administrators.find(a => a.tenant_id === limit.tenant_id || a.id === limit.tenant_id)?.full_name || 'Nome não disponível'}
-                       </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Admin: {administrators.find(a => a.tenant_id === limit.tenant_id || a.id === limit.tenant_id)?.full_name || 'Nome não disponível'}
+                      </p>
                     </div>
-                    {isNearLimit && (
-                      <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                    )}
+                    <div className="flex gap-2">
+                      {isNearLimit && (
+                        <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(limit)}
+                      >
+                        Editar
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -294,14 +336,14 @@ const TenantLimitsManagement = () => {
                     
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full transition-all ${getUsageColor(getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10))}`}
-                        style={{ width: `${Math.min(getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10), 100)}%` }}
+                        className={`h-2 rounded-full transition-all ${getUsageColor(userUsagePercentage)}`}
+                        style={{ width: `${Math.min(userUsagePercentage, 100)}%` }}
                       />
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <Badge variant={getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10) >= 90 ? "destructive" : getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10) >= 70 ? "secondary" : "default"}>
-                        {getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10)}% usado
+                      <Badge variant={userUsagePercentage >= 90 ? "destructive" : userUsagePercentage >= 70 ? "secondary" : "default"}>
+                        {userUsagePercentage}% usado
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         Período: {new Date(limit.limit_period_start).toLocaleDateString('pt-PT')}
@@ -331,6 +373,59 @@ const TenantLimitsManagement = () => {
           })
         )}
       </div>
+      
+      {/* Edit Limits Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Limites do Administrador</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="edit_monthly_data_limit">Limite Mensal de Dados</Label>
+              <Input
+                id="edit_monthly_data_limit"
+                type="number"
+                value={editFormData.monthly_data_limit}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, monthly_data_limit: parseInt(e.target.value) }))}
+                min={1}
+                required
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Número máximo de registros que podem ser criados por mês
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="edit_monthly_user_limit">Limite Mensal de Usuários</Label>
+              <Input
+                id="edit_monthly_user_limit"
+                type="number"
+                value={editFormData.monthly_user_limit}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, monthly_user_limit: parseInt(e.target.value) }))}
+                min={1}
+                required
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Número máximo de usuários que podem ser criados por mês
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button type="submit" className="flex-1">
+                Atualizar Limites
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setEditDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

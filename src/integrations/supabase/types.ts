@@ -483,6 +483,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      sync_all_tenant_counters: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      sync_tenant_counters: {
+        Args: { tenant_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "superuser" | "administrator" | "user"
