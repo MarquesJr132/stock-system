@@ -153,6 +153,19 @@ export const useSupabaseData = () => {
     setSaleItems(data || []);
   };
 
+  const fetchSaleItemsBySaleId = async (saleId: string) => {
+    const { data, error } = await supabase
+      .from('sale_items')
+      .select('*')
+      .eq('sale_id', saleId);
+
+    if (error) {
+      console.error('Error fetching sale items:', error);
+      return [];
+    }
+    return data || [];
+  };
+
   // CRUD operations for products
   const addProduct = async (productData: Omit<Product, 'id' | 'created_at' | 'created_by' | 'tenant_id'>) => {
     if (!profile) return { error: 'User not authenticated' };
@@ -487,5 +500,6 @@ export const useSupabaseData = () => {
     
     // Refresh function
     fetchAllData,
+    fetchSaleItemsBySaleId,
   };
 };
