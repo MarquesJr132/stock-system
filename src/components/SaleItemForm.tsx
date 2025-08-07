@@ -89,6 +89,31 @@ const SaleItemForm: React.FC<SaleItemFormProps> = ({ products, items, onItemsCha
     return items.reduce((total, item) => total + (item.vat_amount || 0), 0);
   };
 
+  const applyVATToAll = (includeVAT: boolean) => {
+    const updatedItems = items.map(item => {
+      const subtotal = item.quantity * item.unit_price;
+      const newItem = { ...item };
+      
+      newItem.includes_vat = includeVAT;
+      newItem.includesVAT = includeVAT;
+      newItem.subtotal = subtotal;
+      
+      if (includeVAT) {
+        newItem.vat_amount = subtotal * 0.16;
+        newItem.vatAmount = newItem.vat_amount;
+        newItem.total = subtotal + newItem.vat_amount;
+      } else {
+        newItem.vat_amount = 0;
+        newItem.vatAmount = 0;
+        newItem.total = subtotal;
+      }
+      
+      return newItem;
+    });
+    
+    onItemsChange(updatedItems);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -197,7 +222,18 @@ const SaleItemForm: React.FC<SaleItemFormProps> = ({ products, items, onItemsCha
       {items.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Resumo da Venda</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Resumo da Venda</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="apply-vat-all"
+                  onCheckedChange={(checked) => applyVATToAll(!!checked)}
+                />
+                <Label htmlFor="apply-vat-all" className="text-sm font-medium">
+                  Aplicar IVA em todos os itens
+                </Label>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
