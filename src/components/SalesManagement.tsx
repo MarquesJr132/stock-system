@@ -15,7 +15,7 @@ import InvoicePreview from "./InvoicePreview";
 import { formatCurrency } from "@/lib/currency";
 
 const SalesManagement = () => {
-  const { products, customers, sales } = useSupabaseData();
+  const { products, customers, sales, addSale } = useSupabaseData();
   const { isAdministrator } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -57,7 +57,7 @@ const SalesManagement = () => {
     return { subtotal, vatAmount, total, profit };
   };
 
-  const handleSaveSale = () => {
+  const handleSaveSale = async () => {
     if (currentSale.items.length === 0) {
       toast.error("Adicione pelo menos um item à venda");
       return;
@@ -75,10 +75,12 @@ const SalesManagement = () => {
       items: currentSale.items
     };
 
-    // In a real implementation, this would save to Supabase
-    toast.success("Venda registrada com sucesso!");
-    setDialogOpen(false);
-    resetSale();
+    const result = await addSale(saleData);
+    
+    if (result.data) {
+      setDialogOpen(false);
+      resetSale();
+    }
   };
 
   const formatPaymentMethod = (method: string) => {

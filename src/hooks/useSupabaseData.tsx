@@ -315,6 +315,93 @@ export const useSupabaseData = () => {
     return { data: true };
   };
 
+  // CRUD operations for sales
+  const addSale = async (saleData: {
+    customer_id: string | null;
+    payment_method: string;
+    total_amount: number;
+    total_profit: number;
+    total_vat_amount: number;
+    items: any[];
+  }) => {
+    if (!profile) return { error: 'User not authenticated' };
+
+    try {
+      // First, create the sale
+      const newSale = {
+        customer_id: saleData.customer_id,
+        payment_method: saleData.payment_method,
+        total_amount: saleData.total_amount,
+        total_profit: saleData.total_profit,
+        total_vat_amount: saleData.total_vat_amount,
+        created_by: profile.id,
+        tenant_id: profile.tenant_id || profile.id,
+      };
+
+      const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .insert([newSale])
+        .select()
+        .single();
+
+      if (saleError) {
+        console.error('Error creating sale:', saleError);
+        throw saleError;
+      }
+
+      // Then, create the sale items
+      const saleItems = saleData.items.map(item => ({
+        sale_id: sale.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        subtotal: item.subtotal,
+        total: item.total,
+        vat_amount: item.vat_amount || 0,
+        includes_vat: item.includes_vat || false,
+        tenant_id: profile.tenant_id || profile.id,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('sale_items')
+        .insert(saleItems);
+
+      if (itemsError) {
+        console.error('Error creating sale items:', itemsError);
+        throw itemsError;
+      }
+
+      // Update product quantities
+      for (const item of saleData.items) {
+        const product = products.find(p => p.id === item.product_id);
+        if (product) {
+          await supabase
+            .from('products')
+            .update({ 
+              quantity: product.quantity - item.quantity 
+            })
+            .eq('id', item.product_id);
+        }
+      }
+
+      // Refresh data
+      await fetchAllData();
+
+      toast({
+        title: "Sucesso",
+        description: "Venda registrada com sucesso",
+      });
+      return { data: sale };
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao registrar venda: " + error.message,
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+  };
+
   // Helper functions for data analysis
   const getTotalStock = () => {
     return products.reduce((total, product) => total + product.quantity, 0);
@@ -388,6 +475,7 @@ export const useSupabaseData = () => {
     addCustomer,
     updateCustomer,
     deleteCustomer,
+    addSale,
     
     // Helper functions
     getTotalStock,
