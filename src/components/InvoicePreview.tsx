@@ -119,14 +119,22 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
 
         <div id="invoice-content" className="relative space-y-4 bg-white p-6" style={{ color: '#000', fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
           {/* Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-            <div className="text-gray-200 text-6xl font-bold transform rotate-45 opacity-20 select-none">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 1 }}>
+            <div style={{ 
+              color: '#e5e7eb', 
+              fontSize: '120px', 
+              fontWeight: 'bold', 
+              transform: 'rotate(45deg)', 
+              opacity: 0.15,
+              userSelect: 'none',
+              pointerEvents: 'none'
+            }}>
               ORIGINAL
             </div>
           </div>
           
           {/* Content with higher z-index */}
-          <div className="relative z-10">
+          <div style={{ position: 'relative', zIndex: 10 }}>
              {/* Header */}
              <div className="bg-slate-700 text-white text-center py-4">
                <h1 className="text-xl font-bold mb-1">{companySettings?.company_name || 'SISTEMA DE STOCK'}</h1>

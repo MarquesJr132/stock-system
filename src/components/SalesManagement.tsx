@@ -15,7 +15,7 @@ import InvoicePreview from "./InvoicePreview";
 import { formatCurrency } from "@/lib/currency";
 
 const SalesManagement = () => {
-  const { products, customers, sales, addSale, fetchSaleItemsBySaleId } = useSupabaseData();
+  const { products, customers, sales, addSale, updateSale, fetchSaleItemsBySaleId } = useSupabaseData();
   const { isAdministrator } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,7 +106,12 @@ const SalesManagement = () => {
       items: currentSale.items
     };
 
-    const result = await addSale(saleData);
+    let result;
+    if (editingSale) {
+      result = await updateSale(editingSale.id, saleData);
+    } else {
+      result = await addSale(saleData);
+    }
     
     if (result.data) {
       setDialogOpen(false);
@@ -212,7 +217,10 @@ const SalesManagement = () => {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => setDialogOpen(false)}
+                    onClick={() => {
+                      setDialogOpen(false);
+                      resetSale();
+                    }}
                   >
                     Cancelar
                   </Button>

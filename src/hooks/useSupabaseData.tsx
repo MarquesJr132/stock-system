@@ -445,6 +445,75 @@ export const useSupabaseData = () => {
     }
   };
 
+  const updateSale = async (saleId: string, saleData: any) => {
+    if (!profile) return { error: 'User not authenticated' };
+
+    try {
+      // First, delete existing sale items
+      await supabase
+        .from('sale_items')
+        .delete()
+        .eq('sale_id', saleId);
+
+      // Update the sale
+      const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .update({
+          customer_id: saleData.customer_id,
+          payment_method: saleData.payment_method,
+          total_amount: saleData.total_amount,
+          total_profit: saleData.total_profit,
+          total_vat_amount: saleData.total_vat_amount,
+        })
+        .eq('id', saleId)
+        .select()
+        .single();
+
+      if (saleError) {
+        console.error('Error updating sale:', saleError);
+        throw saleError;
+      }
+
+      // Create new sale items
+      const saleItems = saleData.items.map((item: any) => ({
+        sale_id: saleId,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        subtotal: item.subtotal,
+        total: item.total,
+        vat_amount: item.vat_amount || 0,
+        includes_vat: item.includes_vat || false,
+        tenant_id: profile.tenant_id || profile.id,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('sale_items')
+        .insert(saleItems);
+
+      if (itemsError) {
+        console.error('Error creating sale items:', itemsError);
+        throw itemsError;
+      }
+
+      // Refresh data
+      await fetchAllData();
+
+      toast({
+        title: "Sucesso",
+        description: "Venda atualizada com sucesso",
+      });
+      return { data: sale };
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar venda: " + error.message,
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+  };
+
   const updateCompanySettings = async (settingsData: Partial<CompanySettings>) => {
     if (!profile) return { error: 'User not authenticated' };
 
@@ -554,6 +623,31 @@ export const useSupabaseData = () => {
     return last7Days;
   };
 
+  const getCurrentMonthSales = () => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    return sales
+      .filter(sale => new Date(sale.created_at) >= firstDay)
+      .reduce((total, sale) => total + sale.total_amount, 0);
+  };
+
+  const getCurrentMonthProfit = () => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    return sales
+      .filter(sale => new Date(sale.created_at) >= firstDay)
+      .reduce((total, sale) => total + sale.total_profit, 0);
+  };
+
+  const getCurrentMonthSalesQuantity = () => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    return sales.filter(sale => new Date(sale.created_at) >= firstDay).length;
+  };
+
   return {
     // Data
     products,
@@ -571,18 +665,19 @@ export const useSupabaseData = () => {
     updateCustomer,
     deleteCustomer,
     addSale,
+    updateSale,
+    fetchSaleItemsBySaleId,
     updateCompanySettings,
     
     // Helper functions
     getTotalStock,
+    getLowStockProducts,
     getTotalValue,
     getDailyProfit,
-    getLowStockProducts,
-    getTopSellingProducts,
     getSalesData,
-    
-    // Refresh function
-    fetchAllData,
-    fetchSaleItemsBySaleId,
+    getTopSellingProducts,
+    getCurrentMonthSales,
+    getCurrentMonthProfit,
+    getCurrentMonthSalesQuantity
   };
 };
