@@ -51,8 +51,6 @@ const Index = () => {
       />
       
       <Header />
-      
-      <NotificationCenter />
 
       <div className="container mx-auto px-4 lg:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

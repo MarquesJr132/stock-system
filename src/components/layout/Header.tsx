@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 interface HeaderProps {
   isMobile?: boolean;
@@ -30,6 +31,7 @@ export const Header = ({ isMobile = false, onMobileMenuToggle, mobileMenuOpen }:
           </div>
           
           <div className="flex items-center gap-2">
+            <NotificationCenter />
             <span className="text-xs text-muted-foreground hidden sm:block">
               {profile?.full_name}
             </span>
@@ -55,6 +57,7 @@ export const Header = ({ isMobile = false, onMobileMenuToggle, mobileMenuOpen }:
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationCenter />
             <span className="text-sm text-muted-foreground">
               Bem-vindo, {profile?.full_name}
             </span>
