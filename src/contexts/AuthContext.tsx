@@ -143,9 +143,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
       
+      if (error) {
+        console.error('Sign in error:', error);
+      }
+      
       return { error: error?.message ?? null };
     } catch (error) {
-      return { error: 'An unexpected error occurred' };
+      console.error('Auth sign in error:', error);
+      return { error: 'Erro inesperado ao fazer login' };
     }
   };
 
@@ -163,9 +168,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
       
+      if (error) {
+        console.error('Sign up error:', error);
+      }
+      
       return { error: error?.message ?? null };
     } catch (error) {
-      return { error: 'An unexpected error occurred' };
+      console.error('Auth sign up error:', error);
+      return { error: 'Erro inesperado ao criar conta' };
     }
   };
 

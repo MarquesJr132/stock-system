@@ -117,20 +117,20 @@ export const useSupabaseData = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-    await Promise.all([
-      fetchProducts(),
-      fetchCustomers(), 
-      fetchSales(),
-      fetchSaleItems(),
-      fetchCompanySettings(),
-      fetchTenantLimits(),
-      fetchDataUsage()
-    ]);
+      await Promise.all([
+        fetchProducts(),
+        fetchCustomers(), 
+        fetchSales(),
+        fetchSaleItems(),
+        fetchCompanySettings(),
+        fetchTenantLimits(),
+        fetchDataUsage()
+      ]);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching all data:', error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar dados",
+        description: "Erro ao carregar alguns dados. Tente recarregar a página.",
         variant: "destructive",
       });
     } finally {
