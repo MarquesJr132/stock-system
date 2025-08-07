@@ -11,6 +11,7 @@ import Reports from "@/components/Reports";
 import StockMovements from "@/components/StockMovements";
 import UserManagement from "@/components/UserManagement";
 import ProfileManagement from "@/components/ProfileManagement";
+import SuperuserManagement from "@/components/SuperuserManagement";
 import Login from "@/components/Login";
 import { useAuth } from "@/contexts/AuthContext";
 import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, LogOut, Menu, User as UserIcon } from "lucide-react";
@@ -33,6 +34,11 @@ const Index = () => {
 
   if (!isAuthenticated) {
     return <Login />;
+  }
+
+  // Superusers get their own dedicated management interface
+  if (isSuperuser) {
+    return <SuperuserManagement />;
   }
 
   return (
@@ -71,7 +77,7 @@ const Index = () => {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
-                Sistema de Gestão de Stock
+                Sistema de Gestão de Stock - {profile?.role === 'administrator' ? 'Administrador' : 'Usuário'}
               </h1>
               <p className="text-muted-foreground">
                 Controle completo do seu inventário, vendas e clientes
@@ -108,7 +114,7 @@ const Index = () => {
                     { value: "movements", icon: History, label: "Movimentos" },
                     { value: "reports", icon: TrendingUp, label: "Relatórios" },
                     { value: "profile", icon: UserIcon, label: "Perfil" },
-                    ...(isSuperuser ? [{ value: "users", icon: Settings, label: "Administradores" }] : [])
+                    ...(isAdministrator && !isSuperuser ? [{ value: "users", icon: Settings, label: "Usuários" }] : [])
                   ].map((item) => (
                     <button
                       key={item.value}
@@ -132,7 +138,7 @@ const Index = () => {
           )}
 
           {/* Desktop Navigation */}
-          <TabsList className={`hidden lg:grid w-full ${isSuperuser ? 'grid-cols-8' : 'grid-cols-7'} lg:w-auto`}>
+          <TabsList className={`hidden lg:grid w-full ${isAdministrator && !isSuperuser ? 'grid-cols-8' : 'grid-cols-7'} lg:w-auto`}>
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Dashboard
@@ -161,10 +167,10 @@ const Index = () => {
               <UserIcon className="h-4 w-4" />
               Perfil
             </TabsTrigger>
-            {isSuperuser && (
+            {isAdministrator && !isSuperuser && (
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                Administradores
+                Usuários
               </TabsTrigger>
             )}
           </TabsList>
@@ -197,7 +203,7 @@ const Index = () => {
             <ProfileManagement />
           </TabsContent>
 
-          {isSuperuser && (
+          {isAdministrator && !isSuperuser && (
             <TabsContent value="users" className="space-y-6">
               <UserManagement />
             </TabsContent>
