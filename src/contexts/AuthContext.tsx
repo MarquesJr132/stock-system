@@ -23,6 +23,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string, role?: 'administrator' | 'user') => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   createUser: (email: string, password: string, fullName: string, role: 'administrator' | 'user') => Promise<{ error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (password: string) => Promise<{ error: string | null }>;
   isAuthenticated: boolean;
   isSuperuser: boolean;
   isAdministrator: boolean;
@@ -150,6 +152,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      return { error: error?.message ?? null };
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+      
+      return { error: error?.message ?? null };
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -163,6 +189,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signOut,
     createUser,
+    resetPassword,
+    updatePassword,
     isAuthenticated: !!user,
     isSuperuser: profile?.role === 'superuser',
     isAdministrator: profile?.role === 'administrator' || profile?.role === 'superuser'
