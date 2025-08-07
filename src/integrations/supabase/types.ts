@@ -302,6 +302,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_user_to_admin_tenant: {
+        Args: { user_email: string; admin_email: string }
+        Returns: undefined
+      }
       get_administrators: {
         Args: Record<PropertyKey, never>
         Returns: {
