@@ -226,18 +226,34 @@ const SalesManagement = () => {
                       Cliente: {customerName}
                     </p>
                   </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedSale(sale);
-                        setPreviewOpen(true);
-                      }}
-                    >
-                      <Printer className="h-4 w-4" />
-                    </Button>
-                  </div>
+                   <div className="flex gap-1">
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       onClick={() => {
+                         setCurrentSale({
+                           customer_id: sale.customer_id || "",
+                           payment_method: sale.payment_method,
+                           items: []
+                         });
+                         setDialogOpen(true);
+                       }}
+                       title="Editar venda"
+                     >
+                       Editar
+                     </Button>
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       onClick={() => {
+                         setSelectedSale(sale);
+                         setPreviewOpen(true);
+                       }}
+                       title="Gerar fatura"
+                     >
+                       <Printer className="h-4 w-4" />
+                     </Button>
+                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">

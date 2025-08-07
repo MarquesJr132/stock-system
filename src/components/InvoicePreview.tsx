@@ -127,11 +127,11 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
           
           {/* Content with higher z-index */}
           <div className="relative z-10">
-            {/* Header */}
-            <div className="bg-slate-700 text-white text-center py-4">
-              <h1 className="text-xl font-bold mb-1">SISTEMA DE STOCK</h1>
-              <p className="text-sm">FACTURA DE VENDA</p>
-            </div>
+             {/* Header */}
+             <div className="bg-slate-700 text-white text-center py-4">
+               <h1 className="text-xl font-bold mb-1">{companySettings?.company_name || 'SISTEMA DE STOCK'}</h1>
+               <p className="text-sm">FACTURA DE VENDA</p>
+             </div>
 
             {/* Company, Invoice Details and Customer Info in 3 columns */}
             <div className="grid grid-cols-3 gap-4 mt-4">
@@ -170,11 +170,11 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                       <p><span className="font-semibold">NUIT:</span> {customer.nuit}</p>
                     )}
                   </div>
-                ) : (
-                  <div className="text-black text-xs">
-                    <p><span className="font-semibold">Nome:</span> Cliente Anônimo</p>
-                  </div>
-                )}
+                 ) : (
+                   <div className="text-black text-xs">
+                     <p><span className="font-semibold">Nome:</span> Anônimo</p>
+                   </div>
+                 )}
               </div>
             </div>
 
