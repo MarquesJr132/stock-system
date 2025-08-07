@@ -12,24 +12,60 @@ import {
   ShoppingCart,
   Target
 } from "lucide-react";
-import { useStockData } from "@/hooks/useStockData";
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from "@/contexts/AuthContext";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { formatCurrency, formatNumber } from "@/lib/currency";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
   const { 
     products, 
     sales, 
     customers, 
+    loading,
     getTotalStock, 
     getTotalValue, 
     getDailyProfit, 
     getLowStockProducts,
     getTopSellingProducts,
     getSalesData
-  } = useStockData();
+  } = useSupabaseData();
   const { isAdministrator } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-24 mb-2" />
+                <Skeleton className="h-3 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-64 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const totalStock = getTotalStock();
   const totalValue = getTotalValue();
@@ -147,7 +183,7 @@ const Dashboard = () => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="quantity" fill="#00C49F" />
+                <Bar dataKey="totalSold" fill="#00C49F" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -174,13 +210,13 @@ const Dashboard = () => {
                 </p>
               ) : (
                 lowStockProducts.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between p-2 sm:p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">{/* Smaller padding on mobile */}
-                    <div className="min-w-0 flex-1">{/* Prevent overflow */}
+                  <div key={product.id} className="flex items-center justify-between p-2 sm:p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-800 dark:text-slate-100 truncate text-sm sm:text-base">
                         {product.name}
                       </p>
                       <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 truncate">
-                        {product.category}
+                        {product.category || 'Sem categoria'}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -188,9 +224,13 @@ const Dashboard = () => {
                         {product.quantity} unidades
                       </Badge>
                       <Progress 
-                        value={(product.quantity / 100) * 100} 
+                        value={(product.quantity / (product.min_stock || 1)) * 100} 
                         className="w-16 sm:w-20 mt-1"
                       />
+                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                        <span>Atual: {product.quantity}</span>
+                        <span>Mínimo: {product.min_stock || 0}</span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -212,15 +252,16 @@ const Dashboard = () => {
               <PieChart>
                 <Pie
                   data={products.reduce((acc, product) => {
-                    const category = acc.find(item => item.name === product.category);
+                    const category = product.category || 'Sem categoria';
                     const value = isAdministrator ? 
-                      product.quantity * product.purchasePrice :
-                      product.quantity * product.salePrice;
+                      product.quantity * product.purchase_price :
+                      product.quantity * product.sale_price;
                     
-                    if (category) {
-                      category.value += value;
+                    const existing = acc.find(item => item.name === category);
+                    if (existing) {
+                      existing.value += value;
                     } else {
-                      acc.push({ name: product.category, value });
+                      acc.push({ name: category, value });
                     }
                     return acc;
                   }, [] as any[])}
