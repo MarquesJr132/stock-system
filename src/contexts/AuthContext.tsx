@@ -155,8 +155,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: undefined, // Don't use redirect, we'll use OTP instead
+      // Use signInWithOtp instead of resetPasswordForEmail to send OTP codes
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false, // Don't create new users, only reset existing ones
+        }
       });
       
       return { error: error?.message ?? null };
@@ -167,10 +171,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyOtp = async (email: string, token: string, type: 'recovery') => {
     try {
+      // For password reset via OTP, we use 'email' type instead of 'recovery'
       const { error } = await supabase.auth.verifyOtp({
         email,
         token,
-        type,
+        type: 'email', // Use 'email' type for OTP verification
       });
       
       return { error: error?.message ?? null };
