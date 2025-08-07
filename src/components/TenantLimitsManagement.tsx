@@ -6,26 +6,45 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Settings, Users, BarChart3, AlertTriangle, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const TenantLimitsManagement = () => {
   const { updateTenantLimits, getAllTenantLimits } = useSupabaseData();
   const { isSuperuser } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [tenantLimits, setTenantLimits] = useState<any[]>([]);
+  const [administrators, setAdministrators] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    tenant_id: "",
+    selected_admin: "",
     monthly_data_limit: 1000
   });
 
   useEffect(() => {
     if (isSuperuser) {
       loadTenantLimits();
+      loadAdministrators();
     }
   }, [isSuperuser]);
+
+  const loadAdministrators = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, tenant_id')
+        .eq('role', 'administrator')
+        .order('full_name');
+
+      if (error) throw error;
+      setAdministrators(data || []);
+    } catch (error) {
+      console.error('Error loading administrators:', error);
+    }
+  };
 
   const loadTenantLimits = async () => {
     setLoading(true);
@@ -44,13 +63,24 @@ const TenantLimitsManagement = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const result = await updateTenantLimits(formData.tenant_id, {
+    if (!formData.selected_admin) {
+      toast.error("Selecione um administrador");
+      return;
+    }
+
+    const selectedAdmin = administrators.find(admin => admin.id === formData.selected_admin);
+    if (!selectedAdmin) {
+      toast.error("Administrador não encontrado");
+      return;
+    }
+    
+    const result = await updateTenantLimits(selectedAdmin.tenant_id || selectedAdmin.id, {
       monthly_data_limit: formData.monthly_data_limit
     });
 
     if (result.data) {
       setDialogOpen(false);
-      setFormData({ tenant_id: "", monthly_data_limit: 1000 });
+      setFormData({ selected_admin: "", monthly_data_limit: 1000 });
       loadTenantLimits();
     }
   };
@@ -106,14 +136,23 @@ const TenantLimitsManagement = () => {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="tenant_id">ID do Tenant</Label>
-                <Input
-                  id="tenant_id"
-                  value={formData.tenant_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tenant_id: e.target.value }))}
-                  placeholder="UUID do tenant do administrador"
+                <Label htmlFor="selected_admin">Administrador</Label>
+                <Select
+                  value={formData.selected_admin}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, selected_admin: value }))}
                   required
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um administrador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {administrators.map((admin) => (
+                      <SelectItem key={admin.id} value={admin.id}>
+                        {admin.full_name} ({admin.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
