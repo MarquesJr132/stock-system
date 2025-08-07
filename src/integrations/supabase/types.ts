@@ -63,10 +63,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      current_user_is_superuser: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       get_administrators: {
         Args: Record<PropertyKey, never>
         Returns: {
