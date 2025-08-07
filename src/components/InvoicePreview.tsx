@@ -117,76 +117,79 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
           </p>
         </DialogHeader>
 
-        <div id="invoice-content" className="space-y-6 bg-white p-8" style={{ color: '#000', fontFamily: 'Arial, sans-serif' }}>
-          {/* Header */}
+        <div id="invoice-content" className="relative space-y-6 bg-white p-8" style={{ color: '#000', fontFamily: 'Arial, sans-serif' }}>
+          {/* Watermark */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+            <div className="text-gray-200 text-9xl font-bold transform rotate-45 opacity-30 select-none">
+              ORIGINAL
+            </div>
+          </div>
+          
+          {/* Content with higher z-index */}
+          <div className="relative z-10">
           <div className="bg-slate-700 text-white text-center py-6">
             <h1 className="text-3xl font-bold mb-2">SISTEMA DE STOCK</h1>
             <p className="text-lg">FACTURA DE VENDA</p>
           </div>
 
-          {/* Company and Invoice Details */}
-          <div className="grid grid-cols-2 gap-8 mt-8">
-            {/* Company Info */}
-            <div>
-              <h3 className="font-bold text-slate-700 mb-4 text-lg">EMPRESA:</h3>
-              <div className="space-y-1 text-sm text-black">
-                <p className="font-bold">Sistema de Gestão de Stock Lda.</p>
-                <p>Maputo, Moçambique</p>
-                <p>Tel: +258 84 123 4567</p>
-                <p>Email: info@stocksystem.co.mz</p>
-                <p>NUIT: 123456789</p>
+            {/* Company and Invoice Details */}
+            <div className="grid grid-cols-2 gap-8 mt-8">
+              {/* Company Info */}
+              <div>
+                <h3 className="font-bold text-slate-700 mb-4 text-lg">EMPRESA:</h3>
+                <div className="space-y-1 text-sm text-black">
+                  <p className="font-bold">Sistema de Gestão de Stock Lda.</p>
+                  <p>Maputo, Moçambique</p>
+                  <p>Tel: +258 84 123 4567</p>
+                  <p>Email: info@stocksystem.co.mz</p>
+                  <p>NUIT: 123456789</p>
+                </div>
               </div>
-            </div>
 
-            {/* Invoice Details */}
-            <div>
-              <h3 className="font-bold text-slate-700 mb-4 text-lg">DETALHES DA FACTURA:</h3>
-              <div className="space-y-1 text-sm text-black">
-                <p><span className="font-semibold">Factura Nº:</span> #{sale.id.slice(-8)}</p>
-                <p><span className="font-semibold">Data:</span> {formatDateTime(sale.created_at)}</p>
-                <p><span className="font-semibold">Método:</span> {formatPaymentMethod(sale.payment_method)}</p>
-                <div className="mt-2">
-                  <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs">
-                    Status: {formatPaymentMethod(sale.payment_method)}
-                  </span>
+              {/* Invoice Details */}
+              <div>
+                <h3 className="font-bold text-slate-700 mb-4 text-lg">DETALHES DA FACTURA:</h3>
+                <div className="space-y-1 text-sm text-black">
+                  <p><span className="font-semibold">Factura Nº:</span> #{sale.id.slice(-8)}</p>
+                  <p><span className="font-semibold">Data:</span> {formatDateTime(sale.created_at)}</p>
+                  <p><span className="font-semibold">Método:</span> {formatPaymentMethod(sale.payment_method)}</p>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Customer Info */}
-          <div className="mt-8">
-            <h3 className="font-bold text-slate-700 mb-4 text-lg">CLIENTE:</h3>
-            {customer ? (
-              <div className="grid grid-cols-2 gap-8 text-sm text-black">
-                <div className="space-y-1">
-                  <p><span className="font-semibold">Nome:</span> {customer.name}</p>
-                  <p><span className="font-semibold">Email:</span> {customer.email || 'N/A'}</p>
-                  <p><span className="font-semibold">Telefone:</span> {customer.phone || 'N/A'}</p>
-                  <p><span className="font-semibold">Endereço:</span> {customer.address || 'N/A'}</p>
+            {/* Customer Info */}
+            <div className="mt-8">
+              <h3 className="font-bold text-slate-700 mb-4 text-lg">CLIENTE:</h3>
+              {customer ? (
+                <div className="grid grid-cols-2 gap-8 text-sm text-black">
+                  <div className="space-y-1">
+                    <p><span className="font-semibold">Nome:</span> {customer.name}</p>
+                    <p><span className="font-semibold">Email:</span> {customer.email || 'N/A'}</p>
+                    <p><span className="font-semibold">Telefone:</span> {customer.phone || 'N/A'}</p>
+                    <p><span className="font-semibold">Endereço:</span> {customer.address || 'N/A'}</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-black">
-                <p><span className="font-semibold">Nome:</span> Cliente Anônimo</p>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="text-black">
+                  <p><span className="font-semibold">Nome:</span> Cliente Anônimo</p>
+                </div>
+              )}
+            </div>
 
-          {/* Products Table */}
-          <div className="mt-8">
-            <table className="w-full border-collapse border border-slate-400">
-              <thead>
-                <tr className="bg-slate-700 text-white">
-                  <th className="border border-slate-400 p-3 text-left font-bold">PRODUTO</th>
-                  <th className="border border-slate-400 p-3 text-center font-bold">QTD</th>
-                  <th className="border border-slate-400 p-3 text-center font-bold">PREÇO UNIT.</th>
-                  <th className="border border-slate-400 p-3 text-center font-bold">IVA</th>
-                  <th className="border border-slate-400 p-3 text-center font-bold">SUBTOTAL</th>
-                  <th className="border border-slate-400 p-3 text-center font-bold">TOTAL</th>
-                </tr>
-              </thead>
-              <tbody>
+            {/* Products Table */}
+            <div className="mt-8">
+              <table className="w-full border-collapse border border-slate-400">
+                <thead>
+                  <tr className="bg-slate-700 text-white">
+                    <th className="border border-slate-400 p-3 text-left font-bold">PRODUTO</th>
+                    <th className="border border-slate-400 p-3 text-center font-bold">QTD</th>
+                    <th className="border border-slate-400 p-3 text-center font-bold">PREÇO UNIT.</th>
+                    <th className="border border-slate-400 p-3 text-center font-bold">IVA</th>
+                    <th className="border border-slate-400 p-3 text-center font-bold">SUBTOTAL</th>
+                    <th className="border border-slate-400 p-3 text-center font-bold">TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="border border-slate-400 p-8 text-center text-black">
@@ -223,41 +226,42 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                     </td>
                   </tr>
                 )}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
 
-          {/* Totals */}
-          <div className="mt-8 flex justify-end">
-            <div className="w-80">
-              {sale.total_vat_amount > 0 && (
-                <div className="flex justify-between py-2 text-black">
-                  <span className="font-semibold">SUBTOTAL:</span>
-                  <span className="font-semibold">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
-                </div>
-              )}
-              
-              {sale.total_vat_amount > 0 && (
-                <div className="flex justify-between py-2 text-black">
-                  <span className="font-semibold">IVA TOTAL:</span>
-                  <span className="font-semibold">{formatCurrency(sale.total_vat_amount)}</span>
-                </div>
-              )}
-              
-              <div className="bg-slate-700 text-white p-4 mt-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold">TOTAL:</span>
-                  <span className="text-2xl font-bold">{formatCurrency(sale.total_amount)}</span>
+            {/* Totals */}
+            <div className="mt-8 flex justify-end">
+              <div className="w-80">
+                {sale.total_vat_amount > 0 && (
+                  <div className="flex justify-between py-2 text-black">
+                    <span className="font-semibold">SUBTOTAL:</span>
+                    <span className="font-semibold">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
+                  </div>
+                )}
+                
+                {sale.total_vat_amount > 0 && (
+                  <div className="flex justify-between py-2 text-black">
+                    <span className="font-semibold">IVA TOTAL:</span>
+                    <span className="font-semibold">{formatCurrency(sale.total_vat_amount)}</span>
+                  </div>
+                )}
+                
+                <div className="bg-slate-700 text-white p-4 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xl font-bold">TOTAL:</span>
+                    <span className="text-2xl font-bold">{formatCurrency(sale.total_amount)}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="text-center mt-12 text-black">
-            <p className="font-semibold mb-2">Obrigado pela sua preferência!</p>
-            <p className="text-sm mb-4">Esta factura foi gerada automaticamente pelo Sistema de Stock.</p>
-            <p className="text-xs text-gray-600">Gerado em: {new Date().toLocaleString('pt-MZ')}</p>
+            {/* Footer */}
+            <div className="text-center mt-12 text-black">
+              <p className="font-semibold mb-2">Obrigado pela sua preferência!</p>
+              <p className="text-sm mb-4">Esta factura foi gerada automaticamente pelo Sistema de Stock.</p>
+              <p className="text-xs text-gray-600">Gerado em: {new Date().toLocaleString('pt-MZ')}</p>
+            </div>
           </div>
         </div>
 
