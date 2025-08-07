@@ -198,19 +198,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Get current user's tenant info
         const currentUserTenant = profile?.tenant_id || profile?.id;
         
-        // Update the created user's profile with correct tenant
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ 
-            tenant_id: currentUserTenant,
-            created_by: profile?.id 
-          })
-          .eq('user_id', authData.user.id);
-          
-        if (profileError) {
-          console.error('Profile update error:', profileError);
-          // Don't fail the whole operation for this
-        }
+        // Wait a bit for the trigger to create the profile, then update it
+        const updateProfile = async (retries = 3) => {
+          for (let i = 0; i < retries; i++) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Wait 1s, 2s, 3s
+            
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({ 
+                tenant_id: currentUserTenant,
+                created_by: profile?.id 
+              })
+              .eq('user_id', authData.user.id);
+              
+            if (!profileError) {
+              console.log('Profile updated successfully with tenant:', currentUserTenant);
+              break;
+            } else if (i === retries - 1) {
+              console.error('Profile update error after retries:', profileError);
+            }
+          }
+        };
+        
+        // Start the update process without blocking the response
+        updateProfile();
       }
       
       return { error: null };
