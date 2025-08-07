@@ -50,30 +50,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('AuthContext: Fetching profile for user', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('AuthContext: Error fetching profile', error);
+        throw error;
+      }
+      console.log('AuthContext: Profile fetched successfully', data);
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('AuthContext: Error fetching profile:', error);
       setProfile(null);
     }
   };
 
   useEffect(() => {
+    console.log('AuthContext: Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('AuthContext: Auth state changed', { event, session: !!session });
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('AuthContext: Fetching profile for user', session.user.id);
           await fetchProfile(session.user.id);
         } else {
+          console.log('AuthContext: No session, clearing profile');
           setProfile(null);
         }
         setLoading(false);
@@ -81,15 +92,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
+    console.log('AuthContext: Checking for existing session');
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('AuthContext: Initial session check', { session: !!session });
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('AuthContext: Fetching profile for existing session', session.user.id);
         fetchProfile(session.user.id);
       } else {
+        console.log('AuthContext: No existing session');
         setLoading(false);
       }
+    }).catch((error) => {
+      console.error('AuthContext: Error getting session', error);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -155,31 +174,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
+      console.log('AuthContext: Sending OTP to email', email);
       // Use signInWithOtp instead of resetPasswordForEmail to send OTP codes
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: false, // Don't create new users, only reset existing ones
+          data: {
+            password_reset: true // Add a flag to identify this as password reset
+          }
         }
       });
       
+      console.log('AuthContext: OTP send result', { error });
       return { error: error?.message ?? null };
     } catch (error) {
+      console.error('AuthContext: Error sending OTP', error);
       return { error: 'An unexpected error occurred' };
     }
   };
 
   const verifyOtp = async (email: string, token: string, type: 'recovery') => {
     try {
+      console.log('AuthContext: Verifying OTP', { email, token: token.length });
       // For password reset via OTP, we use 'email' type instead of 'recovery'
-      const { error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
         type: 'email', // Use 'email' type for OTP verification
       });
       
+      console.log('AuthContext: OTP verification result', { data: !!data, error });
       return { error: error?.message ?? null };
     } catch (error) {
+      console.error('AuthContext: Error verifying OTP', error);
       return { error: 'An unexpected error occurred' };
     }
   };
