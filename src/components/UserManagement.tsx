@@ -16,10 +16,17 @@ const UserManagement = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [newUser, setNewUser] = useState({
     fullName: '',
     email: '',
     password: '',
+    role: 'user' as 'administrator' | 'gerente' | 'user'
+  });
+  const [editUser, setEditUser] = useState({
+    fullName: '',
+    email: '',
     role: 'user' as 'administrator' | 'gerente' | 'user'
   });
   const { profile, isSuperuser, isAdministrator, isGerente, createUser } = useAuth();
@@ -176,6 +183,91 @@ const UserManagement = () => {
     }
   };
 
+  const handleEditUser = (user: Profile) => {
+    setEditingUser(user);
+    setEditUser({
+      fullName: user.full_name,
+      email: user.email,
+      role: user.role as 'administrator' | 'gerente' | 'user'
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editingUser) return;
+
+    if (!editUser.fullName || !editUser.email) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate role permissions for editing
+    if (!isSuperuser) {
+      // Administrators cannot promote users to administrator
+      if (profile?.role === 'administrator' && editUser.role === 'administrator') {
+        toast({
+          title: "Erro de permissão",
+          description: "Administradores não podem promover usuários a administradores.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Gerentes cannot edit users
+      if (profile?.role === 'gerente') {
+        toast({
+          title: "Erro de permissão", 
+          description: "Gerentes não têm permissão para editar usuários.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editUser.fullName,
+          email: editUser.email,
+          role: editUser.role
+        })
+        .eq('id', editingUser.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating user:', error);
+        toast({
+          title: "Erro ao atualizar utilizador",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Utilizador atualizado com sucesso!",
+        description: `${editUser.fullName} foi atualizado.`,
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro ao atualizar o utilizador.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'superuser': return <Crown className="h-4 w-4" />;
@@ -310,7 +402,7 @@ const UserManagement = () => {
                     ) : (
                       <Select 
                         value={newUser.role} 
-                        onValueChange={(value: 'user') => 
+                        onValueChange={(value: 'gerente' | 'user') => 
                           setNewUser({ ...newUser, role: value })
                         }
                       >
@@ -318,13 +410,14 @@ const UserManagement = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="gerente">Gerente</SelectItem>
                           <SelectItem value="user">Utilizador</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
                   </div>
                   <Button onClick={handleCreateUser} className="w-full">
-                    Criar {isSuperuser ? newUser.role === 'administrator' ? 'Administrador' : 'Gerente' : 'Utilizador'}
+                    Criar {isSuperuser ? (newUser.role === 'administrator' ? 'Administrador' : newUser.role === 'gerente' ? 'Gerente' : 'Utilizador') : (newUser.role === 'gerente' ? 'Gerente' : 'Utilizador')}
                   </Button>
                 </div>
               </DialogContent>
@@ -361,21 +454,109 @@ const UserManagement = () => {
                     {new Date(user.created_at).toLocaleDateString('pt-PT')}
                   </TableCell>
                   <TableCell>
-                    {(isSuperuser || (isAdministrator && user.role === 'user')) && 
-                     user.user_id !== profile?.user_id && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {(isSuperuser || (isAdministrator && user.role !== 'administrator')) && 
+                       user.user_id !== profile?.user_id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                        >
+                          Editar
+                        </Button>
+                      )}
+                      {(isSuperuser || (isAdministrator && user.role === 'user')) && 
+                       user.user_id !== profile?.user_id && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          {/* Edit User Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Editar Utilizador</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Nome Completo</Label>
+                  <Input
+                    id="edit-name"
+                    value={editUser.fullName}
+                    onChange={(e) => setEditUser({ ...editUser, fullName: e.target.value })}
+                    placeholder="Nome completo"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">Email</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editUser.email}
+                    onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-role">Função</Label>
+                  {isSuperuser ? (
+                    <Select 
+                      value={editUser.role} 
+                      onValueChange={(value: 'administrator' | 'gerente' | 'user') => 
+                        setEditUser({ ...editUser, role: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="administrator">Administrador</SelectItem>
+                        <SelectItem value="gerente">Gerente</SelectItem>
+                        <SelectItem value="user">Utilizador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Select 
+                      value={editUser.role} 
+                      onValueChange={(value: 'gerente' | 'user') => 
+                        setEditUser({ ...editUser, role: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gerente">Gerente</SelectItem>
+                        <SelectItem value="user">Utilizador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleUpdateUser} className="flex-1">
+                    Atualizar Utilizador
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsEditDialogOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>
