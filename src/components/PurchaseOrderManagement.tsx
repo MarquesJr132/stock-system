@@ -310,6 +310,54 @@ export const PurchaseOrderManagement: React.FC = () => {
     setIsDialogOpen(false);
   };
 
+  const handleViewOrder = (order: PurchaseOrder) => {
+    // Por enquanto vamos mostrar um toast - pode ser expandido para um modal de detalhes
+    toast({
+      title: "Visualizar Ordem",
+      description: `Ordem #${order.order_number} - ${formatCurrency(order.total_amount)}`,
+    });
+  };
+
+  const handleEditOrder = async (order: PurchaseOrder) => {
+    try {
+      // Buscar itens da ordem
+      const { data: items, error } = await supabase
+        .from('purchase_order_items')
+        .select('*')
+        .eq('purchase_order_id', order.id);
+
+      if (error) throw error;
+
+      // Converter itens para o formato esperado
+      const orderItems: OrderItem[] = (items || []).map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_cost: item.unit_cost,
+        total_cost: item.total_cost,
+      }));
+
+      // Preencher formulário com dados da ordem
+      setOrderData({
+        supplier_id: order.supplier_id,
+        order_number: order.order_number,
+        order_date: order.order_date,
+        expected_delivery_date: order.expected_delivery_date || '',
+        notes: order.notes || '',
+        items: orderItems,
+      });
+
+      setEditingOrder(order);
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error('Erro ao carregar ordem para edição:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a ordem para edição",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -564,10 +612,20 @@ export const PurchaseOrderManagement: React.FC = () => {
                     <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleViewOrder(order)}
+                          title="Visualizar ordem"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleEditOrder(order)}
+                          title="Editar ordem"
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                       </div>
