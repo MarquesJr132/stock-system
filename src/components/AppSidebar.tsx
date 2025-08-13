@@ -36,8 +36,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     { value: "company", icon: Building, label: "Empresa" },
     { value: "users", icon: Settings, label: "Usuários" },
     { value: "suppliers", icon: Truck, label: "Fornecedores" },
-    { value: "purchase-orders", icon: FileText, label: "Compras" },
-    { value: "audit", icon: Shield, label: "Auditoria" }
+    { value: "purchase-orders", icon: FileText, label: "Compras" }
   ];
 
   const isActive = (tab: string) => activeTab === tab;
