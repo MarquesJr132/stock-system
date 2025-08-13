@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting admin-create-user function...')
+    
     // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -50,6 +52,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser(token)
     
     if (userError || !user) {
+      console.error('Authentication failed:', userError)
       return new Response(
         JSON.stringify({ error: 'Usuário não autenticado' }),
         { 
@@ -59,14 +62,17 @@ serve(async (req) => {
       )
     }
 
+    console.log('User authenticated:', user.email)
+
     // Get the user's profile to check permissions
-    const { data: profile, error: profileError } = await supabaseUser
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('user_id', user.id)
       .single()
 
     if (profileError || !profile) {
+      console.error('Profile fetch failed:', profileError)
       return new Response(
         JSON.stringify({ error: 'Perfil não encontrado' }),
         { 
@@ -75,6 +81,8 @@ serve(async (req) => {
         }
       )
     }
+
+    console.log('Profile found:', profile.email, 'Role:', profile.role)
 
     // Check if user is administrator or superuser
     if (!['administrator', 'superuser'].includes(profile.role)) {
@@ -89,6 +97,7 @@ serve(async (req) => {
 
     // Parse the request body
     const { email, password, fullName, role } = await req.json()
+    console.log('Creating user:', email, 'with role:', role)
 
     if (!email || !password || !fullName || !role) {
       return new Response(
@@ -104,6 +113,7 @@ serve(async (req) => {
     const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(email)
     
     if (existingUser.user) {
+      console.log('User already exists:', email)
       return new Response(
         JSON.stringify({ error: 'Usuário já existe com este email' }),
         { 
@@ -113,6 +123,8 @@ serve(async (req) => {
       )
     }
 
+    console.log('Creating new user in auth...')
+    
     // Create the user using admin client (this won't affect current session)
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -136,6 +148,7 @@ serve(async (req) => {
     }
 
     if (!newUser.user) {
+      console.error('User creation returned no user data')
       return new Response(
         JSON.stringify({ error: 'Falha ao criar usuário' }),
         { 
@@ -145,68 +158,101 @@ serve(async (req) => {
       )
     }
 
-    // Aguardar um pouco para o trigger completar
-    await new Promise(resolve => setTimeout(resolve, 200))
+    console.log('User created successfully:', newUser.user.id)
     
-    // Buscar o perfil criado pelo trigger
+    // Wait a bit longer for trigger to complete
+    console.log('Waiting for trigger to complete...')
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // Try to get the profile created by trigger
     const { data: createdProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('user_id', newUser.user.id)
       .maybeSingle()
 
-    if (profileFetchError) {
-      console.error('Error fetching profile:', profileFetchError)
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-      
-      return new Response(
-        JSON.stringify({ error: 'Erro ao buscar perfil do usuário' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
+    console.log('Profile fetch result:', { createdProfile, profileFetchError })
 
     if (!createdProfile) {
-      console.error('Profile not created by trigger')
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+      console.log('Profile not created by trigger, creating manually...')
       
-      return new Response(
-        JSON.stringify({ error: 'Perfil não foi criado automaticamente' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
+      // Create profile manually if trigger didn't work
+      const adminTenant = profile.tenant_id || profile.id
+      const correctTenantId = role === 'administrator' ? null : adminTenant // Will be set later
+      
+      const { data: manualProfile, error: manualProfileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          user_id: newUser.user.id,
+          email: email,
+          full_name: fullName,
+          role: role,
+          tenant_id: correctTenantId,
+          created_by: profile.id
+        })
+        .select()
+        .single()
+
+      if (manualProfileError) {
+        console.error('Error creating profile manually:', manualProfileError)
+        // Clean up the user
+        await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+        
+        return new Response(
+          JSON.stringify({ error: 'Erro ao criar perfil do usuário' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+      
+      console.log('Profile created manually:', manualProfile.id)
+      
+      // For administrators, set tenant_id to profile id
+      if (role === 'administrator') {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ tenant_id: manualProfile.id })
+          .eq('id', manualProfile.id)
+        
+        console.log('Updated admin tenant_id to profile id')
+      }
+    } else {
+      console.log('Profile found from trigger, updating...')
+      
+      // Update the existing profile
+      const adminTenant = profile.tenant_id || profile.id
+      const correctTenantId = role === 'administrator' ? createdProfile.id : adminTenant
+      
+      const { error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          role: role,
+          tenant_id: correctTenantId,
+          created_by: profile.id
+        })
+        .eq('id', createdProfile.id)
+
+      if (updateError) {
+        console.error('Error updating profile:', updateError)
+        // Clean up the user
+        await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+        
+        return new Response(
+          JSON.stringify({ error: 'Erro ao atualizar perfil do usuário' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+      
+      console.log('Profile updated successfully')
     }
 
-    // Atualizar o perfil com os valores corretos
-    const adminTenant = profile.tenant_id || profile.id
-    const correctTenantId = role === 'administrator' ? createdProfile.id : adminTenant
-    
-    const { error: profileUpdateError } = await supabaseAdmin
-      .from('profiles')
-      .update({
-        full_name: fullName,
-        role: role,
-        tenant_id: correctTenantId,
-        created_by: profile.id
-      })
-      .eq('id', createdProfile.id)
-
-    if (profileUpdateError) {
-      console.error('Error updating profile:', profileUpdateError)
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-      
-      return new Response(
-        JSON.stringify({ error: 'Erro ao atualizar perfil do usuário' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
+    console.log('User creation completed successfully')
 
     return new Response(
       JSON.stringify({ 
@@ -226,9 +272,9 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Unexpected error in admin-create-user:', error)
     return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
+      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
