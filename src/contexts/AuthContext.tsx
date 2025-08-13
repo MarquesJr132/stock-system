@@ -204,6 +204,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: authError.message };
       }
 
+      if (!authData.user) {
+        console.error('No user returned from signup');
+        return { error: 'Falha ao criar usuário - nenhum dados retornados' };
+      }
+
       console.log('Auth user created successfully');
       
       // If creating a regular user (not administrator), we need to assign them to current admin's tenant
