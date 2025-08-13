@@ -62,30 +62,37 @@ export const AuditLogs: React.FC = () => {
 
   const fetchAuditLogs = async () => {
     try {
-      const { data, error } = await supabase
+      // First get audit logs
+      const { data: auditData, error: auditError } = await supabase
         .from('audit_logs')
-        .select(`
-          id,
-          table_name,
-          record_id,
-          action,
-          old_data,
-          new_data,
-          timestamp,
-          user_id,
-          ip_address,
-          user_agent,
-          profiles (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('timestamp', { ascending: false })
         .limit(1000);
 
-      if (error) throw error;
+      if (auditError) throw auditError;
+
+      // Then get user profiles for the user_ids in audit logs
+      const userIds = [...new Set(auditData?.map(log => log.user_id).filter(Boolean))];
+      let profilesData: any[] = [];
       
-      const formattedLogs: AuditLog[] = (data || []).map(log => ({
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', userIds);
+        
+        if (!profilesError) {
+          profilesData = profiles || [];
+        }
+      }
+
+      // Create a map of user_id to profile
+      const profileMap = new Map();
+      profilesData.forEach(profile => {
+        profileMap.set(profile.user_id, profile);
+      });
+      
+      const formattedLogs: AuditLog[] = (auditData || []).map(log => ({
         id: log.id,
         table_name: log.table_name,
         record_id: log.record_id,
@@ -96,7 +103,7 @@ export const AuditLogs: React.FC = () => {
         user_id: log.user_id,
         ip_address: typeof log.ip_address === 'string' ? log.ip_address : null,
         user_agent: log.user_agent,
-        profiles: Array.isArray(log.profiles) && log.profiles.length > 0 ? log.profiles[0] : null
+        profiles: log.user_id ? profileMap.get(log.user_id) : null
       }));
       
       setLogs(formattedLogs);
