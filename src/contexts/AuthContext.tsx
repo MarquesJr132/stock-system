@@ -183,76 +183,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Creating user with role:', role);
       
-      // Create the auth user first
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          // Don't require email confirmation for admin-created users
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: fullName,
-            role: role
-          }
+      // Get the current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        return { error: 'Não autenticado' };
+      }
+
+      // Call the Edge Function to create user without auto-login
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          email,
+          password,
+          fullName,
+          role
         }
       });
-      
-      console.log('Auth signup response:', { authData, authError });
-      
-      if (authError) {
-        console.error('Auth creation error:', authError);
-        return { error: authError.message };
+
+      if (error) {
+        console.error('Edge function error:', error);
+        return { error: error.message || 'Erro ao criar usuário' };
       }
 
-      if (!authData.user) {
-        console.error('No user returned from signup');
-        return { error: 'Falha ao criar usuário - nenhum dados retornados' };
+      if (data?.error) {
+        console.error('User creation error:', data.error);
+        return { error: data.error };
       }
 
-      console.log('Auth user created successfully');
-      
-      // If creating a regular user (not administrator), we need to assign them to current admin's tenant
-      if (role === 'user' && authData.user) {
-        console.log('Assigning user to current admin tenant');
-        // Get current user's tenant info
-        const currentUserTenant = profile?.tenant_id || profile?.id;
-        const currentUserEmail = profile?.email;
-        const newUserEmail = email;
-        
-        // Use the database function for reliable tenant assignment
-        const assignTenant = async () => {
-          try {
-            const { error: functionError } = await supabase.rpc('assign_user_to_admin_tenant', {
-              user_email: newUserEmail,
-              admin_email: currentUserEmail
-            });
-            
-            if (functionError) {
-              console.error('Tenant assignment error:', functionError);
-              // Fallback to direct update
-              await supabase
-                .from('profiles')
-                .update({ 
-                  tenant_id: currentUserTenant,
-                  created_by: profile?.id 
-                })
-                .eq('email', newUserEmail);
-            } else {
-              console.log('User successfully assigned to tenant via function');
-            }
-          } catch (error) {
-            console.error('Error in tenant assignment:', error);
-          }
-        };
-        
-        // Wait a moment for the trigger to create the profile, then assign tenant
-        setTimeout(assignTenant, 2000);
+      if (!data?.success) {
+        console.error('Unexpected response:', data);
+        return { error: 'Resposta inesperada do servidor' };
       }
-      
+
+      console.log('User created successfully via Edge Function');
       return { error: null };
+      
     } catch (error) {
       console.error('Unexpected error creating user:', error);
-      return { error: 'An unexpected error occurred' };
+      return { error: 'Erro inesperado ao criar usuário' };
     }
   };
 

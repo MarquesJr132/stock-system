@@ -710,6 +710,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_user: {
+        Args: {
+          user_email: string
+          user_password: string
+          user_full_name: string
+          user_role?: Database["public"]["Enums"]["user_role"]
+          admin_tenant_id?: string
+        }
+        Returns: Json
+      }
       assign_user_to_admin_tenant: {
         Args: { user_email: string; admin_email: string }
         Returns: undefined
