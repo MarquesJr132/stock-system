@@ -147,7 +147,7 @@ export const useSupabaseData = () => {
 
     if (error) {
       console.error('Error fetching products:', error);
-      throw error;
+      return;
     }
     
     setProducts(data || []);
@@ -162,7 +162,7 @@ export const useSupabaseData = () => {
 
     if (error) {
       console.error('Error fetching customers:', error);
-      throw error;
+      return;
     }
     
     setCustomers(data || []);
