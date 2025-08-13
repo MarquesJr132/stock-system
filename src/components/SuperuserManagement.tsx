@@ -168,12 +168,25 @@ const SuperuserManagement = () => {
 
   const deleteAdministrator = async (adminId: string) => {
     try {
-      const { error } = await supabase
+      // Primeiro, atualizar todos os perfis que foram criados por este administrador
+      // para remover a referência de created_by
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ created_by: null })
+        .eq('created_by', adminId);
+
+      if (updateError) {
+        console.error('Error updating created_by references:', updateError);
+        throw updateError;
+      }
+
+      // Agora podemos deletar o administrador com segurança
+      const { error: deleteError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', adminId);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
       toast({
         title: "Administrador removido",
