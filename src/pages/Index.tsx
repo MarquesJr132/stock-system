@@ -23,17 +23,24 @@ const Index = () => {
   const { user, loading, isSuperuser } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
 
+  console.log("Index: Auth state", { user: !!user, loading, isSuperuser });
+
   if (loading) {
+    console.log("Index: Showing loading spinner");
     return <LoadingSpinner />;
   }
 
   if (!user) {
+    console.log("Index: No user, showing login");
     return <Login />;
   }
 
   if (isSuperuser) {
+    console.log("Index: Superuser detected, showing superuser management");
     return <SuperuserManagement />;
   }
+
+  console.log("Index: Showing normal app layout");
 
   const renderTabContent = () => {
     switch (activeTab) {
