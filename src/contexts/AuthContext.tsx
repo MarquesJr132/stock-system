@@ -253,7 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Sending OTP for password reset to', email);
       // Use OTP for password reset
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://marquesjr132.github.io/reset-password',
+        redirectTo: 'https://marquesjr132.github.io/stock-system/reset-password',
       });
       
       console.log('AuthContext: OTP send result', { error });
