@@ -100,6 +100,19 @@ serve(async (req) => {
       )
     }
 
+    // Check if user already exists
+    const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(email)
+    
+    if (existingUser.user) {
+      return new Response(
+        JSON.stringify({ error: 'Usuário já existe com este email' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
     // Create the user using admin client (this won't affect current session)
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -132,11 +145,38 @@ serve(async (req) => {
       )
     }
 
-    // Create or update the user profile
+    // Check if profile already exists to avoid duplicates
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('user_id', newUser.user.id)
+      .single()
+
+    if (existingProfile) {
+      console.log('Profile already exists for user:', newUser.user.id)
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Usuário criado com sucesso',
+          user: {
+            id: newUser.user.id,
+            email: newUser.user.email,
+            full_name: fullName,
+            role: role
+          }
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Create the user profile
     const adminTenant = profile.tenant_id || profile.id
     const { error: profileCreateError } = await supabaseAdmin
       .from('profiles')
-      .upsert({
+      .insert({
         user_id: newUser.user.id,
         email: email,
         full_name: fullName,
