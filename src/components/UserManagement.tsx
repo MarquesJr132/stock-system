@@ -278,7 +278,7 @@ const UserManagement = () => {
 
     if (window.confirm(`Tem certeza que deseja enviar um email de redefinição de senha para "${user.full_name}"?`)) {
       const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: 'https://43211b33-1899-4f3f-a601-2ad492dbc602.lovableproject.com/',
+        redirectTo: 'https://marquesjr132.github.io/reset-password',
       });
 
       if (error) {
