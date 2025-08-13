@@ -109,31 +109,18 @@ serve(async (req) => {
       )
     }
 
-    // Check if user already exists
-    const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(email)
-    
-    if (existingUser.user) {
-      console.log('User already exists:', email)
-      return new Response(
-        JSON.stringify({ error: 'Usuário já existe com este email' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
     console.log('Creating new user in auth...')
     
-    // Create the user using admin client (this won't affect current session)
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    // Create the user using standard signUp (which works in edge functions)
+    const { data: newUser, error: createError } = await supabaseAdmin.auth.signUp({
       email,
       password,
-      user_metadata: {
-        full_name: fullName,
-        role: role
-      },
-      email_confirm: true // Auto-confirm email for admin-created users
+      options: {
+        data: {
+          full_name: fullName,
+          role: role
+        }
+      }
     })
 
     if (createError) {
@@ -195,8 +182,6 @@ serve(async (req) => {
 
       if (manualProfileError) {
         console.error('Error creating profile manually:', manualProfileError)
-        // Clean up the user
-        await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
         
         return new Response(
           JSON.stringify({ error: 'Erro ao criar perfil do usuário' }),
@@ -237,8 +222,6 @@ serve(async (req) => {
 
       if (updateError) {
         console.error('Error updating profile:', updateError)
-        // Clean up the user
-        await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
         
         return new Response(
           JSON.stringify({ error: 'Erro ao atualizar perfil do usuário' }),
