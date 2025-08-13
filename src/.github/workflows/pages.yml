@@ -1,0 +1,71 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Build
+        run: npm run build
+        # If you need env vars (e.g., Supabase), uncomment and add repo Secrets:
+        env:
+          VITE_SUPABASE_URL: 'https://dwlyjmgksmehgmpehzvj.supabase.co'
+          VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3bHlqbWdrc21laGdtcGVoenZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMjIzMzUsImV4cCI6MjA3MDU5ODMzNX0.oc5rkUBJfAJshr-fLx-tZ8WHLuTCXmmacnPWv-tn1pg'
+
+      - name: Add SPA 404 fallback
+        run: |
+          if [ -f dist/index.html ]; then 
+            cp dist/index.html dist/404.html
+            echo "Adding SPA redirect configuration"
+            mkdir -p dist/.well-known
+            echo "/*    /index.html   200" > dist/_redirects
+          fi
+
+      - name: Verify build output
+        run: |
+          echo "Listing dist/"
+          ls -la dist
+          test -f dist/index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+      
+      - name: Display deployment URL
+        run: |
+          echo "🚀 Deployment successful!"
+          echo "Your app is now available at: https://marquesjr132.github.io/stock-system/"
