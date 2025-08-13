@@ -188,6 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
         options: {
+          // Don't require email confirmation for admin-created users
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: fullName,
@@ -195,6 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       });
+      
+      console.log('Auth signup response:', { authData, authError });
       
       if (authError) {
         console.error('Auth creation error:', authError);
