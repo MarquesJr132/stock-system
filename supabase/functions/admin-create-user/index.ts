@@ -145,15 +145,43 @@ serve(async (req) => {
       )
     }
 
-    // The profile is automatically created by the trigger, so we just need to update it with correct values
+    // Wait a moment for the trigger to complete, then update the profile
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    // Get the profile created by the trigger
+    const { data: createdProfile, error: profileFetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('user_id', newUser.user.id)
+      .single()
+
+    if (profileFetchError || !createdProfile) {
+      console.error('Profile not found after creation:', profileFetchError)
+      // Try to clean up the created user
+      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+      
+      return new Response(
+        JSON.stringify({ error: 'Erro ao localizar perfil do usuário' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Update the profile with correct tenant_id and created_by
     const adminTenant = profile.tenant_id || profile.id
+    const correctTenantId = role === 'administrator' ? createdProfile.id : adminTenant
+    
     const { error: profileUpdateError } = await supabaseAdmin
       .from('profiles')
       .update({
-        tenant_id: role === 'administrator' ? newUser.user.id : adminTenant,
-        created_by: profile.id
+        tenant_id: correctTenantId,
+        created_by: profile.id,
+        full_name: fullName,
+        role: role
       })
-      .eq('user_id', newUser.user.id)
+      .eq('id', createdProfile.id)
 
     if (profileUpdateError) {
       console.error('Error updating profile:', profileUpdateError)
@@ -167,22 +195,6 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
-    }
-
-    // For administrators, ensure tenant_id equals profile id
-    if (role === 'administrator') {
-      const { data: createdProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .eq('user_id', newUser.user.id)
-        .single()
-
-      if (createdProfile) {
-        await supabaseAdmin
-          .from('profiles')
-          .update({ tenant_id: createdProfile.id })
-          .eq('user_id', newUser.user.id)
-      }
     }
 
     return new Response(
