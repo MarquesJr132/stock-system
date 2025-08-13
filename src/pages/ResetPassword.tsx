@@ -24,27 +24,40 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const handlePasswordReset = async () => {
+      console.log('Current URL:', window.location.href);
       console.log('Current URL params:', Object.fromEntries(searchParams.entries()));
       console.log('Current session:', session);
       
-      // Check if we have the recovery session
-      const type = searchParams.get('type');
+      // Check if we have the recovery session from URL fragments (Supabase auth uses fragments)
+      const urlHash = window.location.hash;
+      console.log('URL hash:', urlHash);
+      
+      // Parse the hash fragment for auth tokens
+      const hashParams = new URLSearchParams(urlHash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
+      
+      console.log('Hash params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+      
+      // Also check URL search params as fallback
+      const searchType = searchParams.get('type');
       const tokenHash = searchParams.get('token_hash');
       
-      console.log('Type:', type, 'Token hash:', tokenHash);
+      console.log('Search params:', { type: searchType, tokenHash: !!tokenHash });
       
-      if (type === 'recovery' && tokenHash) {
+      if (type === 'recovery' && accessToken) {
         try {
-          // Verify the session with Supabase
-          const { data, error } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: 'recovery'
+          // Set the session using the tokens from the URL
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || ''
           });
           
-          console.log('Verify OTP result:', { data, error });
+          console.log('Set session result:', { data: !!data, error });
           
           if (error) {
-            console.error('Session verification failed:', error);
+            console.error('Session setup failed:', error);
             toast({
               title: "Link inválido",
               description: "Este link de redefinição de senha é inválido ou expirou.",
@@ -52,11 +65,42 @@ const ResetPassword = () => {
             });
             navigate('/');
           } else {
-            console.log('Session verified successfully');
+            console.log('Session setup successful');
             setIsValidSession(true);
           }
         } catch (error) {
-          console.error('Error verifying session:', error);
+          console.error('Error setting up session:', error);
+          toast({
+            title: "Erro",
+            description: "Ocorreu um erro ao verificar o link.",
+            variant: "destructive",
+          });
+          navigate('/');
+        }
+      } else if (searchType === 'recovery' && tokenHash) {
+        try {
+          // Handle the old token_hash format
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery'
+          });
+          
+          console.log('Verify OTP result:', { data: !!data, error });
+          
+          if (error) {
+            console.error('Token verification failed:', error);
+            toast({
+              title: "Link inválido",
+              description: "Este link de redefinição de senha é inválido ou expirou.",
+              variant: "destructive",
+            });
+            navigate('/');
+          } else {
+            console.log('Token verified successfully');
+            setIsValidSession(true);
+          }
+        } catch (error) {
+          console.error('Error verifying token:', error);
           toast({
             title: "Erro",
             description: "Ocorreu um erro ao verificar o link.",
@@ -70,12 +114,15 @@ const ResetPassword = () => {
         setIsValidSession(true);
       } else {
         console.log('No valid recovery parameters or session found');
+        console.log('URL params available:', Object.fromEntries(searchParams.entries()));
+        console.log('Hash fragment:', urlHash);
         toast({
           title: "Link inválido",
-          description: "Este link de redefinição de senha é inválido ou expirou.",
+          description: "Este link de redefinição de senha é inválido ou expirou. Verifique se clicou no link correto do email.",
           variant: "destructive",
         });
-        navigate('/');
+        // Don't navigate away immediately, give user a chance to see the error
+        setTimeout(() => navigate('/'), 3000);
       }
       
       setSessionChecked(true);
