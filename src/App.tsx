@@ -20,7 +20,7 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+            <BrowserRouter basename={import.meta.env.PROD ? '/stock-system' : ''}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
