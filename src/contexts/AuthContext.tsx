@@ -21,7 +21,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, fullName: string, role?: 'administrator' | 'gerente' | 'user') => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error: string | null }>;
   createUser: (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user') => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   verifyOtp: (email: string, token: string, type: 'recovery') => Promise<{ error: string | null }>;
@@ -270,7 +270,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      console.log('AuthContext: Starting logout...');
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('AuthContext: Logout error:', error);
+        throw error;
+      }
+      
+      console.log('AuthContext: Logout successful');
+      
+      // Clear local state immediately
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      setLoading(false);
+      
+      return { error: null };
+    } catch (error) {
+      console.error('AuthContext: Logout failed:', error);
+      setLoading(false);
+      return { error: error?.message || 'Erro ao fazer logout' };
+    }
   };
 
   const isSuperuserCheck = profile?.role === 'superuser';

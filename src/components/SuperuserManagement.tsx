@@ -228,7 +228,25 @@ const SuperuserManagement = () => {
                 <Shield className="h-3 w-3 mr-1" />
                 Superusuário
               </Badge>
-              <Button variant="outline" onClick={signOut}>
+              <Button variant="outline" onClick={async () => {
+                try {
+                  const result = await signOut();
+                  if (result.error) {
+                    toast({
+                      title: "Erro",
+                      description: result.error,
+                      variant: "destructive",
+                    });
+                  }
+                } catch (error) {
+                  console.error('Logout error:', error);
+                  toast({
+                    title: "Erro",
+                    description: "Erro ao fazer logout",
+                    variant: "destructive",
+                  });
+                }
+              }}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </Button>
