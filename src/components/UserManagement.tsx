@@ -143,9 +143,11 @@ const UserManagement = () => {
         description: `${newUser.fullName} foi adicionado ao sistema.`,
       });
 
+      // Just reset form and close dialog - don't log in the user
       setNewUser({ fullName: '', email: '', password: '', role: 'user' });
       setIsCreateDialogOpen(false);
-      setTimeout(() => fetchUsers(), 1000);
+      // Refresh users list
+      fetchUsers();
     } catch (error) {
       toast({
         title: "Erro inesperado",

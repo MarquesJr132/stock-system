@@ -83,6 +83,9 @@ const ProductManagement = () => {
       return;
     }
 
+    // Prevent double submission
+    if (loading) return;
+
     const productData = {
       name: formData.name,
       category: formData.category || null,

@@ -281,12 +281,27 @@ export const SupplierManagement: React.FC = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="country">País</Label>
-                      <Input
-                        id="country"
-                        value={supplierData.country}
-                        onChange={(e) => setSupplierData(prev => ({ ...prev, country: e.target.value }))}
-                      />
+                      <Label htmlFor="province">Província</Label>
+                      <Select 
+                        value={supplierData.country} 
+                        onValueChange={(value) => setSupplierData(prev => ({ ...prev, country: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar província" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Maputo">Maputo</SelectItem>
+                          <SelectItem value="Gaza">Gaza</SelectItem>
+                          <SelectItem value="Inhambane">Inhambane</SelectItem>
+                          <SelectItem value="Sofala">Sofala</SelectItem>
+                          <SelectItem value="Manica">Manica</SelectItem>
+                          <SelectItem value="Tete">Tete</SelectItem>
+                          <SelectItem value="Zambézia">Zambézia</SelectItem>
+                          <SelectItem value="Nampula">Nampula</SelectItem>
+                          <SelectItem value="Cabo Delgado">Cabo Delgado</SelectItem>
+                          <SelectItem value="Niassa">Niassa</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

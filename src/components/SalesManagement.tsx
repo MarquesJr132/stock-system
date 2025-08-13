@@ -96,6 +96,14 @@ const SalesManagement = () => {
       return;
     }
 
+    // Prevent double submission
+    const button = document.querySelector('[data-saving]') as HTMLButtonElement;
+    if (button?.disabled) return;
+    if (button) {
+      button.disabled = true;
+      button.setAttribute('data-saving', 'true');
+    }
+
     const totals = calculateTotals();
     
     // Create sale object
@@ -108,19 +116,26 @@ const SalesManagement = () => {
       items: currentSale.items
     };
 
-    let result;
-    if (editingSale) {
-      result = await updateSale(editingSale.id, saleData);
-    } else {
-      result = await addSale(saleData);
-    }
-    
-    if (result.data) {
-      setDialogOpen(false);
-      resetSale();
-      // Auto-expand the newly created sale
-      if (!editingSale && result.data) {
-        setExpandedSaleId(result.data.id);
+    try {
+      let result;
+      if (editingSale) {
+        result = await updateSale(editingSale.id, saleData);
+      } else {
+        result = await addSale(saleData);
+      }
+      
+      if (result.data) {
+        setDialogOpen(false);
+        resetSale();
+        // Auto-expand the newly created sale
+        if (!editingSale && result.data) {
+          setExpandedSaleId(result.data.id);
+        }
+      }
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.removeAttribute('data-saving');
       }
     }
   };
@@ -227,7 +242,7 @@ const SalesManagement = () => {
                 />
 
                 <div className="flex gap-2 pt-4">
-                  <Button onClick={handleSaveSale} className="flex-1">
+                  <Button onClick={handleSaveSale} className="flex-1" data-saving="false">
                     {editingSale ? 'Atualizar Venda' : 'Registrar Venda'}
                   </Button>
                   <Button 

@@ -6,7 +6,6 @@ import Dashboard from "@/components/Dashboard";
 import ProductManagement from "@/components/ProductManagement";
 import SalesManagement from "@/components/SalesManagement";
 import CustomerManagement from "@/components/CustomerManagement";
-import StockMovements from "@/components/StockMovements";
 import Reports from "@/components/Reports";
 import ProfileManagement from "@/components/ProfileManagement";
 import CompanySettings from "@/components/CompanySettings";
@@ -52,8 +51,6 @@ const Index = () => {
         return <SalesManagement />;
       case "customers":
         return <CustomerManagement />;
-      case "movements":
-        return <StockMovements />;
       case "reports":
         return <Reports />;
       case "profile":

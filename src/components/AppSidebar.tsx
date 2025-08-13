@@ -27,7 +27,6 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     { value: "products", icon: Package, label: "Produtos" },
     { value: "sales", icon: ShoppingCart, label: "Vendas" },
     { value: "customers", icon: Users, label: "Clientes" },
-    { value: "movements", icon: History, label: "Movimentos" },
     { value: "reports", icon: TrendingUp, label: "Relatórios" },
     { value: "profile", icon: UserIcon, label: "Perfil" }
   ];
