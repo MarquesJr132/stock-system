@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,38 +26,72 @@ import {
   ShoppingCart,
   Calendar,
   FileText,
-  Clock
+  Clock,
+  Filter
 } from "lucide-react";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { formatCurrency } from "@/lib/currency";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Reports = () => {
   const { products, customers, sales, getTotalValue, getDailyProfit } = useSupabaseData();
+  const { user, profile } = useAuth();
   const [period, setPeriod] = useState("30");
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedUser, setSelectedUser] = useState<string>("all");
+  const [tenantUsers, setTenantUsers] = useState<any[]>([]);
 
-  // Calculate various metrics
+  // Fetch tenant users if administrator
+  useEffect(() => {
+    const fetchTenantUsers = async () => {
+      if (profile?.role === 'administrator' || profile?.role === 'superuser') {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, role')
+            .eq('tenant_id', profile.tenant_id || profile.id)
+            .order('full_name');
+          
+          if (!error && data) {
+            setTenantUsers(data);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar usuários:', error);
+        }
+      }
+    };
+
+    fetchTenantUsers();
+  }, [profile]);
+
+  // Filter sales by selected user
+  const filteredSales = selectedUser === "all" 
+    ? sales 
+    : sales.filter(sale => sale.created_by === selectedUser);
+
+  // Calculate various metrics based on filtered sales
   const totalProducts = products.length;
   const totalCustomers = customers.length;
-  const totalSales = sales.length;
-  const totalRevenue = sales.reduce((sum, sale) => sum + sale.total_amount, 0);
-  const totalProfit = sales.reduce((sum, sale) => sum + sale.total_profit, 0);
+  const totalSales = filteredSales.length;
+  const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0);
+  const totalProfit = filteredSales.reduce((sum, sale) => sum + sale.total_profit, 0);
   const stockValue = getTotalValue();
 
-  // Sales by day (last 30 days)
+  // Sales by day (last 30 days) with user filter
   const salesByDay = Array.from({ length: 30 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
     
-    const dayTotal = sales
+    const dayTotal = filteredSales
       .filter(sale => sale.created_at.startsWith(dateStr))
       .reduce((total, sale) => total + sale.total_amount, 0);
     
     return {
       date: date.getDate().toString(),
       amount: dayTotal,
-      sales: sales.filter(sale => sale.created_at.startsWith(dateStr)).length
+      sales: filteredSales.filter(sale => sale.created_at.startsWith(dateStr)).length
     };
   }).reverse();
 
@@ -76,8 +110,8 @@ const Reports = () => {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5);
 
-  // Payment methods distribution
-  const paymentMethods = sales.reduce((acc, sale) => {
+  // Payment methods distribution with user filter
+  const paymentMethods = filteredSales.reduce((acc, sale) => {
     const method = sale.payment_method || 'Dinheiro';
     acc[method] = (acc[method] || 0) + sale.total_amount;
     return acc;
@@ -110,20 +144,44 @@ const Reports = () => {
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
             Análise de vendas e desempenho
+            {selectedUser !== "all" && (
+              <span className="ml-2 text-primary font-medium">
+                - Filtrado por usuário
+              </span>
+            )}
           </p>
         </div>
         
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Selecionar período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Últimos 7 dias</SelectItem>
-            <SelectItem value="30">Últimos 30 dias</SelectItem>
-            <SelectItem value="90">Últimos 90 dias</SelectItem>
-            <SelectItem value="365">Último ano</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col sm:flex-row gap-3">
+          {(profile?.role === 'administrator' || profile?.role === 'superuser') && (
+            <Select value={selectedUser} onValueChange={setSelectedUser}>
+              <SelectTrigger className="w-[200px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filtrar por usuário" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os usuários</SelectItem>
+                {tenantUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Selecionar período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+              <SelectItem value="365">Último ano</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -137,39 +195,63 @@ const Reports = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Receita Total
+                  {selectedUser !== "all" && (
+                    <span className="text-xs text-muted-foreground ml-1">(Usuário)</span>
+                  )}
+                </CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
                 <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">↗ +12%</span> vs período anterior
+                  {selectedUser !== "all" 
+                    ? `${totalSales} vendas realizadas`
+                    : <><span className="text-green-600">↗ +12%</span> vs período anterior</>
+                  }
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Lucro Total</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Lucro Total
+                  {selectedUser !== "all" && (
+                    <span className="text-xs text-muted-foreground ml-1">(Usuário)</span>
+                  )}
+                </CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatCurrency(totalProfit)}</div>
                 <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">↗ +8%</span> vs período anterior
+                  {selectedUser !== "all" 
+                    ? `Margem: ${totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0}%`
+                    : <><span className="text-green-600">↗ +8%</span> vs período anterior</>
+                  }
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Vendas</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Vendas
+                  {selectedUser !== "all" && (
+                    <span className="text-xs text-muted-foreground ml-1">(Usuário)</span>
+                  )}
+                </CardTitle>
                 <ShoppingCart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalSales}</div>
                 <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">↗ +15%</span> vs período anterior
+                  {selectedUser !== "all" 
+                    ? `Ticket médio: ${totalSales > 0 ? formatCurrency(totalRevenue / totalSales) : formatCurrency(0)}`
+                    : <><span className="text-green-600">↗ +15%</span> vs período anterior</>
+                  }
                 </p>
               </CardContent>
             </Card>
@@ -192,7 +274,14 @@ const Reports = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Vendas por Dia</CardTitle>
+                <CardTitle>
+                  Vendas por Dia
+                  {selectedUser !== "all" && tenantUsers.find(u => u.id === selectedUser) && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      - {tenantUsers.find(u => u.id === selectedUser)?.full_name}
+                    </span>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -214,7 +303,14 @@ const Reports = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Métodos de Pagamento</CardTitle>
+                <CardTitle>
+                  Métodos de Pagamento
+                  {selectedUser !== "all" && tenantUsers.find(u => u.id === selectedUser) && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      - {tenantUsers.find(u => u.id === selectedUser)?.full_name}
+                    </span>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
