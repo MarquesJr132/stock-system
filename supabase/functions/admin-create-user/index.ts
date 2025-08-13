@@ -145,23 +145,22 @@ serve(async (req) => {
       )
     }
 
-    // Wait a moment for the trigger to complete, then update the profile
-    await new Promise(resolve => setTimeout(resolve, 100))
+    // Aguardar um pouco para o trigger completar
+    await new Promise(resolve => setTimeout(resolve, 200))
     
-    // Get the profile created by the trigger
+    // Buscar o perfil criado pelo trigger
     const { data: createdProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('user_id', newUser.user.id)
-      .single()
+      .maybeSingle()
 
-    if (profileFetchError || !createdProfile) {
-      console.error('Profile not found after creation:', profileFetchError)
-      // Try to clean up the created user
+    if (profileFetchError) {
+      console.error('Error fetching profile:', profileFetchError)
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
       
       return new Response(
-        JSON.stringify({ error: 'Erro ao localizar perfil do usuário' }),
+        JSON.stringify({ error: 'Erro ao buscar perfil do usuário' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -169,27 +168,39 @@ serve(async (req) => {
       )
     }
 
-    // Update the profile with correct tenant_id and created_by
+    if (!createdProfile) {
+      console.error('Profile not created by trigger')
+      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+      
+      return new Response(
+        JSON.stringify({ error: 'Perfil não foi criado automaticamente' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Atualizar o perfil com os valores corretos
     const adminTenant = profile.tenant_id || profile.id
     const correctTenantId = role === 'administrator' ? createdProfile.id : adminTenant
     
     const { error: profileUpdateError } = await supabaseAdmin
       .from('profiles')
       .update({
-        tenant_id: correctTenantId,
-        created_by: profile.id,
         full_name: fullName,
-        role: role
+        role: role,
+        tenant_id: correctTenantId,
+        created_by: profile.id
       })
       .eq('id', createdProfile.id)
 
     if (profileUpdateError) {
       console.error('Error updating profile:', profileUpdateError)
-      // Try to clean up the created user
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
       
       return new Response(
-        JSON.stringify({ error: 'Erro ao configurar perfil do usuário' }),
+        JSON.stringify({ error: 'Erro ao atualizar perfil do usuário' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
