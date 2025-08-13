@@ -38,10 +38,18 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Se for superuser, mostra todos. Senão, mostra apenas do próprio tenant
+      if (!isSuperuser && profile) {
+        const userTenant = profile.tenant_id || profile.id;
+        query = query.or(`tenant_id.eq.${userTenant},user_id.eq.${profile.user_id}`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setUsers(data || []);
@@ -336,9 +344,15 @@ const UserManagement = () => {
     if (isSuperuser) {
       return true; // Superusers can see all users
     }
-    // For this simplified version, we'll just show all users
-    // In production, you'd filter by tenant
-    return true;
+    
+    if (!profile) {
+      return false;
+    }
+    
+    const userTenant = profile.tenant_id || profile.id;
+    
+    // Show users from same tenant or the user himself
+    return user.tenant_id === userTenant || user.user_id === profile.user_id;
   });
 
   if (loading) {
