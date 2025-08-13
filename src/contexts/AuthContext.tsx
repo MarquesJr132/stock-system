@@ -92,19 +92,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         console.log('AuthContext: Auth state changed', { event, session: !!session });
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('AuthContext: Fetching profile for user', session.user.id);
-          // Use setTimeout to prevent race conditions
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
-        } else {
-          console.log('AuthContext: No session, clearing profile');
+        // Prevent unnecessary state updates if nothing changed
+        if (event === 'SIGNED_OUT' || !session) {
+          console.log('AuthContext: User signed out, clearing state');
+          setSession(null);
+          setUser(null);
           setProfile(null);
           setLoading(false);
+          return;
+        }
+        
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(session);
+          setUser(session.user);
+          
+          if (session.user) {
+            console.log('AuthContext: Fetching profile for user', session.user.id);
+            // Use setTimeout to prevent race conditions
+            setTimeout(() => {
+              fetchProfile(session.user.id);
+            }, 0);
+          }
         }
       }
     );
@@ -274,26 +282,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Starting logout...');
       setLoading(true);
       
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('AuthContext: Logout error:', error);
-        throw error;
-      }
-      
-      console.log('AuthContext: Logout successful');
-      
-      // Clear local state immediately
+      // Clear local state first to prevent re-authentication loops
       setUser(null);
       setProfile(null);
       setSession(null);
+      
+      // Then clear Supabase session (ignore error if session already gone)
+      const { error } = await supabase.auth.signOut();
+      
+      if (error && error.message !== 'Auth session missing!') {
+        console.error('AuthContext: Logout error:', error);
+        // Don't throw for missing session - this is expected in some cases
+      }
+      
+      console.log('AuthContext: Logout completed');
       setLoading(false);
       
       return { error: null };
     } catch (error) {
       console.error('AuthContext: Logout failed:', error);
+      // Still clear local state even if logout fails
+      setUser(null);
+      setProfile(null);
+      setSession(null);
       setLoading(false);
-      return { error: error?.message || 'Erro ao fazer logout' };
+      return { error: null }; // Don't show error to user for logout
     }
   };
 
