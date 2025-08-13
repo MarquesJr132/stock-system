@@ -145,58 +145,44 @@ serve(async (req) => {
       )
     }
 
-    // Check if profile already exists to avoid duplicates
-    const { data: existingProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('user_id', newUser.user.id)
-      .single()
-
-    if (existingProfile) {
-      console.log('Profile already exists for user:', newUser.user.id)
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Usuário criado com sucesso',
-          user: {
-            id: newUser.user.id,
-            email: newUser.user.email,
-            full_name: fullName,
-            role: role
-          }
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Create the user profile
+    // The profile is automatically created by the trigger, so we just need to update it with correct values
     const adminTenant = profile.tenant_id || profile.id
-    const { error: profileCreateError } = await supabaseAdmin
+    const { error: profileUpdateError } = await supabaseAdmin
       .from('profiles')
-      .insert({
-        user_id: newUser.user.id,
-        email: email,
-        full_name: fullName,
-        role: role,
+      .update({
         tenant_id: role === 'administrator' ? newUser.user.id : adminTenant,
         created_by: profile.id
       })
+      .eq('user_id', newUser.user.id)
 
-    if (profileCreateError) {
-      console.error('Error creating profile:', profileCreateError)
+    if (profileUpdateError) {
+      console.error('Error updating profile:', profileUpdateError)
       // Try to clean up the created user
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
       
       return new Response(
-        JSON.stringify({ error: 'Erro ao criar perfil do usuário' }),
+        JSON.stringify({ error: 'Erro ao configurar perfil do usuário' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
+    }
+
+    // For administrators, ensure tenant_id equals profile id
+    if (role === 'administrator') {
+      const { data: createdProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('user_id', newUser.user.id)
+        .single()
+
+      if (createdProfile) {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ tenant_id: createdProfile.id })
+          .eq('user_id', newUser.user.id)
+      }
     }
 
     return new Response(
