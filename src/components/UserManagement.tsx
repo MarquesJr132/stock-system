@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { Profile, useAuth } from '@/contexts/AuthContext';
-import { UserPlus, Users, Trash2, Shield, Crown, User, Settings } from 'lucide-react';
+import { UserPlus, Users, Trash2, Shield, Crown, User, Settings, Key } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 const UserManagement = () => {
@@ -266,6 +266,36 @@ const UserManagement = () => {
     }
   };
 
+  const handleResetUserPassword = async (user: Profile) => {
+    if (user.user_id === profile?.user_id) {
+      toast({
+        title: "Ação desnecessária",
+        description: "Use a seção de perfil para alterar sua própria senha.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (window.confirm(`Tem certeza que deseja enviar um email de redefinição de senha para "${user.full_name}"?`)) {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (error) {
+        toast({
+          title: "Erro ao enviar email",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email enviado!",
+          description: `Um email de redefinição de senha foi enviado para ${user.email}.`,
+        });
+      }
+    }
+  };
+
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'superuser': return <Crown className="h-4 w-4" />;
@@ -461,6 +491,17 @@ const UserManagement = () => {
                           onClick={() => handleEditUser(user)}
                         >
                           Editar
+                        </Button>
+                      )}
+                      {(isSuperuser || isAdministrator) && 
+                       user.user_id !== profile?.user_id && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleResetUserPassword(user)}
+                        >
+                          <Key className="h-4 w-4 mr-1" />
+                          Reset Senha
                         </Button>
                       )}
                       {(isSuperuser || (isAdministrator && user.role === 'user')) && 
