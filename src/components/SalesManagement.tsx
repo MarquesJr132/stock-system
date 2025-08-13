@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search, ShoppingCart, CreditCard, Banknote, Users, Printer } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Plus, Search, ShoppingCart, CreditCard, Banknote, Users, Printer, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useSupabaseData, SaleItem } from "@/hooks/useSupabaseData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ const SalesManagement = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [editingSale, setEditingSale] = useState<any>(null);
+  const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const [currentSale, setCurrentSale] = useState({
     customer_id: "",
     payment_method: "Dinheiro",
@@ -116,7 +118,21 @@ const SalesManagement = () => {
     if (result.data) {
       setDialogOpen(false);
       resetSale();
+      // Auto-expand the newly created sale
+      if (!editingSale && result.data) {
+        setExpandedSaleId(result.data.id);
+      }
     }
+  };
+
+  const toggleSaleExpansion = (saleId: string) => {
+    setExpandedSaleId(prev => prev === saleId ? null : saleId);
+  };
+
+  const handleNewSale = () => {
+    resetSale();
+    // Minimize the currently expanded sale and prepare for new sale
+    setExpandedSaleId(null);
   };
 
   const formatPaymentMethod = (method: string) => {
@@ -154,7 +170,7 @@ const SalesManagement = () => {
         {isAdministrator && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetSale} className="flex items-center gap-2">
+              <Button onClick={handleNewSale} className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Nova Venda
               </Button>
@@ -246,84 +262,103 @@ const SalesManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Sales List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      {/* Sales List with Accordion */}
+      <div className="space-y-4">
         {filteredSales.map((sale) => {
           const customer = customers.find(c => c.id === sale.customer_id);
           const customerName = getCustomerName(sale.customer_id);
+          const isExpanded = expandedSaleId === sale.id;
           
           return (
-            <Card key={sale.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <ShoppingCart className="h-5 w-5" />
-                      Venda #{sale.id.slice(-8)}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Cliente: {customerName}
-                    </p>
-                  </div>
-                   <div className="flex gap-1">
-                     <Button
-                       variant="ghost"
-                       size="sm"
-                       onClick={() => loadSaleForEdit(sale)}
-                       title="Editar venda"
-                     >
-                       Editar
-                     </Button>
-                     <Button
-                       variant="ghost"
-                       size="sm"
-                       onClick={() => {
-                         setSelectedSale(sale);
-                         setPreviewOpen(true);
-                       }}
-                       title="Gerar fatura"
-                     >
-                       <Printer className="h-4 w-4" />
-                     </Button>
-                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Total:</span>
-                  <span className="font-semibold text-lg">
-                    {formatCurrency(getSaleTotal(sale))}
-                  </span>
-                </div>
+            <Card key={sale.id} className="transition-all duration-200 hover:shadow-md">
+              <Collapsible open={isExpanded} onOpenChange={() => toggleSaleExpansion(sale.id)}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/5 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <ShoppingCart className="h-5 w-5 text-primary" />
+                        <div>
+                          <CardTitle className="text-lg">
+                            Venda #{sale.id.slice(-8)}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            {customerName} • {formatCurrency(getSaleTotal(sale))}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {sale.payment_method === "Dinheiro" && "💵"}
+                          {sale.payment_method === "Cartão" && "💳"}
+                          {sale.payment_method === "Transferência" && "🏦"}
+                          {sale.payment_method === "Mpesa" && "📱"}
+                          {" "}
+                          {formatPaymentMethod(sale.payment_method)}
+                        </Badge>
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  <CardContent className="pt-0 space-y-4">
+                    {/* Sale Details */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-accent/5 rounded-lg">
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Total</p>
+                        <p className="font-semibold text-lg">{formatCurrency(getSaleTotal(sale))}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">IVA</p>
+                        <p className="text-sm">{formatCurrency(sale.total_vat_amount || 0)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Lucro</p>
+                        <p className="text-sm text-green-600 font-medium">{formatCurrency(sale.total_profit || 0)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Data</p>
+                        <p className="text-sm">{new Date(sale.created_at).toLocaleDateString('pt-PT')}</p>
+                      </div>
+                    </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">IVA:</span>
-                  <span className="text-sm">
-                    {formatCurrency(sale.total_vat_amount || 0)}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Lucro:</span>
-                  <span className="text-sm text-green-600 font-medium">
-                    {formatCurrency(sale.total_profit || 0)}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center pt-2 border-t">
-                  <Badge variant="outline">
-                    {sale.payment_method === "Dinheiro" && "💵"}
-                    {sale.payment_method === "Cartão" && "💳"}
-                    {sale.payment_method === "Transferência" && "🏦"}
-                    {sale.payment_method === "Mpesa" && "📱"}
-                    {" "}
-                    {formatPaymentMethod(sale.payment_method)}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(sale.created_at).toLocaleDateString('pt-PT')}
-                  </span>
-                </div>
-              </CardContent>
+                    {/* Actions */}
+                    <div className="flex flex-wrap gap-2 pt-2 border-t">
+                      {isAdministrator && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            loadSaleForEdit(sale);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          Editar Venda
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSale(sale);
+                          setPreviewOpen(true);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Printer className="h-4 w-4" />
+                        Gerar Fatura
+                      </Button>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
             </Card>
           );
         })}
