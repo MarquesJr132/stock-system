@@ -732,6 +732,10 @@ export type Database = {
         Args: { tenant_uuid: string }
         Returns: boolean
       }
+      cleanup_tenant_data: {
+        Args: { tenant_uuid: string }
+        Returns: undefined
+      }
       get_administrators: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -779,6 +783,10 @@ export type Database = {
       increment_user_count: {
         Args: { tenant_uuid: string }
         Returns: boolean
+      }
+      initialize_tenant_limits: {
+        Args: { tenant_uuid: string }
+        Returns: undefined
       }
       is_administrator: {
         Args: Record<PropertyKey, never>
