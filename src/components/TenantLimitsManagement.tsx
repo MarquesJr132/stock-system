@@ -131,6 +131,30 @@ const TenantLimitsManagement = () => {
     setEditDialogOpen(true);
   };
 
+  const syncTenantData = async (tenantId: string) => {
+    try {
+      console.log('Syncing data for tenant:', tenantId);
+      const { error } = await supabase.rpc('sync_tenant_data_usage', {
+        tenant_uuid: tenantId
+      });
+
+      if (error) {
+        console.error('Error syncing tenant data:', error);
+        toast.error(`Erro ao sincronizar dados: ${error.message}`);
+        return;
+      }
+
+      toast.success('Dados sincronizados com sucesso!');
+      // Recarregar os dados após sincronização
+      setTimeout(() => {
+        loadTenantLimits();
+      }, 500);
+    } catch (error: any) {
+      console.error('Error syncing tenant data:', error);
+      toast.error(`Erro ao sincronizar dados: ${error.message}`);
+    }
+  };
+
   const getUsagePercentage = (current: number, limit: number) => {
     return Math.round((current / limit) * 100);
   };
@@ -291,6 +315,14 @@ const TenantLimitsManagement = () => {
                       {isNearLimit && (
                         <AlertTriangle className="h-5 w-5 text-yellow-500" />
                       )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => syncTenantData(limit.tenant_id)}
+                        className="mr-2"
+                      >
+                        Sync
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

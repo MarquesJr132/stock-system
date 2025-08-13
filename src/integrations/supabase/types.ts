@@ -798,6 +798,10 @@ export type Database = {
         Args: { tenant_uuid: string }
         Returns: undefined
       }
+      sync_tenant_data_usage: {
+        Args: { tenant_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "superuser" | "administrator" | "user" | "gerente"
