@@ -196,10 +196,10 @@ const UserManagement = () => {
   const handleUpdateUser = async () => {
     if (!editingUser) return;
 
-    if (!editUser.fullName || !editUser.email) {
+    if (!editUser.fullName) {
       toast({
         title: "Erro",
-        description: "Por favor, preencha todos os campos.",
+        description: "Por favor, preencha o nome completo.",
         variant: "destructive"
       });
       return;
@@ -229,22 +229,20 @@ const UserManagement = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      // Update profile data only (no password updates)
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: editUser.fullName,
-          email: editUser.email,
-          role: editUser.role
+          updated_at: new Date().toISOString()
         })
-        .eq('id', editingUser.id)
-        .select()
-        .single();
+        .eq('id', editingUser.id);
 
-      if (error) {
-        console.error('Error updating user:', error);
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
         toast({
           title: "Erro ao atualizar utilizador",
-          description: error.message,
+          description: profileError.message,
           variant: "destructive",
         });
         return;
@@ -504,9 +502,13 @@ const UserManagement = () => {
                     id="edit-email"
                     type="email"
                     value={editUser.email}
-                    onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                    disabled
+                    className="bg-muted"
                     placeholder="email@exemplo.com"
                   />
+                  <p className="text-sm text-muted-foreground">
+                    O email não pode ser alterado. Para alterações de senha, o utilizador deve usar o seu perfil.
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="edit-role">Função</Label>
