@@ -51,7 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('AuthContext: Fetching profile for user', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -66,15 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (!data) {
-        console.log('AuthContext: No profile found for user', userId);
         setProfile(null);
         setLoading(false);
         return;
       }
 
-      console.log('AuthContext: Profile fetched successfully', data);
-      console.log('AuthContext: Profile role is:', data.role);
-      console.log('AuthContext: Is superuser?', data.role === 'superuser');
       setProfile(data);
       setLoading(false);
     } catch (error) {
@@ -85,16 +80,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    console.log('AuthContext: Setting up auth state listener');
-    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('AuthContext: Auth state changed', { event, session: !!session });
-        
         // Prevent unnecessary state updates if nothing changed
         if (event === 'SIGNED_OUT' || !session) {
-          console.log('AuthContext: User signed out, clearing state');
           setSession(null);
           setUser(null);
           setProfile(null);
@@ -107,7 +97,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(session.user);
           
           if (session.user) {
-            console.log('AuthContext: Fetching profile for user', session.user.id);
             // Use setTimeout to prevent race conditions
             setTimeout(() => {
               fetchProfile(session.user.id);
@@ -118,22 +107,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    console.log('AuthContext: Checking for existing session');
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthContext: Initial session check', { session: !!session });
-      
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (session?.user) {
-        console.log('AuthContext: Fetching profile for existing session', session.user.id);
-        // Don't fetch profile here if we already handled it in the auth state change
-        // fetchProfile(session.user.id);
-      }
-      
       // Always set loading to false after initial session check
       if (!session) {
-        console.log('AuthContext: No existing session');
         setLoading(false);
       }
     }).catch((error) => {
@@ -189,8 +168,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const createUser = async (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user') => {
     try {
-      console.log('Creating user with role:', role);
-      
       // Get the current session token
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -223,7 +200,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'Resposta inesperada do servidor' };
       }
 
-      console.log('User created successfully via Edge Function');
       return { error: null };
       
     } catch (error) {
@@ -234,13 +210,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
-      console.log('AuthContext: Sending OTP for password reset to', email);
       // Use OTP for password reset
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'https://marquesjr132.github.io/stock-system/reset-password',
       });
       
-      console.log('AuthContext: OTP send result', { error });
       return { error: error?.message ?? null };
     } catch (error) {
       console.error('AuthContext: Error sending OTP', error);
@@ -250,14 +224,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyOtp = async (email: string, token: string, type: 'recovery') => {
     try {
-      console.log('AuthContext: Verifying OTP', { email, token: token.length });
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
         type: 'recovery', // Use 'recovery' type for password reset
       });
       
-      console.log('AuthContext: OTP verification result', { data: !!data, error });
       return { error: error?.message ?? null };
     } catch (error) {
       console.error('AuthContext: Error verifying OTP', error);
@@ -279,7 +251,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      console.log('AuthContext: Starting logout...');
       setLoading(true);
       
       // Clear local state first to prevent re-authentication loops
@@ -295,7 +266,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Don't throw for missing session - this is expected in some cases
       }
       
-      console.log('AuthContext: Logout completed');
       setLoading(false);
       
       return { error: null };
@@ -313,13 +283,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isSuperuserCheck = profile?.role === 'superuser';
   const isAdminCheck = profile?.role === 'administrator' || profile?.role === 'superuser' || profile?.role === 'gerente';
   const isGerenteCheck = profile?.role === 'gerente';
-  
-  console.log('AuthContext: Role checks', { 
-    profileRole: profile?.role, 
-    isSuperuser: isSuperuserCheck, 
-    isAdmin: isAdminCheck,
-    isGerente: isGerenteCheck
-  });
 
   const value = {
     user,

@@ -56,12 +56,12 @@ const TenantLimitsManagement = () => {
   const loadTenantLimits = async () => {
     setLoading(true);
     try {
-      console.log('Loading tenant limits...');
+      
       const result = await getAllTenantLimits();
-      console.log('Tenant limits result:', result);
+      
       if (result.data) {
         setTenantLimits(result.data);
-        console.log('Set tenant limits:', result.data);
+        
       } else if (result.error) {
         console.error('Error loading tenant limits:', result.error);
         toast.error(result.error);
@@ -87,13 +87,13 @@ const TenantLimitsManagement = () => {
       return;
     }
     
-    console.log('Submitting tenant limit for admin:', selectedAdmin);
+    
     const result = await updateTenantLimits(selectedAdmin.tenant_id || selectedAdmin.id, {
       monthly_data_limit: formData.monthly_data_limit,
       monthly_user_limit: formData.monthly_user_limit
     });
 
-    console.log('Update result:', result);
+    
     if (result.data) {
       setDialogOpen(false);
       setFormData({ selected_admin: "", monthly_data_limit: 1000, monthly_user_limit: 10 });
@@ -109,7 +109,7 @@ const TenantLimitsManagement = () => {
     
     if (!editingLimit) return;
     
-    console.log('Updating tenant limit:', editingLimit.tenant_id, editFormData);
+    
     const result = await updateTenantLimits(editingLimit.tenant_id, editFormData);
 
     if (result.data) {
@@ -133,7 +133,7 @@ const TenantLimitsManagement = () => {
 
   const syncTenantData = async (tenantId: string) => {
     try {
-      console.log('Syncing data for tenant:', tenantId);
+      
       const { error } = await supabase.rpc('sync_tenant_data_usage', {
         tenant_uuid: tenantId
       });

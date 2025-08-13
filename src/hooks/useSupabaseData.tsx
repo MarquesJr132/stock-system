@@ -139,7 +139,7 @@ export const useSupabaseData = () => {
   };
 
   const fetchProducts = async () => {
-    console.log('Fetching products for user:', profile?.email, 'tenant:', profile?.tenant_id || profile?.id);
+    
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -149,12 +149,12 @@ export const useSupabaseData = () => {
       console.error('Error fetching products:', error);
       throw error;
     }
-    console.log('Products fetched:', data?.length, 'products for tenant');
+    
     setProducts(data || []);
   };
 
   const fetchCustomers = async () => {
-    console.log('Fetching customers for user:', profile?.email, 'tenant:', profile?.tenant_id || profile?.id);
+    
     const { data, error } = await supabase
       .from('customers')
       .select('*')
@@ -164,7 +164,7 @@ export const useSupabaseData = () => {
       console.error('Error fetching customers:', error);
       throw error;
     }
-    console.log('Customers fetched:', data?.length, 'customers for tenant');
+    
     setCustomers(data || []);
   };
 
@@ -657,7 +657,7 @@ export const useSupabaseData = () => {
     }
 
     try {
-      console.log('Updating tenant limits for:', tenantId, 'with data:', limitsData);
+      
       
       // Use a direct update with ON CONFLICT to avoid race conditions
       const { data, error } = await supabase
@@ -706,7 +706,7 @@ export const useSupabaseData = () => {
         return { data: insertData };
       }
 
-      console.log('Tenant limits updated successfully:', data);
+      
       toast({
         title: "Sucesso",
         description: "Limites do tenant atualizados com sucesso",
@@ -725,11 +725,11 @@ export const useSupabaseData = () => {
 
   const getAllTenantLimits = async () => {
     if (!profile?.role || profile.role !== 'superuser') {
-      console.log('User is not superuser, role:', profile?.role);
+      
       return { error: 'Apenas superusers podem ver todos os limites' };
     }
 
-    console.log('Fetching all tenant limits...');
+    
     const { data, error } = await supabase
       .from('tenant_limits')
       .select(`
@@ -737,7 +737,7 @@ export const useSupabaseData = () => {
       `)
       .order('created_at', { ascending: false });
 
-    console.log('Tenant limits query result:', { data, error });
+    
     if (error) {
       console.error('Error fetching tenant limits:', error);
       return { error: error.message };
@@ -748,13 +748,13 @@ export const useSupabaseData = () => {
 
   const checkUserLimit = async (tenantId: string) => {
     try {
-      console.log('Checking user limit for tenant:', tenantId);
+      
       const { data, error } = await supabase
         .rpc('check_user_limit', {
           tenant_uuid: tenantId
         });
 
-      console.log('User limit check result:', { data, error, tenantId });
+      
       if (error) {
         console.error('Error checking user limit:', error);
         return { canCreate: false, error: error.message };
@@ -769,14 +769,14 @@ export const useSupabaseData = () => {
 
   const checkDataLimit = async (tenantId: string) => {
     try {
-      console.log('Checking data limit for tenant:', tenantId);
+      
       const { data, error } = await supabase
         .rpc('check_data_limit', {
           tenant_uuid: tenantId,
           data_type_param: 'check'
         });
 
-      console.log('Data limit check result:', { data, error, tenantId });
+      
       if (error) {
         console.error('Error checking data limit:', error);
         return { canCreate: false, error: error.message };
