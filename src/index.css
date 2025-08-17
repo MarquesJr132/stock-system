@@ -199,10 +199,4 @@ All colors MUST be HSL.
     box-shadow: var(--shadow-elegant);
   }
   
-  .text-gradient {
-    background: var(--gradient-hero);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
 }

@@ -212,7 +212,7 @@ const SuperuserManagement = () => {
             <div className="flex items-center gap-3">
               <Shield className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-foreground">
                   Painel do Superusuário
                 </h1>
                 <p className="text-sm text-muted-foreground">

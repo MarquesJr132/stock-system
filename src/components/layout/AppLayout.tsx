@@ -32,7 +32,7 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
                 
                 {/* Title - responsive */}
                 <div className="flex-1">
-                  <h1 className="text-xl lg:text-2xl font-bold text-gradient truncate">
+                  <h1 className="text-xl lg:text-2xl font-bold text-foreground truncate">
                     <span className="hidden sm:inline">InvestorStock Pro</span>
                     <span className="sm:hidden">InvestorStock</span>
                     <span className="hidden lg:inline text-muted-foreground font-normal text-sm">
