@@ -108,128 +108,237 @@ const Dashboard = () => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards - Mobile responsive */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">{/* Smaller gaps on mobile */}
+    <div className="space-y-8">
+      {/* Premium Hero Section */}
+      <div className="relative overflow-hidden rounded-2xl gradient-hero p-8 text-white">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-bold mb-2">
+            Bem-vindo ao InvestorStock Pro
+          </h2>
+          <p className="text-lg opacity-90 mb-4">
+            Dashboard executivo • Gestão avançada de inventário
+          </p>
+          <div className="flex items-center gap-4 text-sm opacity-80">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              Sistema ativo
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              {customers.length} clientes ativos
+            </div>
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              {products.length} produtos cadastrados
+            </div>
+          </div>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+      </div>
+
+      {/* Premium Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
         {stats.map((stat, index) => (
-          <Card key={index} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+          <Card key={index} className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 hover:scale-105">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
+              <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 {stat.title}
               </CardTitle>
-              <stat.icon className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+              <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <stat.icon className="h-5 w-5 text-primary" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+            <CardContent className="relative z-10">
+              <div className="text-3xl font-bold text-foreground mb-2">
                 {stat.value}
               </div>
-              <div className="flex items-center space-x-1 mt-1">
-                {stat.changeType === "positive" ? (
-                  <TrendingUp className="h-3 w-3 text-green-500" />
-                ) : (
-                  <TrendingDown className="h-3 w-3 text-red-500" />
-                )}
-                <span className={`text-xs ${
-                  stat.changeType === "positive" ? "text-green-500" : "text-red-500"
+              <div className="flex items-center space-x-2">
+                <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                  stat.changeType === "positive" 
+                    ? "bg-green-500/10 text-green-500" 
+                    : "bg-red-500/10 text-red-500"
                 }`}>
-                  {stat.change}
-                </span>
+                  {stat.changeType === "positive" ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  <span>{stat.change}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">vs último mês</span>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">{/* Mobile responsive charts */}
-        {/* Sales Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Vendas dos Últimos 7 Dias</CardTitle>
-            <CardDescription>
-              Evolução das vendas diárias
-            </CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Premium Sales Chart */}
+        <Card className="border-0 shadow-elegant">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg gradient-primary">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold">Evolução de Vendas</CardTitle>
+                <CardDescription className="text-sm">
+                  Performance dos últimos 7 dias
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="px-2 sm:px-6">{/* Smaller padding on mobile */}
-            <ResponsiveContainer width="100%" height={250}>{/* Smaller height on mobile */}
+          <CardContent className="px-6">
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
+                <defs>
+                  <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(262 83% 58%)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(262 83% 58%)" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '12px',
+                    boxShadow: 'var(--shadow-card)'
+                  }}
+                />
                 <Line 
                   type="monotone" 
                   dataKey="amount" 
-                  stroke="#0088FE" 
-                  strokeWidth={2}
-                  dot={{ fill: '#0088FE' }}
+                  stroke="hsl(262 83% 58%)" 
+                  strokeWidth={3}
+                  fill="url(#salesGradient)"
+                  dot={{ fill: 'hsl(262 83% 58%)', strokeWidth: 2, r: 6 }}
+                  activeDot={{ r: 8, stroke: 'hsl(262 83% 58%)', strokeWidth: 2, fill: 'white' }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Top Products */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Produtos Mais Vendidos</CardTitle>
-            <CardDescription>
-              Top 5 produtos por quantidade vendida
-            </CardDescription>
+        {/* Premium Top Products */}
+        <Card className="border-0 shadow-elegant">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg gradient-secondary">
+                <Package className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold">Top Produtos</CardTitle>
+                <CardDescription className="text-sm">
+                  Produtos mais vendidos
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="px-2 sm:px-6">{/* Smaller padding on mobile */}
-            <ResponsiveContainer width="100%" height={250}>{/* Smaller height on mobile */}
+          <CardContent className="px-6">
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={topProducts}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="totalSold" fill="#00C49F" />
+                <defs>
+                  <linearGradient id="productGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(12 76% 61%)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(38 92% 50%)" stopOpacity={0.8}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '12px',
+                    boxShadow: 'var(--shadow-card)'
+                  }}
+                />
+                <Bar 
+                  dataKey="totalSold" 
+                  fill="url(#productGradient)"
+                  radius={[6, 6, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">{/* Mobile responsive */}
-        {/* Low Stock Alert */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Alertas de Stock Baixo
-            </CardTitle>
-            <CardDescription>
-              Produtos que precisam de reposição
-            </CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Premium Low Stock Alert */}
+        <Card className="border-0 shadow-elegant">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-500/10">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold">Alertas de Stock</CardTitle>
+                <CardDescription className="text-sm">
+                  Produtos com baixo inventário
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {lowStockProducts.length === 0 ? (
-                <p className="text-slate-500 text-center py-4">
-                  Todos os produtos estão com stock adequado 🎉
-                </p>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <Package className="h-8 w-8 text-green-500" />
+                  </div>
+                  <p className="text-foreground font-medium mb-1">
+                    Stock adequado
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    Todos os produtos estão bem abastecidos
+                  </p>
+                </div>
               ) : (
                 lowStockProducts.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between p-2 sm:p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-slate-800 dark:text-slate-100 truncate text-sm sm:text-base">
-                        {product.name}
-                      </p>
-                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 truncate">
-                        {product.category || 'Sem categoria'}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <Badge variant="destructive" className="text-xs">
-                        {product.quantity} unidades
-                      </Badge>
-                      <Progress 
-                        value={(product.quantity / (product.min_stock || 1)) * 100} 
-                        className="w-16 sm:w-20 mt-1"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                        <span>Atual: {product.quantity}</span>
-                        <span>Mínimo: {product.min_stock || 0}</span>
+                  <div key={product.id} className="group p-4 rounded-xl border bg-gradient-to-r from-orange-50/50 to-red-50/50 hover:from-orange-50 hover:to-red-50 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground truncate">
+                          {product.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {product.category || 'Sem categoria'}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-4">
+                        <Badge variant="destructive" className="text-xs font-semibold">
+                          {product.quantity} restantes
+                        </Badge>
+                        <div className="mt-2">
+                          <Progress 
+                            value={(product.quantity / (product.min_stock || 1)) * 100} 
+                            className="w-24 h-2"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Atual: {product.quantity}</span>
+                            <span>Mín: {product.min_stock || 0}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -239,17 +348,38 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Stock Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição por Categoria</CardTitle>
-            <CardDescription>
-              Valor do stock por categoria de produto
-            </CardDescription>
+        {/* Premium Stock Distribution */}
+        <Card className="border-0 shadow-elegant">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg gradient-accent">
+                <Target className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold">Distribuição</CardTitle>
+                <CardDescription className="text-sm">
+                  Valor por categoria de produto
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="px-2 sm:px-6">{/* Smaller padding on mobile */}
-            <ResponsiveContainer width="100%" height={250}>{/* Smaller height on mobile */}
+          <CardContent className="px-6">
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
+                <defs>
+                  <linearGradient id="categoryGradient1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="hsl(262 83% 58%)" />
+                    <stop offset="100%" stopColor="hsl(220 70% 50%)" />
+                  </linearGradient>
+                  <linearGradient id="categoryGradient2" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="hsl(12 76% 61%)" />
+                    <stop offset="100%" stopColor="hsl(38 92% 50%)" />
+                  </linearGradient>
+                  <linearGradient id="categoryGradient3" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="hsl(142 76% 36%)" />
+                    <stop offset="100%" stopColor="hsl(172 76% 45%)" />
+                  </linearGradient>
+                </defs>
                 <Pie
                   data={products.reduce((acc, product) => {
                     const category = product.category || 'Sem categoria';
@@ -269,15 +399,26 @@ const Dashboard = () => {
                   cy="50%"
                   labelLine={false}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
+                  outerRadius={90}
+                  fill="url(#categoryGradient1)"
                   dataKey="value"
                 >
-                  {products.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
+                  {products.map((_, index) => {
+                    const gradients = ['url(#categoryGradient1)', 'url(#categoryGradient2)', 'url(#categoryGradient3)'];
+                    return (
+                      <Cell key={`cell-${index}`} fill={gradients[index % gradients.length]} />
+                    );
+                  })}
                 </Pie>
-                <Tooltip formatter={(value: number) => [formatCurrency(value), 'Valor']} />
+                <Tooltip 
+                  formatter={(value: number) => [formatCurrency(value), 'Valor']}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '12px',
+                    boxShadow: 'var(--shadow-card)'
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>

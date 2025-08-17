@@ -24,19 +24,19 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="flex h-14 items-center px-4 lg:px-6">
+          <header className="sticky top-0 z-40 w-full border-b border-border glass-effect animate-fade-in">
+            <div className="flex h-16 items-center px-4 lg:px-6">
               <div className="flex items-center gap-4 flex-1">
                 {/* Sidebar trigger for mobile */}
                 <SidebarTrigger className="md:hidden" />
                 
                 {/* Title - responsive */}
                 <div className="flex-1">
-                  <h1 className="text-lg lg:text-xl font-semibold text-foreground truncate">
-                    <span className="hidden sm:inline">Sistema de Gestão de Stock</span>
-                    <span className="sm:hidden">Stock System</span>
-                    <span className="hidden lg:inline text-muted-foreground font-normal">
-                      {' '}- {profile?.role === 'administrator' ? 'Administrador' : 'Usuário'}
+                  <h1 className="text-xl lg:text-2xl font-bold text-gradient truncate">
+                    <span className="hidden sm:inline">InvestorStock Pro</span>
+                    <span className="sm:hidden">InvestorStock</span>
+                    <span className="hidden lg:inline text-muted-foreground font-normal text-sm">
+                      {' '}• {profile?.role === 'administrator' ? 'Admin Dashboard' : 'User Portal'}
                     </span>
                   </h1>
                 </div>
@@ -71,7 +71,7 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
 
           {/* Page content */}
           <main className="flex-1 overflow-auto">
-            <div className="container mx-auto p-4 lg:p-6 space-y-6">
+            <div className="container mx-auto p-4 lg:p-8 space-y-8 animate-slide-up">
               {children}
             </div>
           </main>
