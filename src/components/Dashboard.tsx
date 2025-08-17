@@ -110,10 +110,10 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       {/* Premium Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl gradient-hero p-8 text-white">
+      <div className="relative overflow-hidden rounded-2xl bg-card border border-border p-8 text-card-foreground shadow-card">
         <div className="relative z-10">
           <h2 className="text-3xl font-bold mb-2">
-            Bem-vindo ao InvestorStock Pro
+            Bem-vindo ao Soluweb
           </h2>
           <p className="text-lg opacity-90 mb-4">
             Dashboard executivo • Gestão avançada de inventário

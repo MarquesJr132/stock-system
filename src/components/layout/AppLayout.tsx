@@ -33,8 +33,8 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
                 {/* Title - responsive */}
                 <div className="flex-1">
                   <h1 className="text-xl lg:text-2xl font-bold text-foreground truncate">
-                    <span className="hidden sm:inline">InvestorStock Pro</span>
-                    <span className="sm:hidden">InvestorStock</span>
+                    <span className="hidden sm:inline">Soluweb</span>
+                    <span className="sm:hidden">Soluweb</span>
                     <span className="hidden lg:inline text-muted-foreground font-normal text-sm">
                       {' '}• {profile?.role === 'administrator' ? 'Admin Dashboard' : 'User Portal'}
                     </span>
