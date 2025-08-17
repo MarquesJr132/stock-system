@@ -45,10 +45,10 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar className="border-r border-border bg-card">
-      <SidebarContent className="bg-card">
+    <Sidebar className="border-r border-border/50 bg-gradient-subtle shadow-elegant">
+      <SidebarContent className="bg-transparent">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground font-medium">
+          <SidebarGroupLabel className="text-muted-foreground font-semibold text-sm tracking-wide">
             Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -58,10 +58,10 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
                   <SidebarMenuButton
                     onClick={() => onTabChange(item.value)}
                     isActive={isActive(item.value)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full hover-lift ${
                       isActive(item.value)
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "hover:bg-accent/10 text-foreground"
+                        ? "bg-primary text-primary-foreground shadow-card"
+                        : "hover:bg-primary/10 text-foreground hover:text-primary"
                     }`}
                   >
                     <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -75,7 +75,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
 
         {userIsAdmin && !userIsSuperuser && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-muted-foreground font-medium">
+            <SidebarGroupLabel className="text-muted-foreground font-semibold text-sm tracking-wide">
               Administração
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -85,10 +85,10 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
                     <SidebarMenuButton
                       onClick={() => onTabChange(item.value)}
                       isActive={isActive(item.value)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full ${
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full hover-lift ${
                         isActive(item.value)
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "hover:bg-accent/10 text-foreground"
+                          ? "bg-primary text-primary-foreground shadow-card"
+                          : "hover:bg-primary/10 text-foreground hover:text-primary"
                       }`}
                     >
                       <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -102,25 +102,19 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
         )}
       </SidebarContent>
       
-      <SidebarFooter className="border-t border-border bg-card p-2">
-        <div className="flex flex-col gap-2">
-          <div className="px-2 py-1">
-            <p className="text-xs text-muted-foreground truncate">
+      <SidebarFooter className="border-t border-border/50 bg-gradient-subtle p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <UserIcon className="h-4 w-4" />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-sm font-medium text-foreground truncate">
               {profile?.full_name}
             </p>
             <p className="text-xs text-muted-foreground truncate">
               {profile?.email}
             </p>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-2 w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent/10"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Sair</span>
-          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>
