@@ -110,7 +110,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       {/* Premium Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-card border border-border p-8 text-card-foreground shadow-card">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-subtle border border-border/20 p-8 text-foreground shadow-elegant">
         <div className="relative z-10">
           <h2 className="text-3xl font-bold mb-2">
             Bem-vindo ao Soluweb
