@@ -5,7 +5,7 @@ import Login from "@/components/Login";
 import Dashboard from "@/components/Dashboard";
 import ProductManagement from "@/components/ProductManagement";
 import SalesManagement from "@/components/SalesManagement";
-import { SpecialOrderManagement } from "@/components/SpecialOrderManagement";
+import { SpecialOrdersManagement } from "@/components/SpecialOrdersManagement";
 import CustomerManagement from "@/components/CustomerManagement";
 import Reports from "@/components/Reports";
 import ProfileManagement from "@/components/ProfileManagement";
@@ -44,7 +44,7 @@ const Index = () => {
       case "sales":
         return <SalesManagement />;
       case "special-orders":
-        return <SpecialOrderManagement />;
+        return <SpecialOrdersManagement />;
       case "customers":
         return <CustomerManagement />;
       case "reports":
