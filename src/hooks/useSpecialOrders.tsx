@@ -123,18 +123,26 @@ export const useSpecialOrders = () => {
       const tenantId = profile.tenant_id || profile.id
 
       // Calculate total amount from items
-      const totalAmount = orderData.items.reduce((sum: number, item: SpecialOrderItem) => 
+      const totalAmount = orderData.items.reduce((sum: number, item: SpecialOrderItem) =>
         sum + item.subtotal, 0)
+
+      // Prepare order payload WITHOUT items column (items are stored in special_order_items)
+      const orderInsert = {
+        customer_id: orderData.customer_id || null,
+        expected_delivery_date: orderData.expected_delivery_date || null,
+        payment_method: orderData.payment_method || null,
+        advance_payment: orderData.advance_payment ?? 0,
+        notes: orderData.notes || null,
+        status: orderData.status || 'pending',
+        total_amount: totalAmount,
+        tenant_id: tenantId,
+        created_by: profile.id
+      }
 
       // Insert the order first
       const { data: orderResult, error: orderError } = await supabase
         .from('special_orders')
-        .insert([{
-          ...orderData,
-          total_amount: totalAmount,
-          tenant_id: tenantId,
-          created_by: profile.id
-        }])
+        .insert([orderInsert])
         .select()
         .single()
 
@@ -176,9 +184,12 @@ export const useSpecialOrders = () => {
   // Update special order
   const updateSpecialOrder = async (id: string, updates: any) => {
     try {
+      // Prevent sending unsupported fields like 'items'
+      const { items: _ignoreItems, ...safeUpdates } = updates || {}
+
       const { error } = await supabase
         .from('special_orders')
-        .update(updates)
+        .update(safeUpdates)
         .eq('id', id)
 
       if (error) throw error
@@ -256,10 +267,40 @@ export const useSpecialOrders = () => {
 
       if (saleError) throw saleError
 
+      // Ensure a generic product exists to satisfy NOT NULL product_id in sale_items
+      const { data: existingProduct } = await supabase
+        .from('products')
+        .select('id')
+        .eq('tenant_id', tenantId)
+        .eq('name', 'Encomenda Especial')
+        .maybeSingle()
+
+      let specialProductId = existingProduct?.id as string | undefined
+      if (!specialProductId) {
+        const { data: newProduct, error: prodError } = await supabase
+          .from('products')
+          .insert([
+            {
+              name: 'Encomenda Especial',
+              category: 'especial',
+              description: 'Produto genérico para itens de Encomendas Especiais',
+              purchase_price: 0,
+              sale_price: 0,
+              quantity: 0,
+              tenant_id: tenantId,
+              created_by: profile.id
+            }
+          ])
+          .select('id')
+          .single()
+        if (prodError) throw prodError
+        specialProductId = newProduct.id
+      }
+
       // Create sale items from order items
       const saleItems = order.items.map(item => ({
         sale_id: saleData.id,
-        product_id: null, // Since these are special orders, no existing product
+        product_id: specialProductId!,
         quantity: item.quantity,
         unit_price: item.unit_price,
         subtotal: item.subtotal,
