@@ -142,11 +142,37 @@ const SpecialOrderForm = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Validate items
-    if (items.some(item => !item.product_name || item.quantity <= 0 || item.unit_price < 0)) {
+    // Validate customer selection
+    if (!formData.customer_id) {
       toast({
         title: "Erro",
-        description: "Preencha todos os produtos com dados válidos",
+        description: "Selecione um cliente para a encomenda",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Validate delivery date is not in the past
+    if (formData.expected_delivery_date) {
+      const deliveryDate = new Date(formData.expected_delivery_date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      if (deliveryDate < today) {
+        toast({
+          title: "Erro",
+          description: "A data de entrega não pode ser anterior a hoje",
+          variant: "destructive"
+        })
+        return
+      }
+    }
+    
+    // Validate items
+    if (items.some(item => !item.product_name || item.quantity <= 0 || item.unit_price <= 0 || item.profit_amount < 0)) {
+      toast({
+        title: "Erro",
+        description: "Todos os produtos devem ter nome, quantidade > 0, preço unitário > 0 e lucro ≥ 0",
         variant: "destructive"
       })
       return
@@ -162,7 +188,7 @@ const SpecialOrderForm = ({
   if (!isOpen) return null
 
   return (
-    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
+    <DialogContent className="w-full max-w-2xl sm:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
       <DialogHeader>
         <DialogTitle>{order ? 'Editar Encomenda' : 'Nova Encomenda'}</DialogTitle>
         <DialogDescription>
@@ -252,11 +278,11 @@ const SpecialOrderForm = ({
                   onOpenChange={(isOpen) => setExpandedProductIndex(isOpen ? index : -1)}
                 >
                   <CollapsibleTrigger asChild>
-                    <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center space-x-4">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{item.product_name || `Produto ${index + 1}`}</p>
+                    <div className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-muted/50 transition-colors min-h-[60px]">
+                      <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                        <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{item.product_name || `Produto ${index + 1}`}</p>
                           <p className="text-sm text-muted-foreground">
                             Qtd: {item.quantity} | Subtotal: {formatCurrency(item.subtotal)}
                           </p>
@@ -272,6 +298,7 @@ const SpecialOrderForm = ({
                               e.stopPropagation();
                               removeItem(index);
                             }}
+                            className="min-h-[40px] min-w-[40px] flex-shrink-0"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -285,39 +312,46 @@ const SpecialOrderForm = ({
                     </div>
                   </CollapsibleTrigger>
                   
-                  <CollapsibleContent className="p-4 pt-0 border-t">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="md:col-span-3">
+                  <CollapsibleContent className="p-3 sm:p-4 pt-0 border-t">
+                    <div className="space-y-4">
+                      <div>
                         <Label htmlFor={`product-name-${index}`}>Nome do Produto</Label>
                         <Input
                           id={`product-name-${index}`}
                           value={item.product_name}
                           onChange={(e) => updateItem(index, 'product_name', e.target.value)}
                           placeholder="Nome do produto"
+                          className="mt-1"
                         />
                       </div>
 
-                      <div>
-                        <Label htmlFor={`quantity-${index}`}>Quantidade</Label>
-                        <Input
-                          id={`quantity-${index}`}
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                          placeholder="0"
-                        />
-                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor={`quantity-${index}`}>Quantidade</Label>
+                          <Input
+                            id={`quantity-${index}`}
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                            placeholder="1"
+                            className="mt-1"
+                          />
+                        </div>
 
-                      <div>
-                        <Label htmlFor={`unit-price-${index}`}>Preço Unitário (MT)</Label>
-                        <Input
-                          id={`unit-price-${index}`}
-                          type="number"
-                          step="0.01"
-                          value={item.unit_price}
-                          onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                          placeholder="0.00"
-                        />
+                        <div>
+                          <Label htmlFor={`unit-price-${index}`}>Preço Unitário (MT)</Label>
+                          <Input
+                            id={`unit-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            value={item.unit_price}
+                            onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                            placeholder="0.00"
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
 
                       <div>
@@ -326,39 +360,43 @@ const SpecialOrderForm = ({
                           id={`profit-amount-${index}`}
                           type="number"
                           step="0.01"
+                          min="0"
                           value={item.profit_amount}
                           onChange={(e) => updateItem(index, 'profit_amount', parseFloat(e.target.value) || 0)}
                           placeholder="0.00"
+                          className="mt-1"
                         />
                       </div>
 
-                      <div className="md:col-span-3">
+                      <div>
                         <Label htmlFor={`description-${index}`}>Descrição (Opcional)</Label>
                         <Textarea
                           id={`description-${index}`}
                           value={item.product_description}
                           onChange={(e) => updateItem(index, 'product_description', e.target.value)}
                           placeholder="Descrição do produto"
+                          rows={2}
+                          className="mt-1"
                         />
                       </div>
 
-                      <div className="md:col-span-3">
+                      <div>
                         <div className="bg-muted/50 p-3 rounded-lg">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                          <div className="grid grid-cols-2 gap-3 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Preço Base:</span>
+                              <span className="text-muted-foreground block">Preço Base:</span>
                               <p className="font-medium">{formatCurrency(item.unit_price)}</p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Lucro:</span>
+                              <span className="text-muted-foreground block">Lucro:</span>
                               <p className="font-medium text-green-600">{formatCurrency(item.profit_amount)}</p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Preço Final:</span>
+                              <span className="text-muted-foreground block">Preço Final:</span>
                               <p className="font-medium">{formatCurrency(item.unit_price + item.profit_amount)}</p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Subtotal:</span>
+                              <span className="text-muted-foreground block">Subtotal:</span>
                               <p className="font-semibold text-primary">{formatCurrency(item.subtotal)}</p>
                             </div>
                           </div>
