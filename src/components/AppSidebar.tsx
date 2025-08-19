@@ -45,7 +45,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar className="border-r border-border/50 bg-card/50 backdrop-blur-sm">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar">
       <SidebarContent className="bg-transparent">
         <SidebarGroup>
           <SidebarGroupLabel className="text-muted-foreground font-semibold text-sm tracking-wide">
@@ -102,7 +102,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
         )}
       </SidebarContent>
       
-      <SidebarFooter className="border-t border-border/50 bg-card/30 backdrop-blur-sm p-4">
+      <SidebarFooter className="border-t border-sidebar-border bg-sidebar p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
             <UserIcon className="h-4 w-4" />
