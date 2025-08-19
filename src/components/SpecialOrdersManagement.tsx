@@ -714,6 +714,17 @@ export const SpecialOrdersManagement = () => {
           <p className="text-muted-foreground">Gerir encomendas especiais de produtos</p>
         </div>
         <div className="flex gap-2">
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as encomendas</SelectItem>
+              {Object.entries(statusLabels).map(([status, label]) => (
+                <SelectItem key={status} value={status}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Encomenda
@@ -724,37 +735,6 @@ export const SpecialOrdersManagement = () => {
         </div>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-        <Card 
-          className={`cursor-pointer transition-colors ${filterStatus === 'all' ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'}`}
-          onClick={() => setFilterStatus('all')}
-        >
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold">{specialOrders.length}</div>
-            <div className="text-sm text-muted-foreground">Total</div>
-          </CardContent>
-        </Card>
-        {Object.entries(statusLabels).map(([status, label]) => {
-          const Icon = statusIcons[status as keyof typeof statusIcons]
-          const count = stats[status] || 0
-          return (
-            <Card 
-              key={status} 
-              className={`cursor-pointer transition-colors ${filterStatus === status ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'}`}
-              onClick={() => setFilterStatus(status)}
-            >
-              <CardContent className="p-4 text-center">
-                <div className="flex justify-center mb-2">
-                  <Icon className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="text-2xl font-bold">{count}</div>
-                <div className="text-sm text-muted-foreground">{label}</div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
 
       {/* Orders Table/List */}
       <Card>
