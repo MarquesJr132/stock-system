@@ -195,5 +195,19 @@ All colors MUST be HSL.
     transform: translateY(-2px);
     box-shadow: var(--shadow-elegant);
   }
+
+  /* Ensure sidebar tokens always apply (prevents theme mismatch) */
+  [data-sidebar="sidebar"] {
+    @apply bg-sidebar text-sidebar-foreground;
+  }
+  [data-sidebar="footer"] {
+    @apply bg-sidebar;
+  }
+  [data-sidebar="separator"] {
+    @apply bg-sidebar-border;
+  }
+  [data-sidebar="menu-button"][data-active="true"] {
+    @apply bg-sidebar-accent text-sidebar-accent-foreground;
+  }
   
 }

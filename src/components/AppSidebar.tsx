@@ -48,7 +48,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     <Sidebar className="border-r border-sidebar-border bg-sidebar">
       <SidebarContent className="bg-transparent">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground font-semibold text-sm tracking-wide">
+          <SidebarGroupLabel className="text-sidebar-foreground/70 font-semibold text-sm tracking-wide">
             Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
