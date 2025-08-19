@@ -327,12 +327,16 @@ export const useSpecialOrders = () => {
         return
       }
 
-      // Create sale with the total amount
+      // Calculate total profit from items
+      const totalProfit = order.items.reduce((sum, item) => sum + (item.profit_amount * item.quantity), 0)
+
+      // Create sale with the total amount and profit
       const { data: saleData, error: saleError } = await supabase
         .from('sales')
         .insert([{
           customer_id: order.customer_id,
           total_amount: order.total_amount,
+          total_profit: totalProfit,
           payment_method: order.payment_method || 'cash',
           tenant_id: tenantId,
           created_by: profile.id
