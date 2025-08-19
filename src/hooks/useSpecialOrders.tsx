@@ -307,21 +307,24 @@ export const useSpecialOrders = () => {
         return
       }
 
-      // Check if there's already a sale for this order (by checking notes or custom field)
+      // Check if there's already a sale for this specific order (more precise check)
+      // We'll check if we already created a sale by looking for sales with matching metadata
       const { data: existingSales, error: checkError } = await supabase
         .from('sales')
         .select('id')
         .eq('customer_id', order.customer_id)
         .eq('total_amount', order.total_amount)
         .eq('tenant_id', tenantId)
+        .eq('payment_method', order.payment_method || 'cash')
         .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()) // Today only
 
       if (checkError) throw checkError
 
-      if (existingSales && existingSales.length > 0) {
+      // Only block if there are multiple sales (more than 2) with exact same details
+      if (existingSales && existingSales.length >= 2) {
         toast({
           title: "Aviso", 
-          description: "Já existe uma venda para esta encomenda hoje",
+          description: "Já existem vendas similares para este cliente hoje. Verifique se não é duplicata.",
           variant: "destructive"
         })
         return
