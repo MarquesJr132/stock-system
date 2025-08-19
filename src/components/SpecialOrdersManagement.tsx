@@ -706,16 +706,16 @@ export const SpecialOrdersManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 p-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Encomendas Especiais</h1>
-          <p className="text-muted-foreground">Gerir encomendas especiais de produtos</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Encomendas Especiais</h1>
+          <p className="text-muted-foreground text-sm">Gerir encomendas especiais de produtos</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 justify-between">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
@@ -725,27 +725,35 @@ export const SpecialOrdersManagement = () => {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Encomenda
-          </Button>
-          <Button variant="outline" onClick={cleanDuplicateSales}>
-            Limpar Duplicadas
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsFormOpen(true)} className="flex-1 sm:flex-none">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Nova Encomenda</span>
+              <span className="sm:hidden">Nova</span>
+            </Button>
+            <Button variant="outline" onClick={cleanDuplicateSales} className="flex-1 sm:flex-none">
+              <span className="hidden sm:inline">Limpar Duplicadas</span>
+              <span className="sm:hidden">Limpar</span>
+            </Button>
+          </div>
         </div>
       </div>
 
 
       {/* Orders Table/List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
+      <Card className="w-full">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">
             Encomendas 
-            {filterStatus !== 'all' && ` - ${statusLabels[filterStatus as keyof typeof statusLabels]}`}
+            {filterStatus !== 'all' && (
+              <span className="text-sm font-normal ml-2">
+                - {statusLabels[filterStatus as keyof typeof statusLabels]}
+              </span>
+            )}
             <span className="text-sm font-normal ml-2">({filteredOrders.length})</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {filteredOrders.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {filterStatus === 'all' 
@@ -754,18 +762,122 @@ export const SpecialOrdersManagement = () => {
               }
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Produtos</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
+            <>
+              {/* Mobile View */}
+              <div className="block md:hidden">
+                {filteredOrders.map((order) => (
+                  <div key={order.id} className="border-b p-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{order.customer?.name || 'Cliente não especificado'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(order.order_date).toLocaleDateString('pt-MZ')}
+                          </p>
+                        </div>
+                        <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                          {statusLabels[order.status as keyof typeof statusLabels]}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>{order.items ? `${order.items.length} item(s)` : '0 items'}</span>
+                        <span className="font-medium">{formatCurrency(order.total_amount)}</span>
+                      </div>
+                      <div className="flex gap-1 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedOrder(order)
+                            setIsItemsViewDialogOpen(true)
+                          }}
+                        >
+                          <Package className="h-4 w-4" />
+                        </Button>
+                        
+                        {order.status !== 'closed' && order.status !== 'cancelled' && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedOrder(order)
+                                setIsFormOpen(true)
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedOrder(order)
+                                setIsStatusDialogOpen(true)
+                              }}
+                            >
+                              <Clock className="h-4 w-4" />
+                            </Button>
+                            
+                            {order.status === 'delivered' && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                disabled={isClosingOrder}
+                                onClick={() => {
+                                  setSelectedOrder(order)
+                                  setIsPaymentDialogOpen(true)
+                                }}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </>
+                        )}
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Eliminar Encomenda</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem a certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteOrder(order)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Produtos</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {filteredOrders.map((order) => (
                     <TableRow key={order.id}>
@@ -867,9 +979,10 @@ export const SpecialOrdersManagement = () => {
                       </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
