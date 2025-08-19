@@ -253,11 +253,11 @@ const SpecialOrderForm = ({
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>
+        <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+          <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button type="submit">
+          <Button type="submit" className="w-full sm:w-auto">
             {order ? 'Atualizar' : 'Criar'} Encomenda
           </Button>
         </div>
@@ -330,9 +330,9 @@ const StatusUpdateDialog = ({
         </div>
       </div>
 
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button variant="outline" onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleUpdate}>Atualizar</Button>
+      <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+        <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">Cancelar</Button>
+        <Button onClick={handleUpdate} className="w-full sm:w-auto">Atualizar</Button>
       </div>
     </DialogContent>
   )
@@ -484,11 +484,15 @@ export const SpecialOrdersManagement = () => {
 
       {/* Orders Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Lista de Encomendas</CardTitle>
-          <CardDescription>
-            {filteredOrders.length} encomenda(s) encontrada(s)
-          </CardDescription>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle className="text-lg sm:text-xl">Lista de Encomendas</CardTitle>
+              <CardDescription className="text-sm">
+                {filteredOrders.length} encomenda(s) encontrada(s)
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-3 lg:p-6">
           {/* Mobile Cards View */}
@@ -551,28 +555,29 @@ export const SpecialOrdersManagement = () => {
                         className="flex-1"
                       >
                         <Edit className="h-4 w-4 mr-1" />
-                        Editar
+                        <span className="hidden xs:inline">Editar Status</span>
+                        <span className="xs:hidden">Editar</span>
                       </Button>
                     )}
                     
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="text-red-600">
+                        <Button size="sm" variant="outline" className="text-red-600 px-2">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-sm mx-4 sm:mx-auto">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Eliminar Encomenda</AlertDialogTitle>
-                          <AlertDialogDescription>
+                          <AlertDialogTitle className="text-base">Eliminar Encomenda</AlertDialogTitle>
+                          <AlertDialogDescription className="text-sm">
                             Tem certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleDeleteOrder(order.id)}
-                            className="bg-red-600 hover:bg-red-700"
+                            className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
                           >
                             Eliminar
                           </AlertDialogAction>
@@ -656,18 +661,18 @@ export const SpecialOrdersManagement = () => {
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="max-w-sm mx-4 sm:mx-auto">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Eliminar Encomenda</AlertDialogTitle>
-                              <AlertDialogDescription>
+                              <AlertDialogTitle className="text-base">Eliminar Encomenda</AlertDialogTitle>
+                              <AlertDialogDescription className="text-sm">
                                 Tem certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                              <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => handleDeleteOrder(order.id)}
-                                className="bg-red-600 hover:bg-red-700"
+                                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
                               >
                                 Eliminar
                               </AlertDialogAction>
@@ -683,8 +688,15 @@ export const SpecialOrdersManagement = () => {
           </div>
 
           {filteredOrders.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              Nenhuma encomenda encontrada
+            <div className="text-center py-12 text-muted-foreground">
+              <PackageCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">Nenhuma encomenda encontrada</p>
+              <p className="text-sm">
+                {filterStatus === 'all' 
+                  ? 'Crie a sua primeira encomenda especial' 
+                  : `Não há encomendas com status "${statusLabels[filterStatus as keyof typeof statusLabels]}"`
+                }
+              </p>
             </div>
           )}
         </CardContent>
