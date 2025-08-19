@@ -56,17 +56,49 @@ const SpecialOrderForm = ({
   onSubmit: (data: any) => void
 }) => {
   const { customers } = useSpecialOrders()
+  
+  // Initialize form data with order data when available
   const [formData, setFormData] = useState({
-    customer_id: order?.customer_id || '',
-    expected_delivery_date: order?.expected_delivery_date || '',
-    payment_method: order?.payment_method || 'cash',
-    advance_payment: order?.advance_payment || 0,
-    notes: order?.notes || ''
+    customer_id: '',
+    expected_delivery_date: '',
+    payment_method: 'cash',
+    advance_payment: 0,
+    notes: ''
   })
 
-  const [items, setItems] = useState<SpecialOrderItem[]>(
-    order?.items || [{ product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }]
-  )
+  const [items, setItems] = useState<SpecialOrderItem[]>([
+    { product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }
+  ])
+
+  // Update form data when order prop changes
+  React.useEffect(() => {
+    if (order) {
+      setFormData({
+        customer_id: order.customer_id || '',
+        expected_delivery_date: order.expected_delivery_date || '',
+        payment_method: order.payment_method || 'cash',
+        advance_payment: order.advance_payment || 0,
+        notes: order.notes || ''
+      })
+      
+      // Load existing items or set default
+      if (order.items && order.items.length > 0) {
+        setItems(order.items)
+      } else {
+        setItems([{ product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }])
+      }
+    } else {
+      // Reset for new order
+      setFormData({
+        customer_id: '',
+        expected_delivery_date: '',
+        payment_method: 'cash',
+        advance_payment: 0,
+        notes: ''
+      })
+      setItems([{ product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }])
+    }
+  }, [order])
 
   const addItem = () => {
     setItems([...items, { product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }])
@@ -571,8 +603,13 @@ export const SpecialOrdersManagement = () => {
   const handleSubmitOrder = async (data: any) => {
     try {
       if (selectedOrder) {
-        await updateSpecialOrder(selectedOrder.id, data)
+        // For editing, include items in the update
+        await updateSpecialOrder(selectedOrder.id, {
+          ...data,
+          items: data.items
+        })
       } else {
+        // For new orders
         await addSpecialOrder(data)
       }
       setSelectedOrder(undefined)

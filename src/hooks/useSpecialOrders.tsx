@@ -181,18 +181,60 @@ export const useSpecialOrders = () => {
     }
   }
 
-  // Update special order
+  // Update special order and its items
   const updateSpecialOrder = async (id: string, updates: any) => {
     try {
-      // Prevent sending unsupported fields like 'items'
-      const { items: _ignoreItems, ...safeUpdates } = updates || {}
+      // Separate items from other updates
+      const { items: newItems, ...orderUpdates } = updates
 
-      const { error } = await supabase
-        .from('special_orders')
-        .update(safeUpdates)
-        .eq('id', id)
+      // Update the order itself (without items field)
+      if (Object.keys(orderUpdates).length > 0) {
+        const { error } = await supabase
+          .from('special_orders')
+          .update(orderUpdates)
+          .eq('id', id)
 
-      if (error) throw error
+        if (error) throw error
+      }
+
+      // If items were provided, update them as well
+      if (newItems && Array.isArray(newItems)) {
+        const tenantId = profile.tenant_id || profile.id
+
+        // Delete existing items
+        const { error: deleteError } = await supabase
+          .from('special_order_items')
+          .delete()
+          .eq('special_order_id', id)
+
+        if (deleteError) throw deleteError
+
+        // Insert new items
+        const itemsToInsert = newItems.map((item: SpecialOrderItem) => ({
+          special_order_id: id,
+          product_name: item.product_name,
+          product_description: item.product_description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal,
+          tenant_id: tenantId
+        }))
+
+        const { error: insertError } = await supabase
+          .from('special_order_items')
+          .insert(itemsToInsert)
+
+        if (insertError) throw insertError
+
+        // Update total amount if items changed
+        const newTotal = newItems.reduce((sum: number, item: SpecialOrderItem) => sum + item.subtotal, 0)
+        const { error: totalError } = await supabase
+          .from('special_orders')
+          .update({ total_amount: newTotal })
+          .eq('id', id)
+
+        if (totalError) throw totalError
+      }
 
       toast({
         title: "Sucesso", 
@@ -297,18 +339,55 @@ export const useSpecialOrders = () => {
         specialProductId = newProduct.id
       }
 
-      // Create sale items from order items
-      const saleItems = order.items.map(item => ({
-        sale_id: saleData.id,
-        product_id: specialProductId!,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        subtotal: item.subtotal,
-        total: item.subtotal,
-        tenant_id: tenantId,
-        includes_vat: false,
-        vat_amount: 0
-      }))
+      // Create sale items from order items with specific names
+      const saleItems = []
+      
+      for (const item of order.items) {
+        // Check if product with this specific name exists
+        const { data: existingProductByName } = await supabase
+          .from('products')
+          .select('id')
+          .eq('tenant_id', tenantId)
+          .eq('name', item.product_name)
+          .maybeSingle()
+
+        let productId = existingProductByName?.id
+        
+        if (!productId) {
+          // Create a specific product for this item
+          const { data: newProduct, error: prodError } = await supabase
+            .from('products')
+            .insert([
+              {
+                name: item.product_name,
+                category: 'encomenda_especial',
+                description: item.product_description || 'Produto de encomenda especial',
+                purchase_price: item.unit_price,
+                sale_price: item.unit_price,
+                quantity: 0, // Special order items don't affect stock
+                tenant_id: tenantId,
+                created_by: profile.id
+              }
+            ])
+            .select('id')
+            .single()
+          
+          if (prodError) throw prodError
+          productId = newProduct.id
+        }
+
+        saleItems.push({
+          sale_id: saleData.id,
+          product_id: productId,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal,
+          total: item.subtotal,
+          tenant_id: tenantId,
+          includes_vat: false,
+          vat_amount: 0
+        })
+      }
 
       const { error: itemsError } = await supabase
         .from('sale_items')
