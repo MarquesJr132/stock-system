@@ -694,6 +694,9 @@ export const SpecialOrdersManagement = () => {
   const handleStatusUpdate = async (status: string) => {
     if (selectedOrder) {
       await updateSpecialOrder(selectedOrder.id, { status })
+      if (status === 'delivered') {
+        setIsPaymentDialogOpen(true)
+      }
     }
   }
 
@@ -1007,7 +1010,6 @@ export const SpecialOrdersManagement = () => {
             isOpen={isStatusDialogOpen}
             onClose={() => {
               setIsStatusDialogOpen(false)
-              setSelectedOrder(undefined)
             }}
             onUpdate={handleStatusUpdate}
           />
