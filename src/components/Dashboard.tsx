@@ -246,39 +246,53 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent className="px-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topProducts}>
-                <defs>
-                  <linearGradient id="productGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(12 76% 61%)" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(38 92% 50%)" stopOpacity={0.8}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                    boxShadow: 'var(--shadow-card)'
-                  }}
-                />
-                <Bar 
-                  dataKey="totalSold" 
-                  fill="url(#productGradient)"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {topProducts.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/10 flex items-center justify-center">
+                  <ShoppingCart className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-foreground font-medium mb-1">
+                  Nenhuma venda registada
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Os produtos mais vendidos aparecerão aqui quando houver vendas
+                </p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={topProducts}>
+                  <defs>
+                    <linearGradient id="productGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(12 76% 61%)" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(38 92% 50%)" stopOpacity={0.8}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '12px',
+                      boxShadow: 'var(--shadow-card)'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="totalSold" 
+                    fill="url(#productGradient)"
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -364,63 +378,77 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent className="px-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <defs>
-                  <linearGradient id="categoryGradient1" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="hsl(262 83% 58%)" />
-                    <stop offset="100%" stopColor="hsl(220 70% 50%)" />
-                  </linearGradient>
-                  <linearGradient id="categoryGradient2" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="hsl(12 76% 61%)" />
-                    <stop offset="100%" stopColor="hsl(38 92% 50%)" />
-                  </linearGradient>
-                  <linearGradient id="categoryGradient3" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="hsl(142 76% 36%)" />
-                    <stop offset="100%" stopColor="hsl(172 76% 45%)" />
-                  </linearGradient>
-                </defs>
-                <Pie
-                  data={products.reduce((acc, product) => {
-                    const category = product.category || 'Sem categoria';
-                    const value = isAdministrator ? 
-                      product.quantity * product.purchase_price :
-                      product.quantity * product.sale_price;
-                    
-                    const existing = acc.find(item => item.name === category);
-                    if (existing) {
-                      existing.value += value;
-                    } else {
-                      acc.push({ name: category, value });
-                    }
-                    return acc;
-                  }, [] as any[])}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={90}
-                  fill="url(#categoryGradient1)"
-                  dataKey="value"
-                >
-                  {products.map((_, index) => {
-                    const gradients = ['url(#categoryGradient1)', 'url(#categoryGradient2)', 'url(#categoryGradient3)'];
-                    return (
-                      <Cell key={`cell-${index}`} fill={gradients[index % gradients.length]} />
-                    );
-                  })}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: number) => [formatCurrency(value), 'Valor']}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                    boxShadow: 'var(--shadow-card)'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {products.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/10 flex items-center justify-center">
+                  <Package className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-foreground font-medium mb-1">
+                  Nenhum produto cadastrado
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  A distribuição por categoria aparecerá quando houver produtos
+                </p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <defs>
+                    <linearGradient id="categoryGradient1" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="hsl(262 83% 58%)" />
+                      <stop offset="100%" stopColor="hsl(220 70% 50%)" />
+                    </linearGradient>
+                    <linearGradient id="categoryGradient2" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="hsl(12 76% 61%)" />
+                      <stop offset="100%" stopColor="hsl(38 92% 50%)" />
+                    </linearGradient>
+                    <linearGradient id="categoryGradient3" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="hsl(142 76% 36%)" />
+                      <stop offset="100%" stopColor="hsl(172 76% 45%)" />
+                    </linearGradient>
+                  </defs>
+                  <Pie
+                    data={products.reduce((acc, product) => {
+                      const category = product.category || 'Sem categoria';
+                      const value = isAdministrator ? 
+                        product.quantity * product.purchase_price :
+                        product.quantity * product.sale_price;
+                      
+                      const existing = acc.find(item => item.name === category);
+                      if (existing) {
+                        existing.value += value;
+                      } else {
+                        acc.push({ name: category, value });
+                      }
+                      return acc;
+                    }, [] as any[])}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={90}
+                    fill="url(#categoryGradient1)"
+                    dataKey="value"
+                  >
+                    {products.map((_, index) => {
+                      const gradients = ['url(#categoryGradient1)', 'url(#categoryGradient2)', 'url(#categoryGradient3)'];
+                      return (
+                        <Cell key={`cell-${index}`} fill={gradients[index % gradients.length]} />
+                      );
+                    })}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [formatCurrency(value), 'Valor']}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '12px',
+                      boxShadow: 'var(--shadow-card)'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
