@@ -576,6 +576,45 @@ export type Database = {
           },
         ]
       }
+      special_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_description: string | null
+          product_name: string
+          quantity: number
+          special_order_id: string
+          subtotal: number
+          tenant_id: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_description?: string | null
+          product_name: string
+          quantity?: number
+          special_order_id: string
+          subtotal: number
+          tenant_id: string
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_description?: string | null
+          product_name?: string
+          quantity?: number
+          special_order_id?: string
+          subtotal?: number
+          tenant_id?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       special_orders: {
         Row: {
           actual_delivery_date: string | null
@@ -588,14 +627,9 @@ export type Database = {
           notes: string | null
           order_date: string
           payment_method: string | null
-          product_description: string | null
-          product_name: string
-          quantity: number
           status: string
-          supplier_id: string | null
           tenant_id: string
           total_amount: number
-          unit_price: number
           updated_at: string
         }
         Insert: {
@@ -609,14 +643,9 @@ export type Database = {
           notes?: string | null
           order_date?: string
           payment_method?: string | null
-          product_description?: string | null
-          product_name: string
-          quantity?: number
           status?: string
-          supplier_id?: string | null
           tenant_id: string
           total_amount: number
-          unit_price: number
           updated_at?: string
         }
         Update: {
@@ -630,14 +659,9 @@ export type Database = {
           notes?: string | null
           order_date?: string
           payment_method?: string | null
-          product_description?: string | null
-          product_name?: string
-          quantity?: number
           status?: string
-          supplier_id?: string | null
           tenant_id?: string
           total_amount?: number
-          unit_price?: number
           updated_at?: string
         }
         Relationships: [
@@ -646,13 +670,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "special_orders_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]

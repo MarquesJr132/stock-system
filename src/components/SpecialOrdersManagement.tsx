@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { useSpecialOrders, SpecialOrder } from '@/hooks/useSpecialOrders'
-import { Plus, PackageCheck, Clock, Truck, Package, CheckCircle, X, Trash2, Eye, Edit } from 'lucide-react'
+import { useSpecialOrders, SpecialOrder, SpecialOrderItem } from '@/hooks/useSpecialOrders'
+import { Plus, PackageCheck, Clock, Truck, Package, CheckCircle, X, Trash2, Edit, Minus } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { formatCurrency } from '@/lib/currency'
 
@@ -55,31 +55,53 @@ const SpecialOrderForm = ({
   onClose: () => void
   onSubmit: (data: any) => void
 }) => {
-  const { customers, suppliers } = useSpecialOrders()
+  const { customers } = useSpecialOrders()
   const [formData, setFormData] = useState({
     customer_id: order?.customer_id || '',
-    supplier_id: order?.supplier_id || '',
-    product_name: order?.product_name || '',
-    product_description: order?.product_description || '',
-    quantity: order?.quantity || 1,
-    unit_price: order?.unit_price || 0,
-    advance_payment: order?.advance_payment || 0,
     expected_delivery_date: order?.expected_delivery_date || '',
     payment_method: order?.payment_method || 'cash',
+    advance_payment: order?.advance_payment || 0,
     notes: order?.notes || ''
   })
 
+  const [items, setItems] = useState<SpecialOrderItem[]>(
+    order?.items || [{ product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }]
+  )
+
+  const addItem = () => {
+    setItems([...items, { product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }])
+  }
+
+  const removeItem = (index: number) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateItem = (index: number, field: keyof SpecialOrderItem, value: any) => {
+    const newItems = [...items]
+    newItems[index] = { ...newItems[index], [field]: value }
+    
+    // Calculate subtotal when quantity or unit_price changes
+    if (field === 'quantity' || field === 'unit_price') {
+      newItems[index].subtotal = newItems[index].quantity * newItems[index].unit_price
+    }
+    
+    setItems(newItems)
+  }
+
   const calculateTotal = () => {
-    return formData.quantity * formData.unit_price
+    return items.reduce((sum, item) => sum + item.subtotal, 0)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.product_name || !formData.quantity || !formData.unit_price) {
+    // Validate items
+    if (items.some(item => !item.product_name || item.quantity <= 0 || item.unit_price <= 0)) {
       toast({
         title: "Erro",
-        description: "Preencha todos os campos obrigatórios",
+        description: "Preencha todos os produtos com dados válidos",
         variant: "destructive"
       })
       return
@@ -87,7 +109,7 @@ const SpecialOrderForm = ({
 
     onSubmit({
       ...formData,
-      total_amount: calculateTotal()
+      items: items
     })
     onClose()
   }
@@ -95,7 +117,7 @@ const SpecialOrderForm = ({
   if (!isOpen) return null
 
   return (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
       <DialogHeader>
         <DialogTitle>{order ? 'Editar Encomenda' : 'Nova Encomenda'}</DialogTitle>
         <DialogDescription>
@@ -103,7 +125,7 @@ const SpecialOrderForm = ({
         </DialogDescription>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="customer_id">Cliente</Label>
@@ -125,98 +147,6 @@ const SpecialOrderForm = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="supplier_id">Fornecedor</Label>
-            <Select 
-              value={formData.supplier_id} 
-              onValueChange={(value) => setFormData({...formData, supplier_id: value})}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um fornecedor" />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers.map(supplier => (
-                  <SelectItem key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="product_name">Nome do Produto *</Label>
-          <Input
-            id="product_name"
-            value={formData.product_name}
-            onChange={(e) => setFormData({...formData, product_name: e.target.value})}
-            placeholder="Ex: Notebook Dell Inspiron"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="product_description">Descrição do Produto</Label>
-          <Textarea
-            id="product_description"
-            value={formData.product_description}
-            onChange={(e) => setFormData({...formData, product_description: e.target.value})}
-            placeholder="Especificações e detalhes do produto"
-            rows={3}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantidade *</Label>
-            <Input
-              id="quantity"
-              type="number"
-              min="1"
-              value={formData.quantity}
-              onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="unit_price">Preço Unitário (MT) *</Label>
-            <Input
-              id="unit_price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.unit_price}
-              onChange={(e) => setFormData({...formData, unit_price: parseFloat(e.target.value) || 0})}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="advance_payment">Pagamento Antecipado (MT)</Label>
-            <Input
-              id="advance_payment"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.advance_payment}
-              onChange={(e) => setFormData({...formData, advance_payment: parseFloat(e.target.value) || 0})}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="expected_delivery_date">Data Prevista de Entrega</Label>
-            <Input
-              id="expected_delivery_date"
-              type="date"
-              value={formData.expected_delivery_date}
-              onChange={(e) => setFormData({...formData, expected_delivery_date: e.target.value})}
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="payment_method">Método de Pagamento</Label>
             <Select 
               value={formData.payment_method} 
@@ -233,6 +163,116 @@ const SpecialOrderForm = ({
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="expected_delivery_date">Data Prevista de Entrega</Label>
+            <Input
+              id="expected_delivery_date"
+              type="date"
+              value={formData.expected_delivery_date}
+              onChange={(e) => setFormData({...formData, expected_delivery_date: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="advance_payment">Pagamento Antecipado (MT)</Label>
+            <Input
+              id="advance_payment"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.advance_payment}
+              onChange={(e) => setFormData({...formData, advance_payment: parseFloat(e.target.value) || 0})}
+            />
+          </div>
+        </div>
+
+        {/* Products Section */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Label className="text-lg font-semibold">Produtos</Label>
+            <Button type="button" onClick={addItem} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Produto
+            </Button>
+          </div>
+
+          {items.map((item, index) => (
+            <Card key={index} className="p-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium">Produto {index + 1}</h4>
+                  {items.length > 1 && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => removeItem(index)}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome do Produto *</Label>
+                    <Input
+                      value={item.product_name}
+                      onChange={(e) => updateItem(index, 'product_name', e.target.value)}
+                      placeholder="Ex: Notebook Dell Inspiron"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Descrição</Label>
+                    <Input
+                      value={item.product_description || ''}
+                      onChange={(e) => updateItem(index, 'product_description', e.target.value)}
+                      placeholder="Especificações do produto"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Quantidade *</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Preço Unitário (MT) *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={item.unit_price}
+                      onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Subtotal</Label>
+                    <Input
+                      value={formatCurrency(item.subtotal)}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
 
         <div className="space-y-2">
@@ -295,11 +335,13 @@ const StatusUpdateDialog = ({
   if (!isOpen) return null
 
   return (
-    <DialogContent>
+    <DialogContent className="max-w-md mx-4 sm:mx-auto">
       <DialogHeader>
         <DialogTitle>Atualizar Status da Encomenda</DialogTitle>
         <DialogDescription>
-          Produto: {order.product_name}
+          {order.items && order.items.length > 0 && (
+            <span>Encomenda com {order.items.length} produto(s)</span>
+          )}
         </DialogDescription>
       </DialogHeader>
 
@@ -502,10 +544,16 @@ export const SpecialOrdersManagement = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate">{order.product_name}</h3>
-                      {order.product_description && (
+                      <h3 className="font-medium">
+                        {order.items && order.items.length > 0 
+                          ? `${order.items.length} produto(s)`
+                          : 'Encomenda especial'
+                        }
+                      </h3>
+                      {order.items && order.items.length > 0 && (
                         <p className="text-sm text-muted-foreground truncate">
-                          {order.product_description}
+                          {order.items[0].product_name}
+                          {order.items.length > 1 && ` e mais ${order.items.length - 1}`}
                         </p>
                       )}
                     </div>
@@ -520,8 +568,8 @@ export const SpecialOrdersManagement = () => {
                       <p className="truncate">{order.customer?.name || 'N/A'}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Qtd:</span>
-                      <p>{order.quantity}</p>
+                      <span className="text-muted-foreground">Itens:</span>
+                      <p>{order.items?.length || 0}</p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Total:</span>
@@ -595,9 +643,9 @@ export const SpecialOrdersManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Produto</TableHead>
+                  <TableHead>Produtos</TableHead>
                   <TableHead>Cliente</TableHead>
-                  <TableHead>Quantidade</TableHead>
+                  <TableHead>Qtd. Items</TableHead>
                   <TableHead>Valor Total</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data</TableHead>
@@ -609,10 +657,15 @@ export const SpecialOrdersManagement = () => {
                   <TableRow key={order.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{order.product_name}</div>
-                        {order.product_description && (
-                          <div className="text-sm text-muted-foreground truncate max-w-xs">
-                            {order.product_description}
+                        <div className="font-medium">
+                          {order.items && order.items.length > 0 
+                            ? order.items[0].product_name
+                            : 'Encomenda especial'
+                          }
+                        </div>
+                        {order.items && order.items.length > 1 && (
+                          <div className="text-sm text-muted-foreground">
+                            e mais {order.items.length - 1} produto(s)
                           </div>
                         )}
                       </div>
@@ -620,7 +673,7 @@ export const SpecialOrdersManagement = () => {
                     <TableCell>
                       {order.customer?.name || 'N/A'}
                     </TableCell>
-                    <TableCell>{order.quantity}</TableCell>
+                    <TableCell>{order.items?.length || 0}</TableCell>
                     <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                     <TableCell>
                       <Badge className={statusColors[order.status as keyof typeof statusColors]}>
