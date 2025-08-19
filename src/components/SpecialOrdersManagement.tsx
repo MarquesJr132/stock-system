@@ -95,7 +95,7 @@ const SpecialOrderForm = ({
   if (!isOpen) return null
 
   return (
-    <DialogContent className="max-w-2xl">
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{order ? 'Editar Encomenda' : 'Nova Encomenda'}</DialogTitle>
         <DialogDescription>
@@ -104,7 +104,7 @@ const SpecialOrderForm = ({
       </DialogHeader>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="customer_id">Cliente</Label>
             <Select 
@@ -166,7 +166,7 @@ const SpecialOrderForm = ({
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="quantity">Quantidade *</Label>
             <Input
@@ -205,7 +205,7 @@ const SpecialOrderForm = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="expected_delivery_date">Data Prevista de Entrega</Label>
             <Input
@@ -404,20 +404,21 @@ export const SpecialOrdersManagement = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-3 lg:p-6 space-y-4 lg:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold">Encomendas Especiais</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl lg:text-3xl font-bold">Encomendas Especiais</h1>
+          <p className="text-sm lg:text-base text-muted-foreground">
             Gerir encomendas de produtos não disponíveis em stock
           </p>
         </div>
         
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setSelectedOrder(undefined)}>
+            <Button onClick={() => setSelectedOrder(undefined)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Nova Encomenda
+              <span className="hidden sm:inline">Nova Encomenda</span>
+              <span className="sm:hidden">Nova</span>
             </Button>
           </DialogTrigger>
           <SpecialOrderForm
@@ -430,7 +431,7 @@ export const SpecialOrdersManagement = () => {
       </div>
 
       {/* Status Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 lg:gap-4">
         {Object.entries(stats).map(([status, count]) => {
           const IconComponent = statusIcons[status as keyof typeof statusIcons]
           return (
@@ -441,12 +442,12 @@ export const SpecialOrdersManagement = () => {
               }`}
               onClick={() => setFilterStatus(filterStatus === status ? 'all' : status)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <IconComponent className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-2xl font-bold">{count}</p>
-                    <p className="text-xs text-muted-foreground">
+              <CardContent className="p-2 lg:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+                  <IconComponent className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground mb-1 sm:mb-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-lg lg:text-2xl font-bold">{count}</p>
+                    <p className="text-xs text-muted-foreground truncate">
                       {statusLabels[status as keyof typeof statusLabels]}
                     </p>
                   </div>
@@ -458,16 +459,18 @@ export const SpecialOrdersManagement = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center space-x-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
         <Button 
           variant={filterStatus === 'all' ? 'default' : 'outline'}
           onClick={() => setFilterStatus('all')}
+          size="sm"
+          className="w-full sm:w-auto"
         >
           Todas ({specialOrders.length})
         </Button>
         
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filtrar por status" />
           </SelectTrigger>
           <SelectContent>
@@ -487,100 +490,197 @@ export const SpecialOrdersManagement = () => {
             {filteredOrders.length} encomenda(s) encontrada(s)
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Produto</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Quantidade</TableHead>
-                <TableHead>Valor Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{order.product_name}</div>
+        <CardContent className="p-3 lg:p-6">
+          {/* Mobile Cards View */}
+          <div className="block lg:hidden space-y-4">
+            {filteredOrders.map((order) => (
+              <Card key={order.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate">{order.product_name}</h3>
                       {order.product_description && (
-                        <div className="text-sm text-muted-foreground truncate max-w-xs">
+                        <p className="text-sm text-muted-foreground truncate">
                           {order.product_description}
-                        </div>
+                        </p>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {order.customer?.name || 'N/A'}
-                  </TableCell>
-                  <TableCell>{order.quantity}</TableCell>
-                  <TableCell>{formatCurrency(order.total_amount)}</TableCell>
-                  <TableCell>
-                    <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                    <Badge className={`ml-2 text-xs ${statusColors[order.status as keyof typeof statusColors]}`}>
                       {statusLabels[order.status as keyof typeof statusLabels]}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(order.order_date).toLocaleDateString('pt-PT')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {order.status === 'delivered' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleCloseOrder(order)}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Fechar
-                        </Button>
-                      )}
-                      
-                      {order.status !== 'closed' && order.status !== 'cancelled' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedOrder(order)
-                            setIsStatusDialogOpen(true)
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      )}
-                      
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" className="text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Eliminar Encomenda</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteOrder(order.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Eliminar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Cliente:</span>
+                      <p className="truncate">{order.customer?.name || 'N/A'}</p>
                     </div>
-                  </TableCell>
+                    <div>
+                      <span className="text-muted-foreground">Qtd:</span>
+                      <p>{order.quantity}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Total:</span>
+                      <p className="font-medium">{formatCurrency(order.total_amount)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Data:</span>
+                      <p>{new Date(order.order_date).toLocaleDateString('pt-PT')}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {order.status === 'delivered' && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleCloseOrder(order)}
+                        className="bg-green-600 hover:bg-green-700 flex-1"
+                      >
+                        Fechar
+                      </Button>
+                    )}
+                    
+                    {order.status !== 'closed' && order.status !== 'cancelled' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedOrder(order)
+                          setIsStatusDialogOpen(true)
+                        }}
+                        className="flex-1"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Editar
+                      </Button>
+                    )}
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-red-600">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Eliminar Encomenda</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Eliminar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Produto</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Quantidade</TableHead>
+                  <TableHead>Valor Total</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{order.product_name}</div>
+                        {order.product_description && (
+                          <div className="text-sm text-muted-foreground truncate max-w-xs">
+                            {order.product_description}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {order.customer?.name || 'N/A'}
+                    </TableCell>
+                    <TableCell>{order.quantity}</TableCell>
+                    <TableCell>{formatCurrency(order.total_amount)}</TableCell>
+                    <TableCell>
+                      <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                        {statusLabels[order.status as keyof typeof statusLabels]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(order.order_date).toLocaleDateString('pt-PT')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {order.status === 'delivered' && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleCloseOrder(order)}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Fechar
+                          </Button>
+                        )}
+                        
+                        {order.status !== 'closed' && order.status !== 'cancelled' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedOrder(order)
+                              setIsStatusDialogOpen(true)
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="text-red-600">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Eliminar Encomenda</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteOrder(order.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
           {filteredOrders.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
