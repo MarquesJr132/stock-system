@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -576,6 +576,87 @@ export type Database = {
           },
         ]
       }
+      special_orders: {
+        Row: {
+          actual_delivery_date: string | null
+          advance_payment: number | null
+          created_at: string
+          created_by: string
+          customer_id: string | null
+          expected_delivery_date: string | null
+          id: string
+          notes: string | null
+          order_date: string
+          payment_method: string | null
+          product_description: string | null
+          product_name: string
+          quantity: number
+          status: string
+          supplier_id: string | null
+          tenant_id: string
+          total_amount: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          actual_delivery_date?: string | null
+          advance_payment?: number | null
+          created_at?: string
+          created_by: string
+          customer_id?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          payment_method?: string | null
+          product_description?: string | null
+          product_name: string
+          quantity?: number
+          status?: string
+          supplier_id?: string | null
+          tenant_id: string
+          total_amount: number
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          actual_delivery_date?: string | null
+          advance_payment?: number | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          payment_method?: string | null
+          product_description?: string | null
+          product_name?: string
+          quantity?: number
+          status?: string
+          supplier_id?: string | null
+          tenant_id?: string
+          total_amount?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "special_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -712,20 +793,20 @@ export type Database = {
     Functions: {
       admin_create_user: {
         Args: {
-          user_email: string
-          user_password: string
-          user_full_name: string
-          user_role?: Database["public"]["Enums"]["user_role"]
           admin_tenant_id?: string
+          user_email: string
+          user_full_name: string
+          user_password: string
+          user_role?: Database["public"]["Enums"]["user_role"]
         }
         Returns: Json
       }
       assign_user_to_admin_tenant: {
-        Args: { user_email: string; admin_email: string }
+        Args: { admin_email: string; user_email: string }
         Returns: undefined
       }
       check_data_limit: {
-        Args: { tenant_uuid: string; data_type_param: string }
+        Args: { data_type_param: string; tenant_uuid: string }
         Returns: boolean
       }
       check_user_limit: {
@@ -739,15 +820,15 @@ export type Database = {
       get_administrators: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          user_id: string
+          created_at: string
+          created_by: string
           email: string
           full_name: string
+          id: string
           role: Database["public"]["Enums"]["user_role"]
           tenant_id: string
-          created_by: string
-          created_at: string
           updated_at: string
+          user_id: string
         }[]
       }
       get_current_user_role: {
