@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useSpecialOrders, SpecialOrder, SpecialOrderItem } from '@/hooks/useSpecialOrders'
-import { Plus, PackageCheck, Clock, Truck, Package, CheckCircle, X, Trash2, Edit, Minus } from 'lucide-react'
+import { Plus, PackageCheck, Clock, Truck, Package, CheckCircle, X, Trash2, Edit, Minus, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { formatCurrency } from '@/lib/currency'
 
@@ -67,8 +68,10 @@ const SpecialOrderForm = ({
   })
 
   const [items, setItems] = useState<SpecialOrderItem[]>([
-    { product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }
+    { product_name: '', product_description: '', quantity: 1, unit_price: 0, profit_amount: 0, subtotal: 0 }
   ])
+  
+  const [expandedProductIndex, setExpandedProductIndex] = useState<number>(0)
 
   // Update form data when order prop changes
   React.useEffect(() => {
@@ -83,10 +86,14 @@ const SpecialOrderForm = ({
       
       // Load existing items or set default
       if (order.items && order.items.length > 0) {
-        setItems(order.items)
+        setItems(order.items.map(item => ({
+          ...item,
+          profit_amount: item.profit_amount || 0
+        })))
       } else {
-        setItems([{ product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }])
+        setItems([{ product_name: '', product_description: '', quantity: 1, unit_price: 0, profit_amount: 0, subtotal: 0 }])
       }
+      setExpandedProductIndex(0)
     } else {
       // Reset for new order
       setFormData({
@@ -96,17 +103,23 @@ const SpecialOrderForm = ({
         advance_payment: 0,
         notes: ''
       })
-      setItems([{ product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }])
+      setItems([{ product_name: '', product_description: '', quantity: 1, unit_price: 0, profit_amount: 0, subtotal: 0 }])
+      setExpandedProductIndex(0)
     }
   }, [order])
 
   const addItem = () => {
-    setItems([...items, { product_name: '', product_description: '', quantity: 1, unit_price: 0, subtotal: 0 }])
+    const newIndex = items.length
+    setItems([...items, { product_name: '', product_description: '', quantity: 1, unit_price: 0, profit_amount: 0, subtotal: 0 }])
+    setExpandedProductIndex(newIndex)
   }
 
   const removeItem = (index: number) => {
     if (items.length > 1) {
       setItems(items.filter((_, i) => i !== index))
+      if (expandedProductIndex === index) {
+        setExpandedProductIndex(Math.max(0, index - 1))
+      }
     }
   }
 
@@ -114,9 +127,9 @@ const SpecialOrderForm = ({
     const newItems = [...items]
     newItems[index] = { ...newItems[index], [field]: value }
     
-    // Calculate subtotal when quantity or unit_price changes
-    if (field === 'quantity' || field === 'unit_price') {
-      newItems[index].subtotal = newItems[index].quantity * newItems[index].unit_price
+    // Calculate subtotal when quantity, unit_price, or profit_amount changes
+    if (field === 'quantity' || field === 'unit_price' || field === 'profit_amount') {
+      newItems[index].subtotal = (newItems[index].unit_price + newItems[index].profit_amount) * newItems[index].quantity
     }
     
     setItems(newItems)
@@ -130,7 +143,7 @@ const SpecialOrderForm = ({
     e.preventDefault()
     
     // Validate items
-    if (items.some(item => !item.product_name || item.quantity <= 0 || item.unit_price <= 0)) {
+    if (items.some(item => !item.product_name || item.quantity <= 0 || item.unit_price < 0)) {
       toast({
         title: "Erro",
         description: "Preencha todos os produtos com dados válidos",
@@ -231,80 +244,132 @@ const SpecialOrderForm = ({
             </Button>
           </div>
 
-          {items.map((item, index) => (
-            <Card key={index} className="p-4">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-medium">Produto {index + 1}</h4>
-                  {items.length > 1 && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => removeItem(index)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+          <div className="space-y-4">
+            {items.map((item, index) => (
+              <Card key={index} className="border">
+                <Collapsible 
+                  open={expandedProductIndex === index} 
+                  onOpenChange={(isOpen) => setExpandedProductIndex(isOpen ? index : -1)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center space-x-4">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{item.product_name || `Produto ${index + 1}`}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Qtd: {item.quantity} | Subtotal: {formatCurrency(item.subtotal)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {items.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeItem(index);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {expandedProductIndex === index ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
+                    </div>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent className="p-4 pt-0 border-t">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="md:col-span-3">
+                        <Label htmlFor={`product-name-${index}`}>Nome do Produto</Label>
+                        <Input
+                          id={`product-name-${index}`}
+                          value={item.product_name}
+                          onChange={(e) => updateItem(index, 'product_name', e.target.value)}
+                          placeholder="Nome do produto"
+                        />
+                      </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Nome do Produto *</Label>
-                    <Input
-                      value={item.product_name}
-                      onChange={(e) => updateItem(index, 'product_name', e.target.value)}
-                      placeholder="Ex: Notebook Dell Inspiron"
-                      required
-                    />
-                  </div>
+                      <div>
+                        <Label htmlFor={`quantity-${index}`}>Quantidade</Label>
+                        <Input
+                          id={`quantity-${index}`}
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                          placeholder="0"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label>Descrição</Label>
-                    <Input
-                      value={item.product_description || ''}
-                      onChange={(e) => updateItem(index, 'product_description', e.target.value)}
-                      placeholder="Especificações do produto"
-                    />
-                  </div>
-                </div>
+                      <div>
+                        <Label htmlFor={`unit-price-${index}`}>Preço Unitário (MT)</Label>
+                        <Input
+                          id={`unit-price-${index}`}
+                          type="number"
+                          step="0.01"
+                          value={item.unit_price}
+                          onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                          placeholder="0.00"
+                        />
+                      </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Quantidade *</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                      required
-                    />
-                  </div>
+                      <div>
+                        <Label htmlFor={`profit-amount-${index}`}>Valor do Lucro (MT)</Label>
+                        <Input
+                          id={`profit-amount-${index}`}
+                          type="number"
+                          step="0.01"
+                          value={item.profit_amount}
+                          onChange={(e) => updateItem(index, 'profit_amount', parseFloat(e.target.value) || 0)}
+                          placeholder="0.00"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label>Preço Unitário (MT) *</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.unit_price}
-                      onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                      required
-                    />
-                  </div>
+                      <div className="md:col-span-3">
+                        <Label htmlFor={`description-${index}`}>Descrição (Opcional)</Label>
+                        <Textarea
+                          id={`description-${index}`}
+                          value={item.product_description}
+                          onChange={(e) => updateItem(index, 'product_description', e.target.value)}
+                          placeholder="Descrição do produto"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label>Subtotal</Label>
-                    <Input
-                      value={formatCurrency(item.subtotal)}
-                      disabled
-                      className="bg-muted"
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
+                      <div className="md:col-span-3">
+                        <div className="bg-muted/50 p-3 rounded-lg">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Preço Base:</span>
+                              <p className="font-medium">{formatCurrency(item.unit_price)}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Lucro:</span>
+                              <p className="font-medium text-green-600">{formatCurrency(item.profit_amount)}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Preço Final:</span>
+                              <p className="font-medium">{formatCurrency(item.unit_price + item.profit_amount)}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Subtotal:</span>
+                              <p className="font-semibold text-primary">{formatCurrency(item.subtotal)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -448,7 +513,7 @@ const OrderItemsViewDialog = ({
           <h3 className="font-semibold">Produtos ({order.items.length})</h3>
           {order.items.map((item, index) => (
             <Card key={index} className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Produto</Label>
                   <p className="font-semibold">{item.product_name}</p>
@@ -461,8 +526,12 @@ const OrderItemsViewDialog = ({
                   <p>{item.quantity}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium">Preço Unitário</Label>
+                  <Label className="text-sm font-medium">Preço Base</Label>
                   <p>{formatCurrency(item.unit_price)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Lucro</Label>
+                  <p className="text-green-600 font-medium">{formatCurrency(item.profit_amount || 0)}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Subtotal</Label>
@@ -602,453 +671,283 @@ export const SpecialOrdersManagement = () => {
     ? specialOrders 
     : specialOrders.filter(order => order.status === filterStatus)
 
-  const handleSubmitOrder = async (data: any) => {
-    try {
-      if (selectedOrder) {
-        // For editing, include items in the update
-        await updateSpecialOrder(selectedOrder.id, {
-          ...data,
-          items: data.items
-        })
-      } else {
-        // For new orders
-        await addSpecialOrder(data)
-      }
-      setSelectedOrder(undefined)
-    } catch (error) {
-      console.error('Error submitting order:', error)
-    }
-  }
-
-  const handleStatusUpdate = async (status: string) => {
-    if (!selectedOrder) return
-
-    // If changing to delivered, show payment reminder dialog first
-    if (status === 'delivered') {
-      setIsStatusDialogOpen(false)
-      setIsPaymentDialogOpen(true)
-      return
-    }
-
-    try {
-      await updateSpecialOrder(selectedOrder.id, { status })
-      setSelectedOrder(undefined)
-    } catch (error) {
-      console.error('Error updating status:', error)
-    }
-  }
-
-  const handleConfirmDelivery = async () => {
-    if (!selectedOrder) return
-
-    try {
-      await updateSpecialOrder(selectedOrder.id, { status: 'delivered' })
-      setSelectedOrder(undefined)
-      setIsPaymentDialogOpen(false)
-    } catch (error) {
-      console.error('Error confirming delivery:', error)
-    }
-  }
-
-  const handleViewItems = (order: SpecialOrder) => {
-    setSelectedOrder(order)
-    setIsItemsViewDialogOpen(true)
-  }
-
-  const handleEditFromItemsView = () => {
-    setIsItemsViewDialogOpen(false)
-    setIsFormOpen(true)
-  }
-
   const handleCloseOrder = async (order: SpecialOrder) => {
-    if (isClosingOrder) return // Prevent multiple clicks
-    
     setIsClosingOrder(true)
     try {
       await closeSpecialOrder(order)
-    } catch (error) {
-      console.error('Error closing order:', error)
     } finally {
       setIsClosingOrder(false)
+      setIsPaymentDialogOpen(false)
     }
   }
 
-  const handleDeleteOrder = async (id: string) => {
-    try {
-      await deleteSpecialOrder(id)
-    } catch (error) {
-      console.error('Error deleting order:', error)
+  const handleSubmitOrder = async (orderData: any) => {
+    if (selectedOrder) {
+      await updateSpecialOrder(selectedOrder.id, orderData)
+    } else {
+      await addSpecialOrder(orderData)
     }
+    setIsFormOpen(false)
+    setSelectedOrder(undefined)
+  }
+
+  const handleStatusUpdate = async (status: string) => {
+    if (selectedOrder) {
+      await updateSpecialOrder(selectedOrder.id, { status })
+    }
+  }
+
+  const handleDeleteOrder = async (order: SpecialOrder) => {
+    await deleteSpecialOrder(order.id)
   }
 
   if (loading) {
-    return <div className="p-6 text-center">Carregando encomendas...</div>
+    return <div className="p-6">Carregando encomendas...</div>
   }
 
   return (
-    <div className="p-3 lg:p-6 space-y-4 lg:space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Encomendas Especiais</h1>
-          <p className="text-sm lg:text-base text-muted-foreground">
-            Gerir encomendas de produtos não disponíveis em stock
-          </p>
+          <h1 className="text-3xl font-bold">Encomendas Especiais</h1>
+          <p className="text-muted-foreground">Gerir encomendas especiais de produtos</p>
         </div>
-        
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setSelectedOrder(undefined)} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Nova Encomenda</span>
-              <span className="sm:hidden">Nova</span>
-            </Button>
-          </DialogTrigger>
-          <SpecialOrderForm
-            order={selectedOrder}
-            isOpen={isFormOpen}
-            onClose={() => setIsFormOpen(false)}
-            onSubmit={handleSubmitOrder}
-          />
-        </Dialog>
-        
-        <Button 
-          variant="destructive" 
-          size="sm" 
-          onClick={cleanDuplicateSales}
-          className="w-full sm:w-auto"
-        >
-          Limpar Duplicadas
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Encomenda
+          </Button>
+          <Button variant="outline" onClick={cleanDuplicateSales}>
+            Limpar Duplicadas
+          </Button>
+        </div>
       </div>
 
       {/* Status Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 lg:gap-4">
-        {Object.entries(stats).map(([status, count]) => {
-          const IconComponent = statusIcons[status as keyof typeof statusIcons]
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <Card 
+          className={`cursor-pointer transition-colors ${filterStatus === 'all' ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'}`}
+          onClick={() => setFilterStatus('all')}
+        >
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold">{specialOrders.length}</div>
+            <div className="text-sm text-muted-foreground">Total</div>
+          </CardContent>
+        </Card>
+        {Object.entries(statusLabels).map(([status, label]) => {
+          const Icon = statusIcons[status as keyof typeof statusIcons]
+          const count = stats[status] || 0
           return (
             <Card 
               key={status} 
-              className={`cursor-pointer transition-colors ${
-                filterStatus === status ? 'ring-2 ring-primary' : ''
-              }`}
-              onClick={() => setFilterStatus(filterStatus === status ? 'all' : status)}
+              className={`cursor-pointer transition-colors ${filterStatus === status ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'}`}
+              onClick={() => setFilterStatus(status)}
             >
-              <CardContent className="p-2 lg:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-                  <IconComponent className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground mb-1 sm:mb-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-lg lg:text-2xl font-bold">{count}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {statusLabels[status as keyof typeof statusLabels]}
-                    </p>
-                  </div>
+              <CardContent className="p-4 text-center">
+                <div className="flex justify-center mb-2">
+                  <Icon className="h-5 w-5 text-muted-foreground" />
                 </div>
+                <div className="text-2xl font-bold">{count}</div>
+                <div className="text-sm text-muted-foreground">{label}</div>
               </CardContent>
             </Card>
           )
         })}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <Button 
-          variant={filterStatus === 'all' ? 'default' : 'outline'}
-          onClick={() => setFilterStatus('all')}
-          size="sm"
-          className="w-full sm:w-auto"
-        >
-          Todas ({specialOrders.length})
-        </Button>
-        
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filtrar por status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as encomendas</SelectItem>
-            {Object.entries(statusLabels).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Orders Table */}
+      {/* Orders Table/List */}
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <CardTitle className="text-lg sm:text-xl">Lista de Encomendas</CardTitle>
-              <CardDescription className="text-sm">
-                {filteredOrders.length} encomenda(s) encontrada(s)
-              </CardDescription>
-            </div>
-          </div>
+        <CardHeader>
+          <CardTitle>
+            Encomendas 
+            {filterStatus !== 'all' && ` - ${statusLabels[filterStatus as keyof typeof statusLabels]}`}
+            <span className="text-sm font-normal ml-2">({filteredOrders.length})</span>
+          </CardTitle>
         </CardHeader>
-        <CardContent className="p-3 lg:p-6">
-          {/* Mobile Cards View */}
-          <div className="block lg:hidden space-y-4">
-            {filteredOrders.map((order) => (
-              <Card key={order.id} className="p-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium">
-                        {order.items && order.items.length > 0 
-                          ? `${order.items.length} produto(s)`
-                          : 'Encomenda especial'
-                        }
-                      </h3>
-                      {order.items && order.items.length > 0 && (
-                        <p className="text-sm text-muted-foreground truncate">
-                          {order.items[0].product_name}
-                          {order.items.length > 1 && ` e mais ${order.items.length - 1}`}
-                        </p>
-                      )}
-                    </div>
-                    <Badge className={`ml-2 text-xs ${statusColors[order.status as keyof typeof statusColors]}`}>
-                      {statusLabels[order.status as keyof typeof statusLabels]}
-                    </Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Cliente:</span>
-                      <p className="truncate">{order.customer?.name || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Itens:</span>
-                      <p>{order.items?.length || 0}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Total:</span>
-                      <p className="font-medium">{formatCurrency(order.total_amount)}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Data:</span>
-                      <p>{new Date(order.order_date).toLocaleDateString('pt-PT')}</p>
-                    </div>
-                  </div>
-                  
-                   <div className="flex flex-wrap gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewItems(order)}
-                      className="flex-1"
-                    >
-                      <Package className="h-4 w-4 mr-1" />
-                      Ver Itens
-                    </Button>
-                    
-                    {order.status === 'delivered' && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleCloseOrder(order)}
-                        className="bg-green-600 hover:bg-green-700 flex-1"
-                        disabled={isClosingOrder}
-                      >
-                        {isClosingOrder ? 'Fechando...' : 'Fechar'}
-                      </Button>
-                    )}
-                    
-                    {order.status !== 'closed' && order.status !== 'cancelled' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedOrder(order)
-                          setIsStatusDialogOpen(true)
-                        }}
-                        className="flex-1"
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        <span className="hidden xs:inline">Editar Status</span>
-                        <span className="xs:hidden">Status</span>
-                      </Button>
-                    )}
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="text-red-600 px-2">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-sm mx-4 sm:mx-auto">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-base">Eliminar Encomenda</AlertDialogTitle>
-                          <AlertDialogDescription className="text-sm">
-                            Tem certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                          <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteOrder(order.id)}
-                            className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-                          >
-                            Eliminar
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden lg:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Produtos</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Qtd. Items</TableHead>
-                  <TableHead>Valor Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {order.items && order.items.length > 0 
-                            ? order.items[0].product_name
-                            : 'Encomenda especial'
-                          }
-                        </div>
-                        {order.items && order.items.length > 1 && (
-                          <div className="text-sm text-muted-foreground">
-                            e mais {order.items.length - 1} produto(s)
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {order.customer?.name || 'N/A'}
-                    </TableCell>
-                    <TableCell>{order.items?.length || 0}</TableCell>
-                    <TableCell>{formatCurrency(order.total_amount)}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[order.status as keyof typeof statusColors]}>
-                        {statusLabels[order.status as keyof typeof statusLabels]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(order.order_date).toLocaleDateString('pt-PT')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        {order.status === 'delivered' && (
+        <CardContent>
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {filterStatus === 'all' 
+                ? 'Nenhuma encomenda encontrada' 
+                : `Nenhuma encomenda ${statusLabels[filterStatus as keyof typeof statusLabels].toLowerCase()}`
+              }
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Produtos</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">
+                        {order.customer?.name || 'Cliente não especificado'}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(order.order_date).toLocaleDateString('pt-MZ')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                          {statusLabels[order.status as keyof typeof statusLabels]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {order.items ? `${order.items.length} item(s)` : '0 items'}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {formatCurrency(order.total_amount)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
                           <Button
-                            size="sm"
-                            onClick={() => handleCloseOrder(order)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            Fechar
-                          </Button>
-                        )}
-                        
-                        {order.status !== 'closed' && order.status !== 'cancelled' && (
-                          <Button
-                            size="sm"
                             variant="outline"
+                            size="sm"
                             onClick={() => {
                               setSelectedOrder(order)
-                              setIsStatusDialogOpen(true)
+                              setIsItemsViewDialogOpen(true)
                             }}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Package className="h-4 w-4" />
                           </Button>
-                        )}
-                        
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline" className="text-red-600">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="max-w-sm mx-4 sm:mx-auto">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="text-base">Eliminar Encomenda</AlertDialogTitle>
-                              <AlertDialogDescription className="text-sm">
-                                Tem certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                              <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteOrder(order.id)}
-                                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+                          
+                          {order.status !== 'closed' && order.status !== 'cancelled' && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order)
+                                  setIsFormOpen(true)
+                                }}
                               >
-                                Eliminar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {filteredOrders.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <PackageCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">Nenhuma encomenda encontrada</p>
-              <p className="text-sm">
-                {filterStatus === 'all' 
-                  ? 'Crie a sua primeira encomenda especial' 
-                  : `Não há encomendas com status "${statusLabels[filterStatus as keyof typeof statusLabels]}"`
-                }
-              </p>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order)
+                                  setIsStatusDialogOpen(true)
+                                }}
+                              >
+                                <Clock className="h-4 w-4" />
+                              </Button>
+                              
+                              {order.status === 'delivered' && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  disabled={isClosingOrder}
+                                  onClick={() => {
+                                    setSelectedOrder(order)
+                                    setIsPaymentDialogOpen(true)
+                                  }}
+                                >
+                                  {isClosingOrder ? 'Fechando...' : 'Fechar'}
+                                </Button>
+                              )}
+                            </>
+                          )}
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Eliminar Encomenda</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem a certeza que deseja eliminar esta encomenda? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteOrder(order)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Dialogs */}
-      
-      {/* Status Update Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <SpecialOrderForm
+          order={selectedOrder}
+          isOpen={isFormOpen}
+          onClose={() => {
+            setIsFormOpen(false)
+            setSelectedOrder(undefined)
+          }}
+          onSubmit={handleSubmitOrder}
+        />
+      </Dialog>
+
       <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
         {selectedOrder && (
           <StatusUpdateDialog
             order={selectedOrder}
             isOpen={isStatusDialogOpen}
-            onClose={() => setIsStatusDialogOpen(false)}
+            onClose={() => {
+              setIsStatusDialogOpen(false)
+              setSelectedOrder(undefined)
+            }}
             onUpdate={handleStatusUpdate}
           />
         )}
       </Dialog>
 
-      {/* Payment Reminder Dialog */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         {selectedOrder && (
           <PaymentReminderDialog
             order={selectedOrder}
             isOpen={isPaymentDialogOpen}
-            onClose={() => setIsPaymentDialogOpen(false)}
-            onConfirm={handleConfirmDelivery}
+            onClose={() => {
+              setIsPaymentDialogOpen(false)
+              setSelectedOrder(undefined)
+            }}
+            onConfirm={() => handleCloseOrder(selectedOrder)}
           />
         )}
       </Dialog>
 
-      {/* Items View Dialog */}
       <Dialog open={isItemsViewDialogOpen} onOpenChange={setIsItemsViewDialogOpen}>
         {selectedOrder && (
           <OrderItemsViewDialog
             order={selectedOrder}
             isOpen={isItemsViewDialogOpen}
-            onClose={() => setIsItemsViewDialogOpen(false)}
-            onEdit={handleEditFromItemsView}
+            onClose={() => {
+              setIsItemsViewDialogOpen(false)
+              setSelectedOrder(undefined)
+            }}
+            onEdit={() => {
+              setIsItemsViewDialogOpen(false)
+              setIsFormOpen(true)
+            }}
           />
         )}
       </Dialog>

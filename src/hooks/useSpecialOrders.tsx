@@ -9,6 +9,7 @@ export interface SpecialOrderItem {
   product_description?: string
   quantity: number
   unit_price: number
+  profit_amount: number
   subtotal: number
 }
 
@@ -155,6 +156,7 @@ export const useSpecialOrders = () => {
         product_description: item.product_description,
         quantity: item.quantity,
         unit_price: item.unit_price,
+        profit_amount: item.profit_amount || 0,
         subtotal: item.subtotal,
         tenant_id: tenantId
       }))
@@ -216,6 +218,7 @@ export const useSpecialOrders = () => {
           product_description: item.product_description,
           quantity: item.quantity,
           unit_price: item.unit_price,
+          profit_amount: item.profit_amount || 0,
           subtotal: item.subtotal,
           tenant_id: tenantId
         }))

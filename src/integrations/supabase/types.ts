@@ -582,6 +582,7 @@ export type Database = {
           id: string
           product_description: string | null
           product_name: string
+          profit_amount: number
           quantity: number
           special_order_id: string
           subtotal: number
@@ -594,6 +595,7 @@ export type Database = {
           id?: string
           product_description?: string | null
           product_name: string
+          profit_amount?: number
           quantity?: number
           special_order_id: string
           subtotal: number
@@ -606,6 +608,7 @@ export type Database = {
           id?: string
           product_description?: string | null
           product_name?: string
+          profit_amount?: number
           quantity?: number
           special_order_id?: string
           subtotal?: number
