@@ -306,6 +306,171 @@ const SpecialOrderForm = ({
   )
 }
 
+const PaymentReminderDialog = ({
+  order,
+  isOpen,
+  onClose,
+  onConfirm
+}: {
+  order: SpecialOrder
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+}) => {
+  const remainingAmount = order.total_amount - (order.advance_payment || 0)
+  
+  if (!isOpen) return null
+
+  return (
+    <DialogContent className="max-w-md mx-4 sm:mx-auto">
+      <DialogHeader>
+        <DialogTitle>Confirmar Entrega</DialogTitle>
+        <DialogDescription>
+          Confirme que a encomenda foi entregue ao cliente
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 className="font-semibold text-yellow-800 mb-2">Resumo de Pagamento</h4>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span>Total da Encomenda:</span>
+              <span className="font-medium">{formatCurrency(order.total_amount)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Pagamento Antecipado:</span>
+              <span className="font-medium">{formatCurrency(order.advance_payment || 0)}</span>
+            </div>
+            <hr className="border-yellow-300" />
+            <div className="flex justify-between font-bold text-yellow-800">
+              <span>Valor a Receber:</span>
+              <span>{formatCurrency(remainingAmount)}</span>
+            </div>
+          </div>
+        </div>
+
+        {remainingAmount > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-red-800 text-sm font-medium">
+              ⚠️ O cliente ainda deve pagar {formatCurrency(remainingAmount)}
+            </p>
+          </div>
+        )}
+
+        {remainingAmount <= 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-green-800 text-sm font-medium">
+              ✅ Pagamento completo recebido
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+        <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+          Cancelar
+        </Button>
+        <Button onClick={onConfirm} className="w-full sm:w-auto">
+          Confirmar Entrega
+        </Button>
+      </div>
+    </DialogContent>
+  )
+}
+
+const OrderItemsViewDialog = ({
+  order,
+  isOpen,
+  onClose,
+  onEdit
+}: {
+  order: SpecialOrder
+  isOpen: boolean
+  onClose: () => void
+  onEdit: () => void
+}) => {
+  if (!isOpen || !order.items) return null
+
+  return (
+    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
+      <DialogHeader>
+        <DialogTitle>Detalhes da Encomenda</DialogTitle>
+        <DialogDescription>
+          Visualize os itens desta encomenda especial
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4">
+        {/* Customer Info */}
+        <div className="bg-muted p-4 rounded-lg">
+          <h3 className="font-semibold mb-2">Informações do Cliente</h3>
+          <p><strong>Cliente:</strong> {order.customer?.name || 'Cliente não especificado'}</p>
+          <p><strong>Data de Entrega Prevista:</strong> {order.expected_delivery_date || 'Não definida'}</p>
+          <p><strong>Método de Pagamento:</strong> {order.payment_method || 'Não especificado'}</p>
+          <p><strong>Pagamento Antecipado:</strong> {formatCurrency(order.advance_payment || 0)}</p>
+        </div>
+
+        {/* Items List */}
+        <div className="space-y-3">
+          <h3 className="font-semibold">Produtos ({order.items.length})</h3>
+          {order.items.map((item, index) => (
+            <Card key={index} className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Produto</Label>
+                  <p className="font-semibold">{item.product_name}</p>
+                  {item.product_description && (
+                    <p className="text-sm text-muted-foreground">{item.product_description}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Quantidade</Label>
+                  <p>{item.quantity}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Preço Unitário</Label>
+                  <p>{formatCurrency(item.unit_price)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Subtotal</Label>
+                  <p className="font-semibold">{formatCurrency(item.subtotal)}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Total */}
+        <div className="bg-primary/10 p-4 rounded-lg">
+          <div className="flex justify-between items-center text-lg font-bold">
+            <span>Total da Encomenda:</span>
+            <span>{formatCurrency(order.total_amount)}</span>
+          </div>
+        </div>
+
+        {/* Notes */}
+        {order.notes && (
+          <div>
+            <Label className="text-sm font-medium">Observações</Label>
+            <p className="mt-1 p-3 bg-muted rounded-lg">{order.notes}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+        <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+          Fechar
+        </Button>
+        <Button onClick={() => { onEdit(); onClose(); }} className="w-full sm:w-auto">
+          <Edit className="h-4 w-4 mr-2" />
+          Editar Encomenda
+        </Button>
+      </div>
+    </DialogContent>
+  )
+}
+
 const StatusUpdateDialog = ({ 
   order, 
   isOpen, 
@@ -393,6 +558,8 @@ export const SpecialOrdersManagement = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false)
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
+  const [isItemsViewDialogOpen, setIsItemsViewDialogOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<SpecialOrder | undefined>()
   const [filterStatus, setFilterStatus] = useState<string>('all')
 
@@ -417,12 +584,41 @@ export const SpecialOrdersManagement = () => {
   const handleStatusUpdate = async (status: string) => {
     if (!selectedOrder) return
 
+    // If changing to delivered, show payment reminder dialog first
+    if (status === 'delivered') {
+      setIsStatusDialogOpen(false)
+      setIsPaymentDialogOpen(true)
+      return
+    }
+
     try {
       await updateSpecialOrder(selectedOrder.id, { status })
       setSelectedOrder(undefined)
     } catch (error) {
       console.error('Error updating status:', error)
     }
+  }
+
+  const handleConfirmDelivery = async () => {
+    if (!selectedOrder) return
+
+    try {
+      await updateSpecialOrder(selectedOrder.id, { status: 'delivered' })
+      setSelectedOrder(undefined)
+      setIsPaymentDialogOpen(false)
+    } catch (error) {
+      console.error('Error confirming delivery:', error)
+    }
+  }
+
+  const handleViewItems = (order: SpecialOrder) => {
+    setSelectedOrder(order)
+    setIsItemsViewDialogOpen(true)
+  }
+
+  const handleEditFromItemsView = () => {
+    setIsItemsViewDialogOpen(false)
+    setIsFormOpen(true)
   }
 
   const handleCloseOrder = async (order: SpecialOrder) => {
@@ -581,7 +777,17 @@ export const SpecialOrdersManagement = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-wrap gap-2 pt-2">
+                   <div className="flex flex-wrap gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleViewItems(order)}
+                      className="flex-1"
+                    >
+                      <Package className="h-4 w-4 mr-1" />
+                      Ver Itens
+                    </Button>
+                    
                     {order.status === 'delivered' && (
                       <Button
                         size="sm"
@@ -604,7 +810,7 @@ export const SpecialOrdersManagement = () => {
                       >
                         <Edit className="h-4 w-4 mr-1" />
                         <span className="hidden xs:inline">Editar Status</span>
-                        <span className="xs:hidden">Editar</span>
+                        <span className="xs:hidden">Status</span>
                       </Button>
                     )}
                     
@@ -755,6 +961,8 @@ export const SpecialOrdersManagement = () => {
         </CardContent>
       </Card>
 
+      {/* Dialogs */}
+      
       {/* Status Update Dialog */}
       <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
         {selectedOrder && (
@@ -763,6 +971,30 @@ export const SpecialOrdersManagement = () => {
             isOpen={isStatusDialogOpen}
             onClose={() => setIsStatusDialogOpen(false)}
             onUpdate={handleStatusUpdate}
+          />
+        )}
+      </Dialog>
+
+      {/* Payment Reminder Dialog */}
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        {selectedOrder && (
+          <PaymentReminderDialog
+            order={selectedOrder}
+            isOpen={isPaymentDialogOpen}
+            onClose={() => setIsPaymentDialogOpen(false)}
+            onConfirm={handleConfirmDelivery}
+          />
+        )}
+      </Dialog>
+
+      {/* Items View Dialog */}
+      <Dialog open={isItemsViewDialogOpen} onOpenChange={setIsItemsViewDialogOpen}>
+        {selectedOrder && (
+          <OrderItemsViewDialog
+            order={selectedOrder}
+            isOpen={isItemsViewDialogOpen}
+            onClose={() => setIsItemsViewDialogOpen(false)}
+            onEdit={handleEditFromItemsView}
           />
         )}
       </Dialog>
