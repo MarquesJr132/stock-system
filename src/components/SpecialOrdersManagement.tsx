@@ -585,7 +585,8 @@ export const SpecialOrdersManagement = () => {
     updateSpecialOrder, 
     deleteSpecialOrder, 
     closeSpecialOrder,
-    getStatusStats 
+    getStatusStats,
+    cleanDuplicateSales
   } = useSpecialOrders()
 
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -594,6 +595,7 @@ export const SpecialOrdersManagement = () => {
   const [isItemsViewDialogOpen, setIsItemsViewDialogOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<SpecialOrder | undefined>()
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [isClosingOrder, setIsClosingOrder] = useState(false)
 
   const stats = getStatusStats()
   const filteredOrders = filterStatus === 'all' 
@@ -659,10 +661,15 @@ export const SpecialOrdersManagement = () => {
   }
 
   const handleCloseOrder = async (order: SpecialOrder) => {
+    if (isClosingOrder) return // Prevent multiple clicks
+    
+    setIsClosingOrder(true)
     try {
       await closeSpecialOrder(order)
     } catch (error) {
       console.error('Error closing order:', error)
+    } finally {
+      setIsClosingOrder(false)
     }
   }
 
@@ -703,6 +710,15 @@ export const SpecialOrdersManagement = () => {
             onSubmit={handleSubmitOrder}
           />
         </Dialog>
+        
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={cleanDuplicateSales}
+          className="w-full sm:w-auto"
+        >
+          Limpar Duplicadas
+        </Button>
       </div>
 
       {/* Status Cards */}
@@ -830,8 +846,9 @@ export const SpecialOrdersManagement = () => {
                         size="sm"
                         onClick={() => handleCloseOrder(order)}
                         className="bg-green-600 hover:bg-green-700 flex-1"
+                        disabled={isClosingOrder}
                       >
-                        Fechar
+                        {isClosingOrder ? 'Fechando...' : 'Fechar'}
                       </Button>
                     )}
                     

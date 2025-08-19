@@ -287,12 +287,42 @@ export const useSpecialOrders = () => {
     }
   }
 
-  // Close special order and create sale
+  // Close special order and create sale (only once)
   const closeSpecialOrder = async (order: SpecialOrder) => {
     if (!profile?.id || !order.items || order.items.length === 0) return
     
     try {
       const tenantId = profile.tenant_id || profile.id
+
+      // First check if this order is already closed or already has a sale
+      if (order.status === 'closed') {
+        toast({
+          title: "Aviso",
+          description: "Esta encomenda já foi fechada",
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Check if there's already a sale for this order (by checking notes or custom field)
+      const { data: existingSales, error: checkError } = await supabase
+        .from('sales')
+        .select('id')
+        .eq('customer_id', order.customer_id)
+        .eq('total_amount', order.total_amount)
+        .eq('tenant_id', tenantId)
+        .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()) // Today only
+
+      if (checkError) throw checkError
+
+      if (existingSales && existingSales.length > 0) {
+        toast({
+          title: "Aviso", 
+          description: "Já existe uma venda para esta encomenda hoje",
+          variant: "destructive"
+        })
+        return
+      }
 
       // Create sale with the total amount
       const { data: saleData, error: saleError } = await supabase
@@ -423,6 +453,68 @@ export const useSpecialOrders = () => {
     }, {} as Record<string, number>)
   }
 
+  // Helper function to clean duplicate sales (for existing duplicates)
+  const cleanDuplicateSales = async () => {
+    if (!profile?.id) return
+    
+    try {
+      const tenantId = profile.tenant_id || profile.id
+      
+      // Find duplicate sales by grouping by customer_id, total_amount, and date
+      const { data: sales, error } = await supabase
+        .from('sales')
+        .select('id, customer_id, total_amount, created_at')
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      // Group sales by customer_id + total_amount + date
+      const groups = sales?.reduce((acc, sale) => {
+        const dateKey = new Date(sale.created_at).toDateString()
+        const key = `${sale.customer_id}-${sale.total_amount}-${dateKey}`
+        if (!acc[key]) acc[key] = []
+        acc[key].push(sale)
+        return acc
+      }, {} as Record<string, any[]>) || {}
+
+      // Remove duplicates (keep first, delete rest)
+      for (const group of Object.values(groups)) {
+        if (group.length > 1) {
+          const duplicateIds = group.slice(1).map(sale => sale.id)
+          
+          // Delete sale items first
+          const { error: itemsError } = await supabase
+            .from('sale_items')
+            .delete()
+            .in('sale_id', duplicateIds)
+
+          if (itemsError) throw itemsError
+
+          // Delete duplicate sales
+          const { error: salesError } = await supabase
+            .from('sales')
+            .delete()
+            .in('id', duplicateIds)
+
+          if (salesError) throw salesError
+        }
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Vendas duplicadas removidas"
+      })
+    } catch (error) {
+      console.error('Error cleaning duplicate sales:', error)
+      toast({
+        title: "Erro",
+        description: "Erro ao limpar vendas duplicadas",
+        variant: "destructive"
+      })
+    }
+  }
+
   useEffect(() => {
     if (profile?.id) {
       fetchSpecialOrders()
@@ -438,6 +530,7 @@ export const useSpecialOrders = () => {
     updateSpecialOrder,
     deleteSpecialOrder,
     closeSpecialOrder,
-    getStatusStats
+    getStatusStats,
+    cleanDuplicateSales
   }
 }
