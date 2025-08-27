@@ -36,8 +36,14 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     { value: "company", icon: Building, label: "Empresa" },
     { value: "users", icon: Settings, label: "Usuários" },
     { value: "suppliers", icon: Truck, label: "Fornecedores" },
-    { value: "purchase-orders", icon: FileText, label: "Compras" }
+    // Hide purchase orders for now
+    // { value: "purchase-orders", icon: FileText, label: "Compras" }
   ];
+
+  // Add audit access only for administrators (not managers)
+  if (userIsAdmin && profile?.role === 'administrator') {
+    adminItems.push({ value: "audit", icon: Shield, label: "Auditoria" });
+  }
 
   const isActive = (tab: string) => activeTab === tab;
 
@@ -57,7 +63,16 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.value}>
                   <SidebarMenuButton
-                    onClick={() => onTabChange(item.value)}
+                    onClick={() => {
+                      onTabChange(item.value);
+                      // Close sidebar on mobile after selection
+                      if (window.innerWidth < 768) {
+                        const sidebar = document.querySelector('[data-sidebar="sidebar"]');
+                        if (sidebar) {
+                          sidebar.setAttribute('data-state', 'collapsed');
+                        }
+                      }
+                    }}
                     isActive={isActive(item.value)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full hover-lift ${
                       isActive(item.value)
@@ -84,7 +99,16 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
                 {adminItems.map((item) => (
                   <SidebarMenuItem key={item.value}>
                     <SidebarMenuButton
-                      onClick={() => onTabChange(item.value)}
+                      onClick={() => {
+                        onTabChange(item.value);
+                        // Close sidebar on mobile after selection
+                        if (window.innerWidth < 768) {
+                          const sidebar = document.querySelector('[data-sidebar="sidebar"]');
+                          if (sidebar) {
+                            sidebar.setAttribute('data-state', 'collapsed');
+                          }
+                        }
+                      }}
                       isActive={isActive(item.value)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full hover-lift ${
                         isActive(item.value)
