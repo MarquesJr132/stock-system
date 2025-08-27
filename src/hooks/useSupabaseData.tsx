@@ -806,9 +806,16 @@ export const useSupabaseData = () => {
   };
 
   const getLowStockProducts = () => {
-    return products.filter(product => 
+    const lowStock = products.filter(product => 
       product.min_stock && product.quantity <= product.min_stock
     );
+    
+    // Remove duplicates by ID
+    const uniqueProducts = lowStock.filter((product, index, array) =>
+      array.findIndex(p => p.id === product.id) === index
+    );
+    
+    return uniqueProducts;
   };
 
   const getTopSellingProducts = () => {
