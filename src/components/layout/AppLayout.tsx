@@ -44,7 +44,7 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
 
               {/* Right side actions */}
               <div className="flex items-center gap-2 lg:gap-4">
-                <NotificationCenter />
+                {/* <NotificationCenter /> */}
                 <ThemeToggle />
                 
                 {/* User info - responsive */}
