@@ -21,6 +21,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   const { isAdministrator: userIsAdmin, isSuperuser: userIsSuperuser, signOut, profile } = useAuth();
+  const { isMobile, setOpenMobile } = useSidebar();
   
   const mainItems = [
     { value: "dashboard", icon: BarChart3, label: "Dashboard" },
@@ -65,13 +66,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
                   <SidebarMenuButton
                     onClick={() => {
                       onTabChange(item.value);
-                      // Close sidebar on mobile after selection
-                      if (window.innerWidth < 768) {
-                        const sidebar = document.querySelector('[data-sidebar="sidebar"]');
-                        if (sidebar) {
-                          sidebar.setAttribute('data-state', 'collapsed');
-                        }
-                      }
+                      if (isMobile) setOpenMobile(false);
                     }}
                     isActive={isActive(item.value)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full hover-lift ${
@@ -101,13 +96,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
                     <SidebarMenuButton
                       onClick={() => {
                         onTabChange(item.value);
-                        // Close sidebar on mobile after selection
-                        if (window.innerWidth < 768) {
-                          const sidebar = document.querySelector('[data-sidebar="sidebar"]');
-                          if (sidebar) {
-                            sidebar.setAttribute('data-state', 'collapsed');
-                          }
-                        }
+                        if (isMobile) setOpenMobile(false);
                       }}
                       isActive={isActive(item.value)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full hover-lift ${
