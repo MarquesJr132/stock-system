@@ -520,7 +520,7 @@ const UserManagement = () => {
                           Reset Senha
                         </Button>
                       )}
-                      {(isSuperuser || (isAdministrator && user.role === 'user')) && 
+                      {(isSuperuser || (isAdministrator && (user.role === 'user' || user.role === 'gerente'))) && 
                        user.user_id !== profile?.user_id && (
                         <Button
                           variant="destructive"
