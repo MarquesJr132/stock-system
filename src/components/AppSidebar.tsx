@@ -20,7 +20,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
-  const { isAdministrator: userIsAdmin, isSuperuser: userIsSuperuser, signOut, profile } = useAuth();
+  const { isAdministrator: userIsAdmin, isSuperuser: userIsSuperuser, isGerente: userIsGerente, signOut, profile } = useAuth();
   const { isMobile, setOpenMobile } = useSidebar();
   
   const mainItems = [
@@ -33,16 +33,19 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     { value: "profile", icon: UserIcon, label: "Perfil" }
   ];
 
+  // Admin items - exclude company, users, and audit for managers
   const adminItems = [
-    { value: "company", icon: Building, label: "Empresa" },
-    { value: "users", icon: Settings, label: "Usuários" },
     { value: "suppliers", icon: Truck, label: "Fornecedores" },
     // Hide purchase orders for now
     // { value: "purchase-orders", icon: FileText, label: "Compras" }
   ];
 
-  // Add audit access only for administrators (not managers)
+  // Only administrators (not managers) get access to company, users, and audit
   if (userIsAdmin && profile?.role === 'administrator') {
+    adminItems.unshift(
+      { value: "company", icon: Building, label: "Empresa" },
+      { value: "users", icon: Settings, label: "Usuários" }
+    );
     adminItems.push({ value: "audit", icon: Shield, label: "Auditoria" });
   }
 
@@ -84,7 +87,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {userIsAdmin && !userIsSuperuser && (
+        {(userIsAdmin || userIsGerente) && !userIsSuperuser && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-muted-foreground font-semibold text-sm tracking-wide">
               Administração
