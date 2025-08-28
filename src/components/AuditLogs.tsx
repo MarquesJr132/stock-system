@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Shield, Search, Filter, Download, Eye } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -121,44 +122,37 @@ export const AuditLogs: React.FC = () => {
 
   const exportLogs = async () => {
     try {
-      const csvHeaders = [
-        'Data/Hora',
-        'Usuário',
-        'Tabela',
-        'Ação',
-        'Registro ID',
-        'IP',
-      ];
+      const excelData = filteredLogs.map(log => ({
+        'Data/Hora': new Date(log.timestamp).toLocaleString('pt-BR'),
+        'Usuário': log.profiles?.full_name || 'Sistema',
+        'Tabela': tableMap[log.table_name] || log.table_name,
+        'Ação': actionMap[log.action]?.label || log.action,
+        'Registro ID': log.record_id,
+        'IP': log.ip_address || '-',
+      }));
 
-      const csvData = filteredLogs.map(log => [
-        new Date(log.timestamp).toLocaleString('pt-BR'),
-        log.profiles?.full_name || 'Sistema',
-        tableMap[log.table_name] || log.table_name,
-        actionMap[log.action]?.label || log.action,
-        log.record_id,
-        log.ip_address || '-',
-      ]);
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Logs de Auditoria');
 
-      const csvContent = [
-        csvHeaders.join(','),
-        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
-      ].join('\n');
+      // Auto-adjust column widths
+      const maxWidth = 50;
+      const colWidths = Object.keys(excelData[0] || {}).map(key => ({
+        wch: Math.min(
+          Math.max(
+            key.length,
+            ...excelData.map(row => String(row[key as keyof typeof row] || '').length)
+          ),
+          maxWidth
+        )
+      }));
+      worksheet['!cols'] = colWidths;
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `audit_logs_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      XLSX.writeFile(workbook, `logs_auditoria_${new Date().toISOString().split('T')[0]}.xlsx`);
 
       toast({
         title: "Sucesso",
-        description: "Logs exportados com sucesso!",
+        description: "Logs exportados para Excel com sucesso!",
       });
     } catch (error) {
       console.error('Erro ao exportar logs:', error);
@@ -222,7 +216,7 @@ export const AuditLogs: React.FC = () => {
             </CardTitle>
             <Button onClick={exportLogs} variant="outline">
               <Download className="h-4 w-4 mr-2" />
-              Exportar CSV
+              Exportar Excel
             </Button>
           </div>
         </CardHeader>

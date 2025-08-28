@@ -231,10 +231,13 @@ const ProfileManagement = () => {
                       id="email"
                       type="email"
                       value={profileData.email}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="seu@email.com"
-                      required
+                      disabled
+                      placeholder="Email não pode ser alterado"
+                      className="bg-muted cursor-not-allowed"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      O email não pode ser alterado por questões de segurança
+                    </p>
                   </div>
                   <div className="flex gap-2 pt-4">
                     <Button type="submit" disabled={loading} className="flex-1">
