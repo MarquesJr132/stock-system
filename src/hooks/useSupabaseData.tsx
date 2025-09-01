@@ -789,6 +789,126 @@ export const useSupabaseData = () => {
     }
   };
 
+  // Quotation functions
+  const getQuotations = async () => {
+    const { data, error } = await supabase
+      .from('quotations')
+      .select(`
+        *,
+        customers(name, email, phone),
+        profiles(full_name)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  };
+
+  const addQuotation = async (quotationData: any) => {
+    if (!profile) throw new Error('User not authenticated');
+    
+    const { data: quotation, error: quotationError } = await supabase
+      .from('quotations')
+      .insert({
+        ...quotationData,
+        tenant_id: profile.tenant_id || profile.id,
+        created_by: profile.id
+      })
+      .select()
+      .single();
+
+    if (quotationError) throw quotationError;
+
+    // Add quotation items
+    if (quotationData.items && quotationData.items.length > 0) {
+      const items = quotationData.items.map((item: any) => ({
+        ...item,
+        quotation_id: quotation.id,
+        tenant_id: profile.tenant_id || profile.id
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('quotation_items')
+        .insert(items);
+
+      if (itemsError) throw itemsError;
+    }
+
+    return quotation;
+  };
+
+  const updateQuotation = async (quotationId: string, quotationData: any) => {
+    if (!profile) throw new Error('User not authenticated');
+    
+    const { error: quotationError } = await supabase
+      .from('quotations')
+      .update({
+        customer_id: quotationData.customer_id,
+        total_amount: quotationData.total_amount,
+        total_profit: quotationData.total_profit,
+        total_vat_amount: quotationData.total_vat_amount,
+        payment_method: quotationData.payment_method,
+        status: quotationData.status,
+        valid_until: quotationData.valid_until,
+        notes: quotationData.notes,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', quotationId);
+
+    if (quotationError) throw quotationError;
+
+    // Delete existing items and add new ones
+    const { error: deleteError } = await supabase
+      .from('quotation_items')
+      .delete()
+      .eq('quotation_id', quotationId);
+
+    if (deleteError) throw deleteError;
+
+    if (quotationData.items && quotationData.items.length > 0) {
+      const items = quotationData.items.map((item: any) => ({
+        ...item,
+        quotation_id: quotationId,
+        tenant_id: profile.tenant_id || profile.id
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('quotation_items')
+        .insert(items);
+
+      if (itemsError) throw itemsError;
+    }
+  };
+
+  const deleteQuotation = async (quotationId: string) => {
+    const { error } = await supabase
+      .from('quotations')
+      .delete()
+      .eq('id', quotationId);
+
+    if (error) throw error;
+  };
+
+  const getQuotationItems = async (quotationId: string) => {
+    const { data, error } = await supabase
+      .from('quotation_items')
+      .select('*')
+      .eq('quotation_id', quotationId);
+
+    if (error) throw error;
+    
+    // Manually join with products since the relationship might not exist yet
+    const itemsWithProducts = data?.map(item => {
+      const product = products.find(p => p.id === item.product_id);
+      return {
+        ...item,
+        product_name: product?.name || 'Produto não encontrado'
+      };
+    }) || [];
+
+    return itemsWithProducts;
+  };
+
   // Helper functions for data analysis
   const getTotalStock = () => {
     return products.filter(product => product.category !== 'encomenda_especial').reduce((total, product) => total + product.quantity, 0);
@@ -908,6 +1028,13 @@ export const useSupabaseData = () => {
     getAllTenantLimits,
     checkDataLimit,
     checkUserLimit,
+    
+    // Quotation functions
+    getQuotations,
+    addQuotation,
+    updateQuotation,
+    deleteQuotation,
+    getQuotationItems,
     
     // Helper functions
     getTotalStock,

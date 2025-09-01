@@ -451,6 +451,104 @@ export type Database = {
           },
         ]
       }
+      quotation_items: {
+        Row: {
+          created_at: string
+          id: string
+          includes_vat: boolean
+          product_id: string
+          quantity: number
+          quotation_id: string
+          subtotal: number
+          tenant_id: string
+          total: number
+          unit_price: number
+          vat_amount: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          includes_vat?: boolean
+          product_id: string
+          quantity: number
+          quotation_id: string
+          subtotal: number
+          tenant_id: string
+          total: number
+          unit_price: number
+          vat_amount?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          includes_vat?: boolean
+          product_id?: string
+          quantity?: number
+          quotation_id?: string
+          subtotal?: number
+          tenant_id?: string
+          total?: number
+          unit_price?: number
+          vat_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_items_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotations: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string | null
+          id: string
+          notes: string | null
+          payment_method: string
+          status: string
+          tenant_id: string
+          total_amount: number
+          total_profit: number
+          total_vat_amount: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          payment_method: string
+          status?: string
+          tenant_id: string
+          total_amount: number
+          total_profit?: number
+          total_vat_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          tenant_id?: string
+          total_amount?: number
+          total_profit?: number
+          total_vat_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       sale_items: {
         Row: {
           created_at: string

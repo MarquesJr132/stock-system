@@ -49,10 +49,10 @@ export default function QuotationManagement() {
   const { 
     products, 
     customers,
-    sales,
-    addSale,
-    updateSale,
-    fetchSaleItemsBySaleId
+    getQuotations,
+    addQuotation,
+    updateQuotation,
+    getQuotationItems
   } = useSupabaseData();
 
   const [quotations, setQuotations] = useState<Quotation[]>([]);
@@ -73,22 +73,18 @@ export default function QuotationManagement() {
 
   useEffect(() => {
     loadQuotations();
-  }, [sales]);
+  }, []);
 
   const loadQuotations = async () => {
     try {
-      // Buscar cotações da tabela sales com status 'quotation'
-      const quotationData = sales.filter((sale: any) => (sale as any).status === 'quotation').map((sale: any) => ({
-        ...sale,
-        status: (sale as any).status || 'pending',
-        valid_until: (sale as any).valid_until || new Date().toISOString().split('T')[0],
-        notes: (sale as any).notes || '',
-        updated_at: sale.updated_at || sale.created_at
-      }));
+      setLoading(true);
+      const quotationData = await getQuotations();
       setQuotations(quotationData);
     } catch (error) {
       console.error('Erro ao carregar cotações:', error);
       toast.error('Erro ao carregar cotações');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,13 +110,25 @@ export default function QuotationManagement() {
   const loadQuotationForEdit = async (quotation: Quotation) => {
     try {
       setLoading(true);
-      const items = await fetchSaleItemsBySaleId(quotation.id);
+      const items = await getQuotationItems(quotation.id);
+      
+      const quotationItems = items?.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        includes_vat: item.includes_vat,
+        vat_amount: item.vat_amount,
+        subtotal: item.subtotal,
+        total: item.total,
+        product_name: item.product_name || 'Produto não encontrado'
+      })) || [];
       
       setCurrentQuotation({
         ...quotation,
         id: quotation.id
       });
-      setQuotationItems(items);
+      setQuotationItems(quotationItems);
       setSelectedQuotation(quotation);
       setIsDialogOpen(true);
     } catch (error) {
@@ -179,11 +187,11 @@ export default function QuotationManagement() {
 
       if (selectedQuotation) {
         // Atualizar cotação existente
-        await updateSale(selectedQuotation.id, quotationData);
+        await updateQuotation(selectedQuotation.id, quotationData);
         toast.success('Cotação atualizada com sucesso!');
       } else {
         // Criar nova cotação
-        await addSale(quotationData);
+        await addQuotation(quotationData);
         toast.success('Cotação criada com sucesso!');
       }
 
