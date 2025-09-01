@@ -364,7 +364,7 @@ export const useSpecialOrders = () => {
           .insert([
             {
               name: 'Encomenda Especial',
-              category: 'especial',
+              category: 'encomenda_especial',
               description: 'Produto genérico para itens de Encomendas Especiais',
               purchase_price: 0,
               sale_price: 0,

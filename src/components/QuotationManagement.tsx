@@ -169,6 +169,11 @@ export default function QuotationManagement() {
       return;
     }
 
+    if (!currentQuotation.customer_id) {
+      toast.error('Selecione um cliente para a cotação');
+      return;
+    }
+
     const { subtotal, totalVat, total, totalProfit } = calculateTotals();
 
     try {
@@ -180,18 +185,24 @@ export default function QuotationManagement() {
         total_profit: totalProfit,
         total_vat_amount: totalVat,
         payment_method: currentQuotation.payment_method || 'cash',
-        status: 'quotation', // Status especial para cotações
+        status: 'pending',
         valid_until: currentQuotation.valid_until,
-        notes: currentQuotation.notes,
-        items: quotationItems
+        notes: currentQuotation.notes || '',
+        items: quotationItems.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          includes_vat: item.includes_vat || false,
+          vat_amount: item.vat_amount || 0,
+          subtotal: item.subtotal,
+          total: item.total
+        }))
       };
 
       if (selectedQuotation) {
-        // Atualizar cotação existente
         await updateQuotation(selectedQuotation.id, quotationData);
         toast.success('Cotação atualizada com sucesso!');
       } else {
-        // Criar nova cotação
         await addQuotation(quotationData);
         toast.success('Cotação criada com sucesso!');
       }
@@ -201,7 +212,7 @@ export default function QuotationManagement() {
       loadQuotations();
     } catch (error) {
       console.error('Erro ao salvar cotação:', error);
-      toast.error('Erro ao salvar cotação');
+      toast.error(`Erro ao salvar cotação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
