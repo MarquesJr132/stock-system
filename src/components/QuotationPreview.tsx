@@ -50,10 +50,10 @@ export function QuotationPreview({
   };
 
   const generatePDF = async () => {
-    const element = document.getElementById('quotation-content');
-    if (!element) return;
-
     try {
+      const element = document.getElementById('quotation-content');
+      if (!element) return;
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -130,19 +130,19 @@ export function QuotationPreview({
           <DialogTitle>Pré-visualização da Cotação</DialogTitle>
         </DialogHeader>
 
-        <div id="quotation-content" className="bg-white p-8 text-black">
+        <div id="quotation-content" className="bg-white p-4 text-black text-sm max-w-[210mm] mx-auto" style={{ minHeight: '295mm' }}>
           {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-0">
-            <span className="text-9xl font-bold transform -rotate-45">COTAÇÃO</span>
+            <span className="text-6xl font-bold transform -rotate-45">COTAÇÃO</span>
           </div>
 
           {/* Header */}
-          <div className="mb-8 relative z-10">
-            <div className="grid grid-cols-2 gap-8">
+          <div className="mb-4 relative z-10">
+            <div className="flex justify-between items-start">
               {/* Company Info */}
-              <div>
-                <h1 className="text-2xl font-bold mb-2">{companySettings?.company_name}</h1>
-                <div className="text-sm space-y-1">
+              <div className="flex-1">
+                <h1 className="text-xl font-bold mb-2">{companySettings?.company_name}</h1>
+                <div className="text-xs space-y-0.5">
                   <p>{companySettings?.address}</p>
                   <p>Tel: {companySettings?.phone}</p>
                   <p>Email: {companySettings?.email}</p>
@@ -152,8 +152,8 @@ export function QuotationPreview({
               
               {/* Quotation Info */}
               <div className="text-right">
-                <h2 className="text-3xl font-bold text-blue-600 mb-4">COTAÇÃO</h2>
-                <div className="text-sm space-y-1">
+                <h2 className="text-2xl font-bold text-blue-600 mb-2">COTAÇÃO</h2>
+                <div className="text-xs space-y-0.5">
                   <p><strong>Número:</strong> #{quotation.id.slice(0, 8)}</p>
                   <p><strong>Data:</strong> {formatDateTime(quotation.created_at)}</p>
                   <p><strong>Válida até:</strong> {new Date(quotation.valid_until).toLocaleDateString()}</p>
@@ -166,40 +166,44 @@ export function QuotationPreview({
           </div>
 
           {/* Customer Info */}
-          <div className="mb-8 relative z-10">
-            <h3 className="text-lg font-semibold mb-2 border-b border-gray-300 pb-1">Cliente</h3>
-            <div className="text-sm">
-              <p><strong>Nome:</strong> {customer?.name || 'Cliente Anónimo'}</p>
-              {customer?.email && <p><strong>Email:</strong> {customer.email}</p>}
-              {customer?.phone && <p><strong>Telefone:</strong> {customer.phone}</p>}
-              {customer?.address && <p><strong>Endereço:</strong> {customer.address}</p>}
-              {customer?.nuit && <p><strong>NUIT:</strong> {customer.nuit}</p>}
+          <div className="mb-4 relative z-10">
+            <h3 className="font-semibold mb-1 border-b border-gray-300 pb-1">Cliente</h3>
+            <div className="text-xs grid grid-cols-2 gap-2">
+              <div>
+                <p><strong>Nome:</strong> {customer?.name || 'Cliente Anónimo'}</p>
+                {customer?.email && <p><strong>Email:</strong> {customer.email}</p>}
+                {customer?.phone && <p><strong>Telefone:</strong> {customer.phone}</p>}
+              </div>
+              <div>
+                {customer?.address && <p><strong>Endereço:</strong> {customer.address}</p>}
+                {customer?.nuit && <p><strong>NUIT:</strong> {customer.nuit}</p>}
+              </div>
             </div>
           </div>
 
           {/* Items Table */}
-          <div className="mb-8 relative z-10">
-            <table className="w-full border-collapse border border-gray-300">
+          <div className="mb-4 relative z-10">
+            <table className="w-full border-collapse border border-gray-300 text-xs">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">Produto</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">Qtd</th>
-                  <th className="border border-gray-300 px-4 py-2 text-right">Preço Unit.</th>
-                  <th className="border border-gray-300 px-4 py-2 text-right">Subtotal</th>
-                  <th className="border border-gray-300 px-4 py-2 text-right">IVA</th>
-                  <th className="border border-gray-300 px-4 py-2 text-right">Total</th>
+                  <th className="border border-gray-300 px-2 py-1 text-left">Produto</th>
+                  <th className="border border-gray-300 px-2 py-1 text-center w-16">Qtd</th>
+                  <th className="border border-gray-300 px-2 py-1 text-right w-24">Preço Unit.</th>
+                  <th className="border border-gray-300 px-2 py-1 text-right w-24">Subtotal</th>
+                  <th className="border border-gray-300 px-2 py-1 text-right w-20">IVA</th>
+                  <th className="border border-gray-300 px-2 py-1 text-right w-24">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="border border-gray-300 px-4 py-8 text-center">
+                    <td colSpan={6} className="border border-gray-300 px-2 py-4 text-center">
                       Carregando itens...
                     </td>
                   </tr>
                 ) : quotationItems.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="border border-gray-300 px-4 py-8 text-center">
+                    <td colSpan={6} className="border border-gray-300 px-2 py-4 text-center text-gray-500">
                       Nenhum item encontrado
                     </td>
                   </tr>
@@ -208,19 +212,24 @@ export function QuotationPreview({
                     const product = products.find(p => p.id === item.product_id);
                     return (
                       <tr key={index}>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <div>
-                            <p className="font-medium">{product?.name || 'Produto não encontrado'}</p>
-                            {product?.description && (
-                              <p className="text-xs text-gray-600">{product.description}</p>
-                            )}
-                          </div>
+                        <td className="border border-gray-300 px-2 py-1">
+                          {item.product_name || product?.name || 'Produto não encontrado'}
                         </td>
-                        <td className="border border-gray-300 px-4 py-2 text-center">{item.quantity}</td>
-                        <td className="border border-gray-300 px-4 py-2 text-right">{formatCurrency(item.unit_price)}</td>
-                        <td className="border border-gray-300 px-4 py-2 text-right">{formatCurrency(item.subtotal)}</td>
-                        <td className="border border-gray-300 px-4 py-2 text-right">{formatCurrency(item.vat_amount)}</td>
-                        <td className="border border-gray-300 px-4 py-2 text-right font-medium">{formatCurrency(item.total)}</td>
+                        <td className="border border-gray-300 px-2 py-1 text-center">
+                          {item.quantity}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1 text-right">
+                          {formatCurrency(item.unit_price)}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1 text-right">
+                          {formatCurrency(item.subtotal)}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1 text-right">
+                          {formatCurrency(item.vat_amount)}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1 text-right">
+                          {formatCurrency(item.total)}
+                        </td>
                       </tr>
                     );
                   })
@@ -230,55 +239,51 @@ export function QuotationPreview({
           </div>
 
           {/* Totals */}
-          <div className="mb-8 relative z-10">
+          <div className="mb-4 relative z-10">
             <div className="flex justify-end">
-              <div className="w-64">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>IVA (17%):</span>
-                    <span>{formatCurrency(quotation.total_vat_amount)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-lg border-t border-gray-300 pt-2">
-                    <span>Total:</span>
-                    <span>{formatCurrency(quotation.total_amount)}</span>
-                  </div>
+              <div className="w-80 space-y-1 text-xs">
+                <div className="flex justify-between border-b border-gray-200 pb-1">
+                  <span>Subtotal:</span>
+                  <span>{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 pb-1">
+                  <span>IVA (17%):</span>
+                  <span>{formatCurrency(quotation.total_vat_amount)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-sm border-t-2 border-gray-400 pt-1">
+                  <span>Total:</span>
+                  <span>{formatCurrency(quotation.total_amount)}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Payment Method and Notes */}
-          <div className="mb-8 relative z-10">
-            <div className="grid grid-cols-2 gap-8">
+          {/* Payment and Notes */}
+          <div className="mb-4 relative z-10">
+            <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
-                <h4 className="font-semibold mb-2">Método de Pagamento</h4>
-                <p className="text-sm">{getPaymentLabel(quotation.payment_method)}</p>
+                <h4 className="font-semibold mb-1">Método de Pagamento</h4>
+                <p>{quotation.payment_method ? getPaymentLabel(quotation.payment_method) : 'Não especificado'}</p>
               </div>
-              {quotation.notes && (
-                <div>
-                  <h4 className="font-semibold mb-2">Observações</h4>
-                  <p className="text-sm">{quotation.notes}</p>
-                </div>
-              )}
+              <div>
+                <h4 className="font-semibold mb-1">Observações</h4>
+                <p>{quotation.notes || 'N/A'}</p>
+              </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="text-center text-xs text-gray-500 mt-8 relative z-10">
+          <div className="mt-8 pt-4 border-t border-gray-300 text-center text-xs text-gray-600 relative z-10">
             <p>Esta cotação é válida até {new Date(quotation.valid_until).toLocaleDateString()}</p>
             <p>Gerado em {formatDateTime(new Date().toISOString())}</p>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2 mt-4">
+        <div className="flex justify-between pt-4">
           <Button variant="outline" onClick={onClose}>
-            Fechar Pré-visualização
+            Fechar
           </Button>
-          <Button onClick={generatePDF}>
+          <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700">
             Gerar PDF
           </Button>
         </div>
