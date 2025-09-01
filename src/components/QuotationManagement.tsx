@@ -424,15 +424,16 @@ export default function QuotationManagement() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="payment_method">Método de Pagamento</Label>
+                <Label htmlFor="payment_method">Método de Pagamento (opcional)</Label>
                 <Select
                   value={currentQuotation.payment_method || ""}
                   onValueChange={(value) => setCurrentQuotation({...currentQuotation, payment_method: value})}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecionar método" />
+                    <SelectValue placeholder="Selecionar método (opcional)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">Não especificado</SelectItem>
                     <SelectItem value="cash">Dinheiro</SelectItem>
                     <SelectItem value="card">Cartão</SelectItem>
                     <SelectItem value="transfer">Transferência</SelectItem>

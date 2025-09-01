@@ -828,7 +828,7 @@ export const useSupabaseData = () => {
       total_amount: quotationData.total_amount,
       total_profit: quotationData.total_profit ?? 0,
       total_vat_amount: quotationData.total_vat_amount ?? 0,
-      payment_method: quotationData.payment_method || 'cash',
+      payment_method: quotationData.payment_method || '',
       status: quotationData.status || 'pending',
       valid_until: quotationData.valid_until
         ? new Date(quotationData.valid_until).toISOString().slice(0, 10)

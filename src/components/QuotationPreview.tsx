@@ -24,7 +24,7 @@ export function QuotationPreview({
   onClose, 
   onGeneratePDF 
 }: QuotationPreviewProps) {
-  const { fetchSaleItemsBySaleId, companySettings } = useSupabaseData();
+  const { getQuotationItems, companySettings } = useSupabaseData();
   const [quotationItems, setQuotationItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -39,10 +39,11 @@ export function QuotationPreview({
     
     try {
       setLoading(true);
-      const items = await fetchSaleItemsBySaleId(quotation.id);
+      const items = await getQuotationItems(quotation.id);
       setQuotationItems(items);
     } catch (error) {
       console.error('Erro ao carregar itens da cotação:', error);
+      setQuotationItems([]);
     } finally {
       setLoading(false);
     }
