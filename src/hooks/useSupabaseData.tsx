@@ -791,17 +791,33 @@ export const useSupabaseData = () => {
 
   // Quotation functions
   const getQuotations = async () => {
-    const { data, error } = await supabase
-      .from('quotations')
-      .select(`
-        *,
-        customers(name, email, phone),
-        profiles(full_name)
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('quotations')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+      if (error) throw error;
+      
+      // Manually join with customers and profiles data
+      const quotationsWithDetails = data?.map(quotation => {
+        const customer = customers.find(c => c.id === quotation.customer_id);
+        const creator = profile; // For now, use current profile
+        
+        return {
+          ...quotation,
+          customer_name: customer?.name || 'Cliente não encontrado',
+          customer_email: customer?.email || '',
+          customer_phone: customer?.phone || '',
+          created_by_name: creator?.full_name || 'Usuário'
+        };
+      }) || [];
+
+      return quotationsWithDetails;
+    } catch (error) {
+      console.error('Error fetching quotations:', error);
+      return [];
+    }
   };
 
   const addQuotation = async (quotationData: any) => {

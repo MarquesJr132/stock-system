@@ -79,10 +79,11 @@ export default function QuotationManagement() {
     try {
       setLoading(true);
       const quotationData = await getQuotations();
-      setQuotations(quotationData);
+      setQuotations(quotationData || []); // Ensure we always have an array
     } catch (error) {
       console.error('Erro ao carregar cotações:', error);
       toast.error('Erro ao carregar cotações');
+      setQuotations([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
