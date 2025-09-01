@@ -823,22 +823,40 @@ export const useSupabaseData = () => {
   const addQuotation = async (quotationData: any) => {
     if (!profile) throw new Error('User not authenticated');
     
+    const payload = {
+      customer_id: quotationData.customer_id,
+      total_amount: quotationData.total_amount,
+      total_profit: quotationData.total_profit ?? 0,
+      total_vat_amount: quotationData.total_vat_amount ?? 0,
+      payment_method: quotationData.payment_method || 'cash',
+      status: quotationData.status || 'pending',
+      valid_until: quotationData.valid_until
+        ? new Date(quotationData.valid_until).toISOString().slice(0, 10)
+        : null,
+      notes: quotationData.notes || '',
+      tenant_id: profile.tenant_id || profile.id,
+      created_by: profile.id
+    };
+
     const { data: quotation, error: quotationError } = await supabase
       .from('quotations')
-      .insert({
-        ...quotationData,
-        tenant_id: profile.tenant_id || profile.id,
-        created_by: profile.id
-      })
+      .insert(payload)
       .select()
-      .single();
+      .maybeSingle();
 
-    if (quotationError) throw quotationError;
+    if (quotationError) throw new Error(quotationError.message);
+    if (!quotation) throw new Error('Falha ao criar cotação');
 
     // Add quotation items
     if (quotationData.items && quotationData.items.length > 0) {
       const items = quotationData.items.map((item: any) => ({
-        ...item,
+        product_id: item.product_id,
+        quantity: Number(item.quantity) || 0,
+        unit_price: Number(item.unit_price) || 0,
+        includes_vat: !!item.includes_vat,
+        vat_amount: Number(item.vat_amount) || 0,
+        subtotal: Number(item.subtotal) || 0,
+        total: Number(item.total) || 0,
         quotation_id: quotation.id,
         tenant_id: profile.tenant_id || profile.id
       }));
@@ -847,7 +865,7 @@ export const useSupabaseData = () => {
         .from('quotation_items')
         .insert(items);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) throw new Error(itemsError.message);
     }
 
     return quotation;
