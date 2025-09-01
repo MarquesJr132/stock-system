@@ -33,9 +33,14 @@ const ProductManagement = () => {
     supplier: ""
   });
 
-  const categories = ["all", ...Array.from(new Set(products.map(p => p.category || 'Sem categoria')))];
+  const categories = ["all", ...Array.from(new Set(products.filter(p => p.category !== 'encomenda_especial').map(p => p.category || 'Sem categoria')))];
 
   const filteredProducts = products.filter(product => {
+    // Excluir produtos de encomenda especial do stock normal
+    if (product.category === 'encomenda_especial') {
+      return false;
+    }
+    
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.category || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;

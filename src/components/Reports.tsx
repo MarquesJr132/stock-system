@@ -124,7 +124,7 @@ const Reports = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-  const auditData = products.map(product => {
+  const auditData = products.filter(product => product.category !== 'encomenda_especial').map(product => {
     return {
       id: product.id,
       name: product.name,

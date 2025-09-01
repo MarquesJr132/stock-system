@@ -199,7 +199,7 @@ const SaleItemForm: React.FC<SaleItemFormProps> = ({ products, items, onItemsCha
                           <SelectValue placeholder="Selecionar produto" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border border-border shadow-lg z-50">
-                          {products.map((product) => (
+                          {products.filter(product => product.category !== 'encomenda_especial').map((product) => (
                             <SelectItem key={product.id} value={product.id}>
                               {product.name} - {formatCurrency(product.sale_price)}
                             </SelectItem>

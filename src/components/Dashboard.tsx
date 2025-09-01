@@ -430,7 +430,7 @@ const Dashboard = () => {
                     fill="url(#categoryGradient1)"
                     dataKey="value"
                   >
-                    {products.map((_, index) => {
+                    {products.filter(product => product.category !== 'encomenda_especial').map((_, index) => {
                       const gradients = ['url(#categoryGradient1)', 'url(#categoryGradient2)', 'url(#categoryGradient3)'];
                       return (
                         <Cell key={`cell-${index}`} fill={gradients[index % gradients.length]} />

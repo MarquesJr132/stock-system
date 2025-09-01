@@ -791,11 +791,11 @@ export const useSupabaseData = () => {
 
   // Helper functions for data analysis
   const getTotalStock = () => {
-    return products.reduce((total, product) => total + product.quantity, 0);
+    return products.filter(product => product.category !== 'encomenda_especial').reduce((total, product) => total + product.quantity, 0);
   };
 
   const getTotalValue = () => {
-    return products.reduce((total, product) => total + (product.purchase_price * product.quantity), 0);
+    return products.filter(product => product.category !== 'encomenda_especial').reduce((total, product) => total + (product.purchase_price * product.quantity), 0);
   };
 
   const getDailyProfit = () => {
@@ -807,7 +807,9 @@ export const useSupabaseData = () => {
 
   const getLowStockProducts = () => {
     const lowStock = products.filter(product => 
-      product.min_stock && product.quantity <= product.min_stock
+      product.category !== 'encomenda_especial' && 
+      product.min_stock && 
+      product.quantity <= product.min_stock
     );
     
     // Remove duplicates by ID
@@ -827,6 +829,7 @@ export const useSupabaseData = () => {
     });
 
     return products
+      .filter(product => product.category !== 'encomenda_especial')
       .map(product => ({
         ...product,
         totalSold: productSales.get(product.id) || 0
