@@ -521,36 +521,45 @@ export type Database = {
           created_by: string
           customer_id: string | null
           id: string
+          notes: string | null
           payment_method: string
+          status: string | null
           tenant_id: string
           total_amount: number
           total_profit: number
           total_vat_amount: number
           updated_at: string
+          valid_until: string | null
         }
         Insert: {
           created_at?: string
           created_by: string
           customer_id?: string | null
           id?: string
+          notes?: string | null
           payment_method: string
+          status?: string | null
           tenant_id: string
           total_amount: number
           total_profit?: number
           total_vat_amount?: number
           updated_at?: string
+          valid_until?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string
           customer_id?: string | null
           id?: string
+          notes?: string | null
           payment_method?: string
+          status?: string | null
           tenant_id?: string
           total_amount?: number
           total_profit?: number
           total_vat_amount?: number
           updated_at?: string
+          valid_until?: string | null
         }
         Relationships: [
           {

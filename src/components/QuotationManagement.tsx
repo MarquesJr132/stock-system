@@ -78,7 +78,13 @@ export default function QuotationManagement() {
   const loadQuotations = async () => {
     try {
       // Buscar cotações da tabela sales com status 'quotation'
-      const quotationData = sales.filter((sale: any) => sale.status === 'quotation');
+      const quotationData = sales.filter((sale: any) => (sale as any).status === 'quotation').map((sale: any) => ({
+        ...sale,
+        status: (sale as any).status || 'pending',
+        valid_until: (sale as any).valid_until || new Date().toISOString().split('T')[0],
+        notes: (sale as any).notes || '',
+        updated_at: sale.updated_at || sale.created_at
+      }));
       setQuotations(quotationData);
     } catch (error) {
       console.error('Erro ao carregar cotações:', error);
@@ -167,7 +173,8 @@ export default function QuotationManagement() {
         payment_method: currentQuotation.payment_method || 'cash',
         status: 'quotation', // Status especial para cotações
         valid_until: currentQuotation.valid_until,
-        notes: currentQuotation.notes
+        notes: currentQuotation.notes,
+        items: quotationItems
       };
 
       if (selectedQuotation) {

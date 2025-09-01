@@ -5,6 +5,7 @@ import Login from "@/components/Login";
 import Dashboard from "@/components/Dashboard";
 import ProductManagement from "@/components/ProductManagement";
 import SalesManagement from "@/components/SalesManagement";
+import QuotationManagement from "@/components/QuotationManagement";
 import { SpecialOrdersManagement } from "@/components/SpecialOrdersManagement";
 import CustomerManagement from "@/components/CustomerManagement";
 import Reports from "@/components/Reports";
@@ -43,6 +44,8 @@ const Index = () => {
         return <ProductManagement />;
       case "sales":
         return <SalesManagement />;
+      case "quotations":
+        return <QuotationManagement />;
       case "special-orders":
         return <SpecialOrdersManagement />;
       case "customers":
