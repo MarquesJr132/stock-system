@@ -67,12 +67,8 @@ export function QuotationPreview({
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 5; // mm
-      const maxWidth = pageWidth - margin * 2;
-      const maxHeight = pageHeight - margin * 2;
-
-      const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
-      const imgWidth = canvas.width * ratio;
-      const imgHeight = canvas.height * ratio;
+      const imgWidth = pageWidth - margin * 2;
+      const imgHeight = pageHeight - margin * 2;
 
       pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
 
