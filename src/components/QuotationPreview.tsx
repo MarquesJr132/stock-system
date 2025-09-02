@@ -126,19 +126,19 @@ export function QuotationPreview({
           <DialogTitle>Pré-visualização da Cotação</DialogTitle>
         </DialogHeader>
 
-        <div id="quotation-content" className="bg-white p-3 text-black text-xs max-w-[210mm] mx-auto" style={{ height: '275mm', display: 'flex', flexDirection: 'column' }}>
+        <div id="quotation-content" className="bg-white p-4 text-black text-sm max-w-[210mm] mx-auto" style={{ height: '297mm', display: 'flex', flexDirection: 'column' }}>
           {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-0">
             <span className="text-5xl font-bold transform -rotate-45">COTAÇÃO</span>
           </div>
 
           {/* Header */}
-          <div className="mb-2 relative z-10">
+          <div className="mb-3 relative z-10">
             <div className="flex justify-between items-start">
               {/* Company Info */}
               <div className="flex-1">
-                <h1 className="text-lg font-bold mb-1">{companySettings?.company_name}</h1>
-                <div className="text-xs space-y-0">
+                <h1 className="text-xl font-bold mb-2">{companySettings?.company_name}</h1>
+                <div className="text-sm space-y-1">
                   <p>{companySettings?.address}</p>
                   <p>Tel: {companySettings?.phone}</p>
                   <p>Email: {companySettings?.email}</p>
@@ -148,8 +148,8 @@ export function QuotationPreview({
               
               {/* Quotation Info */}
               <div className="text-right">
-                <h2 className="text-xl font-bold text-blue-600 mb-1">COTAÇÃO</h2>
-                <div className="text-xs space-y-0">
+                <h2 className="text-2xl font-bold text-blue-600 mb-2">COTAÇÃO</h2>
+                <div className="text-sm space-y-1">
                   <p><strong>Número:</strong> #{quotation.id.slice(0, 8)}</p>
                   <p><strong>Data:</strong> {formatDateTime(quotation.created_at)}</p>
                   <p><strong>Válida até:</strong> {new Date(quotation.valid_until).toLocaleDateString()}</p>
@@ -162,9 +162,9 @@ export function QuotationPreview({
           </div>
 
           {/* Customer Info */}
-          <div className="mb-2 relative z-10">
-            <h3 className="font-semibold mb-0.5 border-b border-gray-300 pb-0.5">Cliente</h3>
-            <div className="text-xs grid grid-cols-2 gap-2">
+          <div className="mb-3 relative z-10">
+            <h3 className="font-semibold mb-2 border-b border-gray-300 pb-1">Cliente</h3>
+            <div className="text-sm grid grid-cols-2 gap-4">
               <div>
                 <p><strong>Nome:</strong> {customer?.name || 'Cliente Anónimo'}</p>
                 {customer?.email && <p><strong>Email:</strong> {customer.email}</p>}
@@ -179,27 +179,27 @@ export function QuotationPreview({
 
           {/* Items Table */}
           <div className="mb-4 relative z-10 flex-1">
-            <table className="w-full border-collapse border border-gray-300 text-xs">
+            <table className="w-full border-collapse border border-gray-300 text-sm">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-2 py-1 text-left">Produto</th>
-                  <th className="border border-gray-300 px-2 py-1 text-center w-16">Qtd</th>
-                  <th className="border border-gray-300 px-2 py-1 text-right w-24">Preço Unit.</th>
-                  <th className="border border-gray-300 px-2 py-1 text-right w-24">Subtotal</th>
-                  <th className="border border-gray-300 px-2 py-1 text-right w-20">IVA</th>
-                  <th className="border border-gray-300 px-2 py-1 text-right w-24">Total</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Produto</th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-20">Qtd</th>
+                  <th className="border border-gray-300 px-3 py-2 text-right w-28">Preço Unit.</th>
+                  <th className="border border-gray-300 px-3 py-2 text-right w-28">Subtotal</th>
+                  <th className="border border-gray-300 px-3 py-2 text-right w-24">IVA</th>
+                  <th className="border border-gray-300 px-3 py-2 text-right w-28">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="border border-gray-300 px-2 py-4 text-center">
+                    <td colSpan={6} className="border border-gray-300 px-3 py-6 text-center">
                       Carregando itens...
                     </td>
                   </tr>
                 ) : quotationItems.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="border border-gray-300 px-2 py-4 text-center text-gray-500">
+                    <td colSpan={6} className="border border-gray-300 px-3 py-6 text-center text-gray-500">
                       Nenhum item encontrado
                     </td>
                   </tr>
@@ -208,22 +208,22 @@ export function QuotationPreview({
                     const product = products.find(p => p.id === item.product_id);
                     return (
                       <tr key={index}>
-                        <td className="border border-gray-300 px-2 py-1">
+                        <td className="border border-gray-300 px-3 py-2">
                           {item.product_name || product?.name || 'Produto não encontrado'}
                         </td>
-                        <td className="border border-gray-300 px-2 py-1 text-center">
+                        <td className="border border-gray-300 px-3 py-2 text-center">
                           {item.quantity}
                         </td>
-                        <td className="border border-gray-300 px-2 py-1 text-right">
+                        <td className="border border-gray-300 px-3 py-2 text-right">
                           {formatCurrency(item.unit_price)}
                         </td>
-                        <td className="border border-gray-300 px-2 py-1 text-right">
+                        <td className="border border-gray-300 px-3 py-2 text-right">
                           {formatCurrency(item.subtotal)}
                         </td>
-                        <td className="border border-gray-300 px-2 py-1 text-right">
+                        <td className="border border-gray-300 px-3 py-2 text-right">
                           {formatCurrency(item.vat_amount)}
                         </td>
-                        <td className="border border-gray-300 px-2 py-1 text-right">
+                        <td className="border border-gray-300 px-3 py-2 text-right">
                           {formatCurrency(item.total)}
                         </td>
                       </tr>
@@ -239,16 +239,16 @@ export function QuotationPreview({
             {/* Totals */}
             <div className="mb-4">
               <div className="flex justify-end">
-                <div className="w-80 space-y-1 text-xs">
-                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                <div className="w-96 space-y-2 text-sm">
+                  <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span>Subtotal:</span>
                     <span>{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
                   </div>
-                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                  <div className="flex justify-between border-b border-gray-200 pb-2">
                     <span>IVA (17%):</span>
                     <span>{formatCurrency(quotation.total_vat_amount)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-sm border-t-2 border-gray-400 pt-1">
+                  <div className="flex justify-between font-bold text-lg border-t-2 border-gray-400 pt-2">
                     <span>Total:</span>
                     <span>{formatCurrency(quotation.total_amount)}</span>
                   </div>
@@ -258,20 +258,20 @@ export function QuotationPreview({
 
             {/* Payment and Notes */}
             <div className="mb-4">
-              <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-2 gap-6 text-sm">
                 <div>
-                  <h4 className="font-semibold mb-1">Método de Pagamento</h4>
+                  <h4 className="font-semibold mb-2">Método de Pagamento</h4>
                   <p>{quotation.payment_method ? getPaymentLabel(quotation.payment_method) : 'Não especificado'}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Observações</h4>
+                  <h4 className="font-semibold mb-2">Observações</h4>
                   <p>{quotation.notes || 'N/A'}</p>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="pt-4 border-t border-gray-300 text-center text-xs text-gray-600">
+            <div className="pt-3 border-t border-gray-300 text-center text-sm text-gray-600">
               <p>Esta cotação é válida até {new Date(quotation.valid_until).toLocaleDateString()}</p>
               <p>Gerado em {formatDateTime(new Date().toISOString())}</p>
             </div>
