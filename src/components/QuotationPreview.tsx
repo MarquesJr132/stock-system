@@ -130,19 +130,19 @@ export function QuotationPreview({
           <DialogTitle>Pré-visualização da Cotação</DialogTitle>
         </DialogHeader>
 
-        <div id="quotation-content" className="bg-white p-4 text-black text-sm max-w-[210mm] mx-auto flex flex-col" style={{ minHeight: '295mm' }}>
+        <div id="quotation-content" className="bg-white p-3 text-black text-xs max-w-[210mm] mx-auto" style={{ height: '275mm', display: 'flex', flexDirection: 'column' }}>
           {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-0">
-            <span className="text-6xl font-bold transform -rotate-45">COTAÇÃO</span>
+            <span className="text-5xl font-bold transform -rotate-45">COTAÇÃO</span>
           </div>
 
           {/* Header */}
-          <div className="mb-4 relative z-10">
+          <div className="mb-2 relative z-10">
             <div className="flex justify-between items-start">
               {/* Company Info */}
               <div className="flex-1">
-                <h1 className="text-xl font-bold mb-2">{companySettings?.company_name}</h1>
-                <div className="text-xs space-y-0.5">
+                <h1 className="text-lg font-bold mb-1">{companySettings?.company_name}</h1>
+                <div className="text-xs space-y-0">
                   <p>{companySettings?.address}</p>
                   <p>Tel: {companySettings?.phone}</p>
                   <p>Email: {companySettings?.email}</p>
@@ -152,8 +152,8 @@ export function QuotationPreview({
               
               {/* Quotation Info */}
               <div className="text-right">
-                <h2 className="text-2xl font-bold text-blue-600 mb-2">COTAÇÃO</h2>
-                <div className="text-xs space-y-0.5">
+                <h2 className="text-xl font-bold text-blue-600 mb-1">COTAÇÃO</h2>
+                <div className="text-xs space-y-0">
                   <p><strong>Número:</strong> #{quotation.id.slice(0, 8)}</p>
                   <p><strong>Data:</strong> {formatDateTime(quotation.created_at)}</p>
                   <p><strong>Válida até:</strong> {new Date(quotation.valid_until).toLocaleDateString()}</p>
@@ -166,8 +166,8 @@ export function QuotationPreview({
           </div>
 
           {/* Customer Info */}
-          <div className="mb-4 relative z-10">
-            <h3 className="font-semibold mb-1 border-b border-gray-300 pb-1">Cliente</h3>
+          <div className="mb-2 relative z-10">
+            <h3 className="font-semibold mb-0.5 border-b border-gray-300 pb-0.5">Cliente</h3>
             <div className="text-xs grid grid-cols-2 gap-2">
               <div>
                 <p><strong>Nome:</strong> {customer?.name || 'Cliente Anónimo'}</p>
