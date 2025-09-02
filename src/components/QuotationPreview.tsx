@@ -130,7 +130,7 @@ export function QuotationPreview({
           <DialogTitle>Pré-visualização da Cotação</DialogTitle>
         </DialogHeader>
 
-        <div id="quotation-content" className="bg-white p-4 text-black text-sm max-w-[210mm] mx-auto" style={{ minHeight: '295mm' }}>
+        <div id="quotation-content" className="bg-white p-4 text-black text-sm max-w-[210mm] mx-auto flex flex-col" style={{ minHeight: '295mm' }}>
           {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-0">
             <span className="text-6xl font-bold transform -rotate-45">COTAÇÃO</span>
@@ -182,7 +182,7 @@ export function QuotationPreview({
           </div>
 
           {/* Items Table */}
-          <div className="mb-4 relative z-10">
+          <div className="mb-4 relative z-10 flex-1">
             <table className="w-full border-collapse border border-gray-300 text-xs">
               <thead>
                 <tr className="bg-gray-100">
@@ -238,44 +238,47 @@ export function QuotationPreview({
             </table>
           </div>
 
-          {/* Totals */}
-          <div className="mb-4 relative z-10">
-            <div className="flex justify-end">
-              <div className="w-80 space-y-1 text-xs">
-                <div className="flex justify-between border-b border-gray-200 pb-1">
-                  <span>Subtotal:</span>
-                  <span>{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
-                </div>
-                <div className="flex justify-between border-b border-gray-200 pb-1">
-                  <span>IVA (17%):</span>
-                  <span>{formatCurrency(quotation.total_vat_amount)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-sm border-t-2 border-gray-400 pt-1">
-                  <span>Total:</span>
-                  <span>{formatCurrency(quotation.total_amount)}</span>
+          {/* Bottom Section - Fixed at bottom */}
+          <div className="mt-auto relative z-10">
+            {/* Totals */}
+            <div className="mb-4">
+              <div className="flex justify-end">
+                <div className="w-80 space-y-1 text-xs">
+                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                    <span>Subtotal:</span>
+                    <span>{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                    <span>IVA (17%):</span>
+                    <span>{formatCurrency(quotation.total_vat_amount)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-sm border-t-2 border-gray-400 pt-1">
+                    <span>Total:</span>
+                    <span>{formatCurrency(quotation.total_amount)}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Payment and Notes */}
-          <div className="mb-4 relative z-10">
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <h4 className="font-semibold mb-1">Método de Pagamento</h4>
-                <p>{quotation.payment_method ? getPaymentLabel(quotation.payment_method) : 'Não especificado'}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-1">Observações</h4>
-                <p>{quotation.notes || 'N/A'}</p>
+            {/* Payment and Notes */}
+            <div className="mb-4">
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <h4 className="font-semibold mb-1">Método de Pagamento</h4>
+                  <p>{quotation.payment_method ? getPaymentLabel(quotation.payment_method) : 'Não especificado'}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Observações</h4>
+                  <p>{quotation.notes || 'N/A'}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="mt-8 pt-4 border-t border-gray-300 text-center text-xs text-gray-600 relative z-10">
-            <p>Esta cotação é válida até {new Date(quotation.valid_until).toLocaleDateString()}</p>
-            <p>Gerado em {formatDateTime(new Date().toISOString())}</p>
+            {/* Footer */}
+            <div className="pt-4 border-t border-gray-300 text-center text-xs text-gray-600">
+              <p>Esta cotação é válida até {new Date(quotation.valid_until).toLocaleDateString()}</p>
+              <p>Gerado em {formatDateTime(new Date().toISOString())}</p>
+            </div>
           </div>
         </div>
 
