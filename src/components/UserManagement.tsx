@@ -18,7 +18,9 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  const [userToDelete, setUserToDelete] = useState<Profile | null>(null);
   const [newUser, setNewUser] = useState({
     fullName: '',
     email: '',
@@ -185,26 +187,34 @@ const UserManagement = () => {
       return;
     }
 
-    if (window.confirm(`Tem certeza que deseja eliminar o utilizador "${userToDelete.full_name}"?`)) {
-      console.log('Attempting to delete user via edge function:', userToDelete);
-      try {
-        const { data, error } = await supabase.functions.invoke('admin-delete-user', {
-          body: { userId: userToDelete.user_id, profileId: userToDelete.id },
-        });
+    // Open confirmation dialog instead of window.confirm
+    setUserToDelete(userToDelete);
+    setIsDeleteDialogOpen(true);
+  };
 
-        if (error || (data && data.error)) {
-          const msg = error?.message || data?.error || 'Erro ao eliminar utilizador';
-          console.error('Edge delete error:', msg);
-          toast({ title: 'Erro ao eliminar utilizador', description: msg, variant: 'destructive' });
-          return;
-        }
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
 
-        toast({ title: 'Utilizador eliminado', description: `${userToDelete.full_name} foi eliminado com sucesso.` });
-        fetchUsers();
-      } catch (err: any) {
-        console.error('Unexpected error deleting user:', err);
-        toast({ title: 'Erro inesperado', description: err?.message || 'Ocorreu um erro ao eliminar o utilizador.', variant: 'destructive' });
+    console.log('Attempting to delete user via edge function:', userToDelete);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId: userToDelete.user_id, profileId: userToDelete.id },
+      });
+
+      if (error || (data && data.error)) {
+        const msg = error?.message || data?.error || 'Erro ao eliminar utilizador';
+        console.error('Edge delete error:', msg);
+        toast({ title: 'Erro ao eliminar utilizador', description: msg, variant: 'destructive' });
+        return;
       }
+
+      toast({ title: 'Utilizador eliminado', description: `${userToDelete.full_name} foi eliminado com sucesso.` });
+      fetchUsers();
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (err: any) {
+      console.error('Unexpected error deleting user:', err);
+      toast({ title: 'Erro inesperado', description: err?.message || 'Ocorreu um erro ao eliminar o utilizador.', variant: 'destructive' });
     }
   };
 
@@ -631,6 +641,53 @@ const UserManagement = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Beautiful Delete Confirmation Dialog */}
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent className="max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                  <Trash2 className="h-5 w-5" />
+                  Eliminar Utilizador
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-left">
+                  Tem certeza que deseja eliminar o utilizador{' '}
+                  <span className="font-semibold text-foreground">
+                    "{userToDelete?.full_name}"
+                  </span>
+                  ?
+                  <br />
+                  <br />
+                  <span className="text-destructive font-medium">
+                    Esta ação é irreversível e eliminará permanentemente:
+                  </span>
+                  <ul className="mt-2 space-y-1 text-sm list-disc list-inside">
+                    <li>Conta de utilizador</li>
+                    <li>Perfil e configurações</li>
+                    <li>Acesso ao sistema</li>
+                  </ul>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="gap-2 sm:gap-2">
+                <AlertDialogCancel 
+                  onClick={() => {
+                    setIsDeleteDialogOpen(false);
+                    setUserToDelete(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={confirmDeleteUser}
+                  className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>
