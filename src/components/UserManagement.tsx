@@ -185,11 +185,40 @@ const UserManagement = () => {
     }
 
     if (window.confirm(`Tem certeza que deseja eliminar o utilizador "${userToDelete.full_name}"?`)) {
-      toast({
-        title: "Funcionalidade não implementada",
-        description: "A eliminação de utilizadores requer configuração adicional do Supabase.",
-        variant: "destructive",
-      });
+      console.log('Attempting to delete user:', userToDelete);
+      
+      try {
+        // First delete the profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', userToDelete.id);
+
+        if (profileError) {
+          console.error('Error deleting profile:', profileError);
+          toast({
+            title: "Erro ao eliminar utilizador",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({
+          title: "Utilizador eliminado",
+          description: `${userToDelete.full_name} foi eliminado com sucesso.`,
+        });
+
+        // Refresh users list
+        fetchUsers();
+      } catch (error) {
+        console.error('Unexpected error deleting user:', error);
+        toast({
+          title: "Erro inesperado",
+          description: "Ocorreu um erro ao eliminar o utilizador.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

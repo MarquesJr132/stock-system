@@ -823,6 +823,9 @@ export const useSupabaseData = () => {
   const addQuotation = async (quotationData: any) => {
     if (!profile) throw new Error('User not authenticated');
     
+    console.log('Adding quotation with data:', quotationData);
+    console.log('Current profile:', profile);
+    
     const payload = {
       customer_id: quotationData.customer_id,
       total_amount: quotationData.total_amount,
@@ -838,11 +841,15 @@ export const useSupabaseData = () => {
       created_by: profile.id
     };
 
+    console.log('Quotation payload:', payload);
+
     const { data: quotation, error: quotationError } = await supabase
       .from('quotations')
       .insert(payload)
       .select()
       .maybeSingle();
+
+    console.log('Quotation insert result:', { quotation, quotationError });
 
     if (quotationError) throw new Error(quotationError.message);
     if (!quotation) throw new Error('Falha ao criar cotação');
@@ -874,6 +881,8 @@ export const useSupabaseData = () => {
   const updateQuotation = async (quotationId: string, quotationData: any) => {
     if (!profile) throw new Error('User not authenticated');
     
+    console.log('Updating quotation:', quotationId, 'with data:', quotationData);
+    
     const { error: quotationError } = await supabase
       .from('quotations')
       .update({
@@ -888,6 +897,8 @@ export const useSupabaseData = () => {
         updated_at: new Date().toISOString()
       })
       .eq('id', quotationId);
+
+    console.log('Quotation update result:', quotationError);
 
     if (quotationError) throw quotationError;
 
