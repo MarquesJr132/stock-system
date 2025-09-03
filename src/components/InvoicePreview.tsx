@@ -119,7 +119,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
           </p>
         </DialogHeader>
 
-        <div id="invoice-content" className="relative space-y-4 bg-white p-6" style={{ color: '#000', fontFamily: 'Arial, sans-serif', fontSize: '12px', position: 'relative' }}>
+        <div id="invoice-content" className="relative bg-white p-6 min-h-[297mm] flex flex-col" style={{ color: '#000', fontFamily: 'Arial, sans-serif', fontSize: '12px', position: 'relative' }}>
           {/* Watermark - visible in PDF */}
           <div style={{ 
             position: 'absolute',
@@ -253,36 +253,42 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
               </table>
             </div>
 
-            {/* Totals - After table */}
-            <div className="mt-6 flex justify-end">
-              <div className="w-64">
-                {sale.total_vat_amount > 0 && (
-                  <div className="flex justify-between py-1 text-black text-sm">
-                    <span className="font-semibold">SUBTOTAL:</span>
-                    <span className="font-semibold">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
-                  </div>
-                )}
-                
-                {sale.total_vat_amount > 0 && (
-                  <div className="flex justify-between py-1 text-black text-sm">
-                    <span className="font-semibold">IVA TOTAL:</span>
-                    <span className="font-semibold">{formatCurrency(sale.total_vat_amount)}</span>
-                  </div>
-                )}
-                
-                <div className="bg-slate-700 text-white p-3 mt-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold">TOTAL:</span>
-                    <span className="text-lg font-bold">{formatCurrency(sale.total_amount)}</span>
+            {/* Spacer to push totals and footer to bottom */}
+            <div className="flex-grow"></div>
+
+            {/* Totals and Footer - Fixed at bottom */}
+            <div className="mt-auto">
+              {/* Totals */}
+              <div className="flex justify-end mb-6">
+                <div className="w-64">
+                  {sale.total_vat_amount > 0 && (
+                    <div className="flex justify-between py-1 text-black text-sm">
+                      <span className="font-semibold">SUBTOTAL:</span>
+                      <span className="font-semibold">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
+                    </div>
+                  )}
+                  
+                  {sale.total_vat_amount > 0 && (
+                    <div className="flex justify-between py-1 text-black text-sm">
+                      <span className="font-semibold">IVA TOTAL:</span>
+                      <span className="font-semibold">{formatCurrency(sale.total_vat_amount)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="bg-slate-700 text-white p-3 mt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold">TOTAL:</span>
+                      <span className="text-lg font-bold">{formatCurrency(sale.total_amount)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Footer */}
-            <div className="text-center mt-8 text-black">
-              <p className="font-semibold mb-1 text-sm">Obrigado pela sua preferência!</p>
-              <p className="text-xs text-gray-600">Gerado em: {new Date().toLocaleString('pt-MZ')}</p>
+              {/* Footer */}
+              <div className="text-center text-black">
+                <p className="font-semibold mb-1 text-sm">Obrigado pela sua preferência!</p>
+                <p className="text-xs text-gray-600">Gerado em: {new Date().toLocaleString("pt-MZ")}</p>
+              </div>
             </div>
           </div>
         </div>
