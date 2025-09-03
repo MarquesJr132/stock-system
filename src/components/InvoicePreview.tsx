@@ -152,12 +152,21 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
               {/* Company Info */}
               <div>
                 <h3 className="font-bold text-slate-700 mb-2 text-sm">EMPRESA:</h3>
-                <div className="space-y-0.5 text-xs text-black">
-                  <p className="font-bold">{companySettings?.company_name || 'Sistema de Gestão de Stock Lda.'}</p>
-                  <p>{companySettings?.address || 'Maputo, Moçambique'}</p>
-                  <p>Tel: {companySettings?.phone || '+258 84 123 4567'}</p>
-                  <p>Email: {companySettings?.email || 'info@stocksystem.co.mz'}</p>
-                  <p>NUIT: {companySettings?.nuit || '123456789'}</p>
+                <div className="flex items-start space-x-3">
+                  {companySettings?.logo_url && (
+                    <img 
+                      src={companySettings.logo_url} 
+                      alt="Company Logo" 
+                      className="h-12 w-12 object-contain flex-shrink-0"
+                    />
+                  )}
+                  <div className="space-y-0.5 text-xs text-black">
+                    <p className="font-bold">{companySettings?.company_name || 'Sistema de Gestão de Stock Lda.'}</p>
+                    <p>{companySettings?.address || 'Maputo, Moçambique'}</p>
+                    <p>Tel: {companySettings?.phone || '+258 84 123 4567'}</p>
+                    <p>Email: {companySettings?.email || 'info@stocksystem.co.mz'}</p>
+                    <p>NUIT: {companySettings?.nuit || '123456789'}</p>
+                  </div>
                 </div>
               </div>
 

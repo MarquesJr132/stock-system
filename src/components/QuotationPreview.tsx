@@ -132,13 +132,22 @@ export function QuotationPreview({
           <div className="mb-3 relative z-10">
             <div className="flex justify-between items-start">
               {/* Company Info */}
-              <div className="flex-1">
-                <h1 className="text-xl font-bold mb-2">{companySettings?.company_name}</h1>
-                <div className="text-sm space-y-1">
-                  <p>{companySettings?.address}</p>
-                  <p>Tel: {companySettings?.phone}</p>
-                  <p>Email: {companySettings?.email}</p>
-                  <p>NUIT: {companySettings?.nuit}</p>
+              <div className="flex-1 flex items-start space-x-4">
+                {companySettings?.logo_url && (
+                  <img 
+                    src={companySettings.logo_url} 
+                    alt="Company Logo" 
+                    className="h-16 w-16 object-contain flex-shrink-0"
+                  />
+                )}
+                <div>
+                  <h1 className="text-xl font-bold mb-2">{companySettings?.company_name}</h1>
+                  <div className="text-sm space-y-1">
+                    <p>{companySettings?.address}</p>
+                    <p>Tel: {companySettings?.phone}</p>
+                    <p>Email: {companySettings?.email}</p>
+                    <p>NUIT: {companySettings?.nuit}</p>
+                  </div>
                 </div>
               </div>
               

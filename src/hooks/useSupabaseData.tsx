@@ -91,6 +91,7 @@ export interface CompanySettings {
   phone: string | null;
   email: string | null;
   nuit: string | null;
+  logo_url: string | null;
   created_at: string;
   updated_at: string;
 }

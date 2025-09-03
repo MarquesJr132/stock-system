@@ -63,6 +63,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          logo_url: string | null
           nuit: string | null
           phone: string | null
           tenant_id: string
@@ -74,6 +75,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          logo_url?: string | null
           nuit?: string | null
           phone?: string | null
           tenant_id: string
@@ -85,6 +87,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          logo_url?: string | null
           nuit?: string | null
           phone?: string | null
           tenant_id?: string
