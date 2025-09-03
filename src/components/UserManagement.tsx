@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Profile, useAuth } from '@/contexts/AuthContext';
 import { UserPlus, Users, Trash2, Shield, Crown, User, Settings, Key } from 'lucide-react';
@@ -185,39 +186,24 @@ const UserManagement = () => {
     }
 
     if (window.confirm(`Tem certeza que deseja eliminar o utilizador "${userToDelete.full_name}"?`)) {
-      console.log('Attempting to delete user:', userToDelete);
-      
+      console.log('Attempting to delete user via edge function:', userToDelete);
       try {
-        // First delete the profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', userToDelete.id);
+        const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+          body: { userId: userToDelete.user_id, profileId: userToDelete.id },
+        });
 
-        if (profileError) {
-          console.error('Error deleting profile:', profileError);
-          toast({
-            title: "Erro ao eliminar utilizador",
-            description: profileError.message,
-            variant: "destructive",
-          });
+        if (error || (data && data.error)) {
+          const msg = error?.message || data?.error || 'Erro ao eliminar utilizador';
+          console.error('Edge delete error:', msg);
+          toast({ title: 'Erro ao eliminar utilizador', description: msg, variant: 'destructive' });
           return;
         }
 
-        toast({
-          title: "Utilizador eliminado",
-          description: `${userToDelete.full_name} foi eliminado com sucesso.`,
-        });
-
-        // Refresh users list
+        toast({ title: 'Utilizador eliminado', description: `${userToDelete.full_name} foi eliminado com sucesso.` });
         fetchUsers();
-      } catch (error) {
-        console.error('Unexpected error deleting user:', error);
-        toast({
-          title: "Erro inesperado",
-          description: "Ocorreu um erro ao eliminar o utilizador.",
-          variant: "destructive",
-        });
+      } catch (err: any) {
+        console.error('Unexpected error deleting user:', err);
+        toast({ title: 'Erro inesperado', description: err?.message || 'Ocorreu um erro ao eliminar o utilizador.', variant: 'destructive' });
       }
     }
   };
