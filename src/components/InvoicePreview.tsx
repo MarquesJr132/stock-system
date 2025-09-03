@@ -143,6 +143,13 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
           <div style={{ position: 'relative', zIndex: 10 }}>
              {/* Header */}
              <div className="bg-slate-700 text-white text-center py-4">
+               {companySettings?.logo_url && (
+                 <img 
+                   src={companySettings.logo_url} 
+                   alt="Company Logo" 
+                   className="h-12 w-12 object-contain mx-auto mb-2"
+                 />
+               )}
                <h1 className="text-xl font-bold mb-1">{companySettings?.company_name || 'SISTEMA DE STOCK'}</h1>
                <p className="text-sm">FACTURA DE VENDA</p>
              </div>
@@ -150,25 +157,16 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             {/* Company, Invoice Details and Customer Info in 3 columns */}
             <div className="grid grid-cols-3 gap-4 mt-4">
               {/* Company Info */}
-              <div>
-                <h3 className="font-bold text-slate-700 mb-2 text-sm">EMPRESA:</h3>
-                <div className="flex items-start space-x-3">
-                  {companySettings?.logo_url && (
-                    <img 
-                      src={companySettings.logo_url} 
-                      alt="Company Logo" 
-                      className="h-12 w-12 object-contain flex-shrink-0"
-                    />
-                  )}
-                  <div className="space-y-0.5 text-xs text-black">
-                    <p className="font-bold">{companySettings?.company_name || 'Sistema de Gestão de Stock Lda.'}</p>
-                    <p>{companySettings?.address || 'Maputo, Moçambique'}</p>
-                    <p>Tel: {companySettings?.phone || '+258 84 123 4567'}</p>
-                    <p>Email: {companySettings?.email || 'info@stocksystem.co.mz'}</p>
-                    <p>NUIT: {companySettings?.nuit || '123456789'}</p>
-                  </div>
-                </div>
-              </div>
+               <div>
+                 <h3 className="font-bold text-slate-700 mb-2 text-sm">EMPRESA:</h3>
+                 <div className="space-y-0.5 text-xs text-black">
+                   <p className="font-bold">{companySettings?.company_name || 'Sistema de Gestão de Stock Lda.'}</p>
+                   <p>{companySettings?.address || 'Maputo, Moçambique'}</p>
+                   <p>Tel: {companySettings?.phone || '+258 84 123 4567'}</p>
+                   <p>Email: {companySettings?.email || 'info@stocksystem.co.mz'}</p>
+                   <p>NUIT: {companySettings?.nuit || '123456789'}</p>
+                 </div>
+               </div>
 
               {/* Invoice Details */}
               <div>
