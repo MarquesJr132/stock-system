@@ -133,19 +133,19 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
         
         <div className="p-6">
           {/* Content for PDF Generation */}
-          <div id="invoice-content" className="bg-white text-black min-h-[297mm] flex flex-col" style={{ fontFamily: 'Arial, sans-serif' }}>
+          <div id="invoice-content" className="bg-white text-black min-h-[297mm] px-8 py-6" style={{ fontFamily: 'Arial, sans-serif' }}>
             {/* Header */}
-            <div className="flex justify-between items-start mb-8">
+            <div className="flex justify-between items-center mb-6">
               {/* Logo */}
               <div className="flex-shrink-0">
                 {companySettings?.logo_url ? (
                   <img 
                     src={companySettings.logo_url} 
                     alt="Logo da empresa" 
-                    className="h-16 w-auto object-contain"
+                    className="h-12 w-auto object-contain"
                   />
                 ) : (
-                  <div className="h-16 w-32 bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                  <div className="h-12 w-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
                     Logo
                   </div>
                 )}
@@ -153,128 +153,142 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
               
               {/* Invoice Title */}
               <div className="text-right">
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">FACTURA</h1>
-                <p className="text-lg text-gray-600">Nº {sale.id.split('-')[0]}</p>
+                <h1 className="text-xl font-bold text-gray-900 mb-1">FACTURA</h1>
+                <p className="text-sm text-gray-600">Nº {sale.id.split('-')[0]}</p>
               </div>
             </div>
 
             {/* Company and Customer Info */}
-            <div className="grid grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-2 gap-12 mb-6">
               {/* Company Info */}
               <div>
-                <h3 className="font-semibold text-gray-800 mb-3">Dados da Empresa:</h3>
-                <div className="space-y-1 text-sm">
-                  <p className="font-medium">{companySettings?.company_name}</p>
-                  {companySettings?.address && <p>{companySettings.address}</p>}
-                  {companySettings?.phone && <p>Tel: {companySettings.phone}</p>}
-                  {companySettings?.email && <p>Email: {companySettings.email}</p>}
-                  {companySettings?.nuit && <p>NUIT: {companySettings.nuit}</p>}
+                <div className="space-y-0.5 text-sm">
+                  <p className="text-base font-bold text-gray-900">{companySettings?.company_name}</p>
+                  {companySettings?.address && <p className="text-gray-700">{companySettings.address}</p>}
+                  {companySettings?.phone && <p className="text-gray-700">{companySettings.phone}</p>}
+                  {companySettings?.email && <p className="text-gray-700">{companySettings.email}</p>}
+                  {companySettings?.nuit && <p className="text-gray-700">NUIT: {companySettings.nuit}</p>}
                 </div>
               </div>
 
-              {/* Customer Info */}
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-3">Cliente:</h3>
-                <div className="space-y-1 text-sm">
-                  {customer ? (
-                    <>
-                      <p className="font-medium">{customer.name}</p>
-                      {customer.email && <p>Email: {customer.email}</p>}
-                      {customer.phone && <p>Tel: {customer.phone}</p>}
-                      {customer.address && <p>{customer.address}</p>}
-                      {customer.nuit && <p>NUIT: {customer.nuit}</p>}
-                    </>
-                  ) : (
-                    <p>Cliente não especificado</p>
-                  )}
+              {/* Customer and Invoice Info */}
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 mb-1">PARA:</p>
+                  <div className="space-y-0.5 text-sm">
+                    {customer ? (
+                      <>
+                        <p className="font-semibold text-gray-900">{customer.name}</p>
+                        {customer.address && <p className="text-gray-700">{customer.address}</p>}
+                        {customer.phone && <p className="text-gray-700">{customer.phone}</p>}
+                        {customer.email && <p className="text-gray-700">{customer.email}</p>}
+                        {customer.nuit && <p className="text-gray-700">NUIT: {customer.nuit}</p>}
+                      </>
+                    ) : (
+                      <p className="text-gray-700">Cliente não especificado</p>
+                    )}
+                  </div>
                 </div>
                 
-                <div className="mt-4 space-y-1 text-sm">
-                  <p><strong>Data:</strong> {new Date(sale.created_at).toLocaleDateString('pt-PT')}</p>
-                  <p><strong>Método de Pagamento:</strong> {getPaymentLabel(sale.payment_method)}</p>
-                  <p><strong>Estado:</strong> <span className={getStatusColor(sale.status)}>{getStatusLabel(sale.status)}</span></p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-900">Data da Factura:</span>
+                    <span className="text-gray-700">{new Date(sale.created_at).toLocaleDateString('pt-PT')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-900">Método de Pagamento:</span>
+                    <span className="text-gray-700">{getPaymentLabel(sale.payment_method)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-900">Estado:</span>
+                    <span className={getStatusColor(sale.status)}>{getStatusLabel(sale.status)}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Products Table */}
-            <div className="flex-grow">
-              <table className="w-full border-collapse border border-gray-300 mb-6">
+            <div className="mb-6">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Nº</th>
-                    <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Produto & Descrição</th>
-                    <th className="border border-gray-300 px-3 py-2 text-center text-sm font-semibold">Qtd</th>
-                    <th className="border border-gray-300 px-3 py-2 text-right text-sm font-semibold">Taxa</th>
-                    <th className="border border-gray-300 px-3 py-2 text-right text-sm font-semibold">Montante</th>
+                  <tr className="bg-gray-800 text-white">
+                    <th className="px-3 py-3 text-left text-sm font-semibold w-12">Nº</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold">Descrição</th>
+                    <th className="px-3 py-3 text-center text-sm font-semibold w-16">Qtd</th>
+                    <th className="px-3 py-3 text-right text-sm font-semibold w-24">Taxa</th>
+                    <th className="px-3 py-3 text-right text-sm font-semibold w-28">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {saleItems.map((item, index) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-3 py-2 text-sm">{index + 1}</td>
-                      <td className="border border-gray-300 px-3 py-2 text-sm">
+                    <tr key={item.id} className="border-b border-gray-200">
+                      <td className="px-3 py-2 text-sm text-gray-700">{index + 1}</td>
+                      <td className="px-3 py-2 text-sm">
                         <div>
-                          <p className="font-medium">{products.find(p => p.id === item.product_id)?.name || 'Produto não encontrado'}</p>
+                          <p className="font-medium text-gray-900">{products.find(p => p.id === item.product_id)?.name || 'Produto não encontrado'}</p>
                           {products.find(p => p.id === item.product_id)?.description && (
                             <p className="text-gray-600 text-xs">{products.find(p => p.id === item.product_id)?.description}</p>
                           )}
                         </div>
                       </td>
-                      <td className="border border-gray-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
-                      <td className="border border-gray-300 px-3 py-2 text-right text-sm">
+                      <td className="px-3 py-2 text-center text-sm text-gray-700">{item.quantity}</td>
+                      <td className="px-3 py-2 text-right text-sm text-gray-700">
                         {formatCurrency(item.unit_price)}
                       </td>
-                      <td className="border border-gray-300 px-3 py-2 text-right text-sm font-medium">
+                      <td className="px-3 py-2 text-right text-sm font-medium text-gray-900">
                         {formatCurrency(item.total)}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
 
-              {/* Totals */}
-              <div className="flex justify-end">
-                <div className="w-64 space-y-2">
-                  <div className="flex justify-between py-1 border-b border-gray-200">
-                    <span className="text-sm">Subtotal:</span>
-                    <span className="text-sm font-medium">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-gray-200">
-                    <span className="text-sm">IVA (16%):</span>
-                    <span className="text-sm font-medium">{formatCurrency(sale.total_vat_amount)}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-t-2 border-gray-800">
-                    <span className="text-base font-bold">Total:</span>
-                    <span className="text-base font-bold">{formatCurrency(sale.total_amount)}</span>
+            {/* Totals */}
+            <div className="flex justify-end mb-6">
+              <div className="w-72 space-y-1">
+                <div className="flex justify-between py-1 text-sm">
+                  <span className="text-gray-700">Subtotal:</span>
+                  <span className="text-gray-900 font-medium">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
+                </div>
+                <div className="flex justify-between py-1 text-sm">
+                  <span className="text-gray-700">IVA (16%):</span>
+                  <span className="text-gray-900 font-medium">{formatCurrency(sale.total_vat_amount)}</span>
+                </div>
+                <div className="border-t border-gray-400 pt-2">
+                  <div className="flex justify-between">
+                    <span className="text-base font-bold text-gray-900">TOTAL:</span>
+                    <span className="text-base font-bold text-gray-900">{formatCurrency(sale.total_amount)}</span>
                   </div>
                 </div>
               </div>
-
-              {sale.notes && (
-                <div className="mt-6">
-                  <h4 className="font-semibold text-gray-800 mb-2">Observações:</h4>
-                  <p className="text-sm text-gray-600">{sale.notes}</p>
-                </div>
-              )}
             </div>
 
+            {sale.notes && (
+              <div className="mb-6">
+                <h4 className="font-semibold text-gray-900 mb-2">Observações:</h4>
+                <p className="text-sm text-gray-700">{sale.notes}</p>
+              </div>
+            )}
+
             {/* Banking Info Footer */}
-            {(companySettings?.bank_name || companySettings?.account_number || companySettings?.iban) && (
-              <div className="mt-auto pt-6 border-t border-gray-300">
-                <h4 className="font-semibold text-gray-800 mb-2">Dados Bancários:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            {(companySettings?.bank_name || companySettings?.account_number || companySettings?.iban || companySettings?.phone) && (
+              <div className="mt-auto pt-4 border-t border-gray-300">
+                <div className="flex flex-wrap gap-8 text-xs text-gray-600">
                   {companySettings.bank_name && (
-                    <p><strong>Banco:</strong> {companySettings.bank_name}</p>
+                    <span><strong>Banco:</strong> {companySettings.bank_name}</span>
                   )}
                   {companySettings.account_holder && (
-                    <p><strong>Titular:</strong> {companySettings.account_holder}</p>
+                    <span><strong>Titular:</strong> {companySettings.account_holder}</span>
                   )}
                   {companySettings.account_number && (
-                    <p><strong>Conta:</strong> {companySettings.account_number}</p>
+                    <span><strong>Conta:</strong> {companySettings.account_number}</span>
                   )}
                   {companySettings.iban && (
-                    <p><strong>IBAN:</strong> {companySettings.iban}</p>
+                    <span><strong>IBAN:</strong> {companySettings.iban}</span>
+                  )}
+                  {companySettings.phone && (
+                    <span><strong>Tel:</strong> {companySettings.phone}</span>
                   )}
                 </div>
               </div>
