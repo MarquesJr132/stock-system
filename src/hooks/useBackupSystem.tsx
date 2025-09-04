@@ -9,16 +9,10 @@ export interface BackupOptions {
 
 export interface ExportOptions {
   table: string;
-  format: 'csv' | 'json' | 'excel';
+  format: 'excel';
   filters?: Record<string, any>;
 }
 
-export interface ImportOptions {
-  table: string;
-  data: any[];
-  upsert?: boolean;
-  batchSize?: number;
-}
 
 export const useBackupSystem = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -122,40 +116,6 @@ export const useBackupSystem = () => {
     }
   };
 
-  const importData = async (options: ImportOptions) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('import-data', {
-        body: options
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: "Importação concluída",
-          description: `${data.imported} registos importados com sucesso`
-        });
-      } else {
-        toast({
-          title: "Importação com erros",
-          description: `${data.imported} importados, ${data.errors} com erros`,
-          variant: "destructive"
-        });
-      }
-
-      return data;
-    } catch (error: any) {
-      toast({
-        title: "Erro na importação",
-        description: error.message,
-        variant: "destructive"
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const scheduleAutoBackup = async (enabled: boolean) => {
     try {
@@ -186,7 +146,6 @@ export const useBackupSystem = () => {
     isLoading,
     createBackup,
     exportData,
-    importData,
     scheduleAutoBackup
   };
 };

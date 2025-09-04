@@ -34,7 +34,6 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     { value: "customers", icon: Users, label: "Clientes" },
     { value: "reports", icon: TrendingUp, label: "Relatórios" },
     { value: "business", icon: TrendingUp, label: "Business" },
-    { value: "integrations", icon: Smartphone, label: "Integrações" },
     { value: "profile", icon: UserIcon, label: "Perfil" }
   ];
 
@@ -45,13 +44,16 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     // { value: "purchase-orders", icon: FileText, label: "Compras" }
   ];
 
-  // Only administrators (not managers) get access to company, users, and audit
+  // Only administrators (not managers) get access to company, users, audit, and integrations
   if (userIsAdmin && profile?.role === 'administrator') {
     adminItems.unshift(
       { value: "company", icon: Building, label: "Empresa" },
       { value: "users", icon: Settings, label: "Usuários" }
     );
-    adminItems.push({ value: "audit", icon: Shield, label: "Auditoria" });
+    adminItems.push(
+      { value: "integrations", icon: Smartphone, label: "Integrações" },
+      { value: "audit", icon: Shield, label: "Auditoria" }
+    );
   }
 
   const isActive = (tab: string) => activeTab === tab;

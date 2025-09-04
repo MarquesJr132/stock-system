@@ -20,14 +20,14 @@ import {
 
 export const BackupSystem = () => {
   const [selectedTable, setSelectedTable] = useState('products');
-  const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
+  const [exportFormat, setExportFormat] = useState<'excel'>('excel');
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(
     localStorage.getItem('autoBackupEnabled') === 'true'
   );
   const [importData, setImportData] = useState('');
   const [selectedTables, setSelectedTables] = useState<string[]>([]);
 
-  const { isLoading, createBackup, exportData, importData: importDataFunc, scheduleAutoBackup } = useBackupSystem();
+  const { isLoading, createBackup, exportData, scheduleAutoBackup } = useBackupSystem();
 
   const tables = [
     { value: 'products', label: 'Produtos' },
@@ -51,21 +51,6 @@ export const BackupSystem = () => {
     });
   };
 
-  const handleImport = async () => {
-    if (!importData.trim()) return;
-
-    try {
-      const data = JSON.parse(importData);
-      await importDataFunc({
-        table: selectedTable,
-        data: Array.isArray(data) ? data : [data],
-        upsert: true
-      });
-      setImportData('');
-    } catch (error) {
-      console.error('Import error:', error);
-    }
-  };
 
   const handleAutoBackupToggle = async (enabled: boolean) => {
     setAutoBackupEnabled(enabled);
@@ -167,21 +152,15 @@ export const BackupSystem = () => {
             </div>
             <div>
               <Label>Formato</Label>
-              <Select value={exportFormat} onValueChange={(value: 'csv' | 'json') => setExportFormat(value)}>
+              <Select value={exportFormat} onValueChange={(value: 'excel') => setExportFormat(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="csv">
+                  <SelectItem value="excel">
                     <div className="flex items-center gap-2">
                       <FileSpreadsheet className="h-4 w-4" />
-                      CSV
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="json">
-                    <div className="flex items-center gap-2">
-                      <FileJson className="h-4 w-4" />
-                      JSON
+                      Excel
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -194,49 +173,6 @@ export const BackupSystem = () => {
           </CardContent>
         </Card>
 
-        {/* Importar Dados */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Importar Dados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Tabela de Destino</Label>
-              <Select value={selectedTable} onValueChange={setSelectedTable}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {tables.map((table) => (
-                    <SelectItem key={table.value} value={table.value}>
-                      {table.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Dados JSON</Label>
-              <Textarea
-                placeholder="Cole aqui os dados em formato JSON..."
-                value={importData}
-                onChange={(e) => setImportData(e.target.value)}
-                rows={6}
-              />
-            </div>
-            <Button 
-              onClick={handleImport} 
-              disabled={isLoading || !importData.trim()} 
-              className="w-full"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {isLoading ? 'Importando...' : 'Importar'}
-            </Button>
-          </CardContent>
-        </Card>
       </div>
 
       <Card>
