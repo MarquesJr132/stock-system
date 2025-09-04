@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface ExportRequest {
   table: string;
-  format: 'csv' | 'json' | 'excel';
+  format: 'excel';
   filters?: Record<string, any>;
 }
 
@@ -85,16 +85,10 @@ const handler = async (req: Request): Promise<Response> => {
     let filename: string;
 
     switch (format) {
-      case 'csv':
-        responseData = convertToCSV(data);
-        contentType = 'text/csv';
-        filename = `${table}_export_${new Date().toISOString().split('T')[0]}.csv`;
-        break;
-      
-      case 'json':
-        responseData = JSON.stringify(data, null, 2);
-        contentType = 'application/json';
-        filename = `${table}_export_${new Date().toISOString().split('T')[0]}.json`;
+      case 'excel':
+        responseData = convertToExcel(data);
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        filename = `${table}_export_${new Date().toISOString().split('T')[0]}.xlsx`;
         break;
       
       default:
@@ -127,21 +121,23 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-function convertToCSV(data: any[]): string {
+function convertToExcel(data: any[]): string {
   if (!data.length) return '';
   
+  // Convert to CSV format for now (simple Excel export)
+  // In a real implementation, you would use a library like xlsx
   const headers = Object.keys(data[0]);
   const csvRows = [
-    headers.join(','),
+    headers.join('\t'), // Use tabs for Excel compatibility
     ...data.map(row => 
       headers.map(header => {
         const value = row[header];
         if (value === null || value === undefined) return '';
-        if (typeof value === 'string' && value.includes(',')) {
+        if (typeof value === 'string' && (value.includes('\t') || value.includes('\n'))) {
           return `"${value.replace(/"/g, '""')}"`;
         }
         return value;
-      }).join(',')
+      }).join('\t')
     )
   ];
   
