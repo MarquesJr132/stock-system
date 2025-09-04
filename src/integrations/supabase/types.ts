@@ -58,10 +58,14 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          account_holder: string | null
+          account_number: string | null
           address: string | null
+          bank_name: string | null
           company_name: string
           created_at: string
           email: string | null
+          iban: string | null
           id: string
           logo_url: string | null
           nuit: string | null
@@ -70,10 +74,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_holder?: string | null
+          account_number?: string | null
           address?: string | null
+          bank_name?: string | null
           company_name?: string
           created_at?: string
           email?: string | null
+          iban?: string | null
           id?: string
           logo_url?: string | null
           nuit?: string | null
@@ -82,10 +90,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_holder?: string | null
+          account_number?: string | null
           address?: string | null
+          bank_name?: string | null
           company_name?: string
           created_at?: string
           email?: string | null
+          iban?: string | null
           id?: string
           logo_url?: string | null
           nuit?: string | null

@@ -1,287 +1,349 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Building, Save, Upload, X, Image } from "lucide-react";
-import { useSupabaseData, CompanySettings } from "@/hooks/useSupabaseData";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { useSupabaseData } from '../hooks/useSupabaseData';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../integrations/supabase/client';
+import { toast } from 'sonner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
+import { Building2, MapPin, Image, CreditCard, Upload, X } from 'lucide-react';
 
-const CompanySettingsComponent = () => {
+interface CompanySettingsComponentProps {}
+
+const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => {
+  const { profile } = useAuth();
   const { companySettings, updateCompanySettings } = useSupabaseData();
-  const { isAdministrator } = useAuth();
+  
   const [formData, setFormData] = useState({
-    company_name: "",
-    address: "",
-    phone: "",
-    email: "",
-    nuit: "",
-    logo_url: ""
+    company_name: '',
+    phone: '',
+    email: '',
+    nuit: '',
+    address: '',
+    logo_url: '',
+    bank_name: '',
+    account_holder: '',
+    account_number: '',
+    iban: ''
   });
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (companySettings) {
       setFormData({
-        company_name: companySettings.company_name || "",
-        address: companySettings.address || "",
-        phone: companySettings.phone || "",
-        email: companySettings.email || "",
-        nuit: companySettings.nuit || "",
-        logo_url: companySettings.logo_url || ""
+        company_name: companySettings.company_name || '',
+        phone: companySettings.phone || '',
+        email: companySettings.email || '',
+        nuit: companySettings.nuit || '',
+        address: companySettings.address || '',
+        logo_url: companySettings.logo_url || '',
+        bank_name: companySettings.bank_name || '',
+        account_holder: companySettings.account_holder || '',
+        account_number: companySettings.account_number || '',
+        iban: companySettings.iban || ''
       });
     }
   }, [companySettings]);
 
   const handleLogoUpload = async (file: File) => {
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Por favor, selecione apenas arquivos de imagem.');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('A imagem deve ter no máximo 5MB.');
-      return;
-    }
-
-    setUploading(true);
     try {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Por favor, selecione apenas arquivos de imagem');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('O arquivo deve ter menos de 5MB');
+        return;
+      }
+
+      // Delete old logo if exists
       if (formData.logo_url) {
-        const oldPath = formData.logo_url.split('/').pop();
-        if (oldPath) {
-          await supabase.storage.from('company-logos').remove([oldPath]);
+        const oldFileName = formData.logo_url.split('/').pop();
+        if (oldFileName) {
+          await supabase.storage
+            .from('company-logos')
+            .remove([oldFileName]);
         }
       }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `logo_${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}.${fileExt}`;
       
-      const { data, error } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('company-logos')
         .upload(fileName, file);
 
-      if (error) throw error;
+      if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('company-logos')
-        .getPublicUrl(data.path);
+        .getPublicUrl(fileName);
 
       setFormData(prev => ({ ...prev, logo_url: publicUrl }));
-      toast.success('Logo enviado com sucesso!');
+      toast.success('Logo carregado com sucesso!');
     } catch (error) {
-      console.error('Error uploading logo:', error);
-      toast.error('Erro ao enviar logo');
-    } finally {
-      setUploading(false);
+      console.error('Erro ao carregar logo:', error);
+      toast.error('Erro ao carregar logo');
     }
   };
 
   const handleRemoveLogo = async () => {
-    if (!formData.logo_url) return;
-
     try {
-      const path = formData.logo_url.split('/').pop();
-      if (path) {
-        await supabase.storage.from('company-logos').remove([path]);
+      if (formData.logo_url) {
+        const fileName = formData.logo_url.split('/').pop();
+        if (fileName) {
+          await supabase.storage
+            .from('company-logos')
+            .remove([fileName]);
+        }
       }
       setFormData(prev => ({ ...prev, logo_url: '' }));
       toast.success('Logo removido com sucesso!');
     } catch (error) {
-      console.error('Error removing logo:', error);
+      console.error('Erro ao remover logo:', error);
       toast.error('Erro ao remover logo');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const result = await updateCompanySettings({
-      company_name: formData.company_name,
-      address: formData.address || null,
-      phone: formData.phone || null,
-      email: formData.email || null,
-      nuit: formData.nuit || null,
-      logo_url: formData.logo_url || null
-    });
-
-    if (result.error) {
-      console.error('Error updating company settings:', result.error);
+    try {
+      await updateCompanySettings(formData);
+      toast.success('Configurações atualizadas com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar configurações:', error);
+      toast.error('Erro ao atualizar configurações');
     }
   };
 
-  if (!isAdministrator) {
+  if (!profile || profile.role !== 'administrator') {
     return (
-      <Card>
-        <CardContent className="text-center py-12">
-          <Building className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-muted-foreground mb-2">
             Acesso Restrito
-          </h3>
-          <p className="text-slate-500">
-            Apenas administradores podem configurar dados da empresa
+          </h2>
+          <p className="text-muted-foreground">
+            Apenas administradores podem acessar as configurações da empresa.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-          Configurações da Empresa
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400">
-          Configure os dados da sua empresa que aparecerão nas faturas
+        <h1 className="text-3xl font-bold">Configurações da Empresa</h1>
+        <p className="text-muted-foreground">
+          Gerencie as informações da sua empresa, identidade visual e dados bancários
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Dados da Empresa
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="company_name">Nome da Empresa *</Label>
-              <Input
-                id="company_name"
-                value={formData.company_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
-                placeholder="Ex: Minha Empresa Lda."
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="phone">Telefone</Label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Informações Básicas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Informações Básicas
+            </CardTitle>
+            <CardDescription>
+              Dados fundamentais da empresa
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="company_name">Nome da Empresa</Label>
                 <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="+258 84 123 4567"
+                  id="company_name"
+                  value={formData.company_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
+                  required
                 />
               </div>
-              <div>
+              <div className="space-y-2">
+                <Label htmlFor="nuit">NUIT</Label>
+                <Input
+                  id="nuit"
+                  value={formData.nuit}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nuit: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="empresa@email.com"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="nuit">NUIT</Label>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone</Label>
                 <Input
-                  id="nuit"
-                  value={formData.nuit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nuit: e.target.value }))}
-                  placeholder="123456789"
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div>
-              <Label htmlFor="address">Endereço</Label>
+        {/* Localização */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Localização
+            </CardTitle>
+            <CardDescription>
+              Endereço e localização da empresa
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="address">Endereço Completo</Label>
               <Textarea
                 id="address"
                 value={formData.address}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Rua, número, bairro, cidade"
                 rows={3}
               />
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="space-y-2">
+        {/* Identidade Visual */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Image className="h-5 w-5" />
+              Identidade Visual
+            </CardTitle>
+            <CardDescription>
+              Logo e elementos visuais da empresa
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
               <Label>Logo da Empresa</Label>
-              <div className="space-y-4">
-                {formData.logo_url ? (
-                  <div className="flex items-center space-x-4 p-4 border rounded-lg">
+              
+              {formData.logo_url ? (
+                <div className="flex items-center gap-4">
+                  <div className="relative">
                     <img 
                       src={formData.logo_url} 
-                      alt="Company Logo" 
-                      className="h-16 w-16 object-contain"
+                      alt="Logo da empresa" 
+                      className="h-20 w-20 object-contain border rounded-lg bg-background"
                     />
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">Logo atual</p>
-                    </div>
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="destructive"
                       size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
                       onClick={handleRemoveLogo}
                     >
-                      <X className="h-4 w-4" />
-                      Remover
+                      <X className="h-3 w-3" />
                     </Button>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-center p-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
-                    <div className="text-center">
-                      <Image className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
-                      <p className="text-sm text-muted-foreground">Nenhum logo carregado</p>
-                    </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Logo atual carregado
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Clique no X para remover
+                    </p>
                   </div>
-                )}
-                
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleLogoUpload(file);
-                      }
-                    }}
-                    disabled={uploading}
-                    className="hidden"
-                    id="logo-upload"
-                  />
-                  <Label
-                    htmlFor="logo-upload"
-                    className="cursor-pointer"
-                  >
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={uploading}
-                      asChild
-                    >
-                      <span>
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploading ? 'Enviando...' : formData.logo_url ? 'Alterar Logo' : 'Enviar Logo'}
-                      </span>
-                    </Button>
-                  </Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Formatos aceitos: PNG, JPG, WEBP. Tamanho máximo: 5MB.
-                </p>
+              ) : (
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Nenhum logo carregado
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Tamanho máximo: 5MB | Formatos: JPG, PNG, SVG
+                  </p>
+                </div>
+              )}
+              
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleLogoUpload(file);
+                }}
+                className="w-full"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dados Bancários */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Dados Bancários
+            </CardTitle>
+            <CardDescription>
+              Informações bancárias para faturas e documentos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bank_name">Nome do Banco</Label>
+                <Input
+                  id="bank_name"
+                  value={formData.bank_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bank_name: e.target.value }))}
+                  placeholder="Ex: Banco Comercial e de Investimentos"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="account_holder">Titular da Conta</Label>
+                <Input
+                  id="account_holder"
+                  value={formData.account_holder}
+                  onChange={(e) => setFormData(prev => ({ ...prev, account_holder: e.target.value }))}
+                  placeholder="Nome do titular"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="account_number">Número da Conta</Label>
+                <Input
+                  id="account_number"
+                  value={formData.account_number}
+                  onChange={(e) => setFormData(prev => ({ ...prev, account_number: e.target.value }))}
+                  placeholder="000000000000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="iban">IBAN/NIB</Label>
+                <Input
+                  id="iban"
+                  value={formData.iban}
+                  onChange={(e) => setFormData(prev => ({ ...prev, iban: e.target.value }))}
+                  placeholder="MZ59 0000 0000 0000 0000 0000 0"
+                />
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <Button type="submit" className="flex items-center gap-2">
-              <Save className="h-4 w-4" />
-              Salvar Configurações
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        <div className="flex justify-end">
+          <Button type="submit" size="lg">
+            Salvar Configurações
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

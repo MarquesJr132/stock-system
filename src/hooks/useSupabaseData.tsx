@@ -92,6 +92,10 @@ export interface CompanySettings {
   email: string | null;
   nuit: string | null;
   logo_url: string | null;
+  bank_name: string | null;
+  account_holder: string | null;
+  account_number: string | null;
+  iban: string | null;
   created_at: string;
   updated_at: string;
 }
