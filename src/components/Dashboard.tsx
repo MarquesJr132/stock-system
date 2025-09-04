@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { formatCurrency, formatNumber } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SecurityNotifications } from './SecurityNotifications';
 
 const Dashboard = () => {
   const { 
@@ -452,6 +453,13 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Notificações de Segurança - apenas para administradores */}
+      {isAdministrator && (
+        <div className="mt-8">
+          <SecurityNotifications />
+        </div>
+      )}
     </div>
   );
 };

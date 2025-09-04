@@ -947,6 +947,14 @@ export type Database = {
         Args: { admin_email: string; user_email: string }
         Returns: undefined
       }
+      atomic_stock_update: {
+        Args: {
+          p_product_id: string
+          p_quantity_change: number
+          p_tenant_id: string
+        }
+        Returns: boolean
+      }
       check_data_limit: {
         Args: { data_type_param: string; tenant_uuid: string }
         Returns: boolean
@@ -1022,6 +1030,10 @@ export type Database = {
       is_superuser: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      mask_sensitive_data: {
+        Args: { data_json: Json }
+        Returns: Json
       }
       promote_to_superuser: {
         Args: { user_email: string }

@@ -460,29 +460,28 @@ export const useSupabaseData = () => {
       return { error: 'Data limit exceeded' };
     }
 
-    // Validate stock for all items before creating sale
-    for (const item of saleData.items) {
-      const product = products.find(p => p.id === item.product_id);
-      if (!product) {
-        toast({
-          title: "Erro de Stock",
-          description: `Produto não encontrado: ${item.product_id}`,
-          variant: "destructive",
-        });
-        return { error: 'Product not found' };
-      }
-      if (product.quantity < item.quantity) {
-        toast({
-          title: "Stock Insuficiente",
-          description: `O produto "${product.name}" tem apenas ${product.quantity} unidades em stock. Você tentou vender ${item.quantity}.`,
-          variant: "destructive",
-        });
-        return { error: 'Insufficient stock' };
-      }
-    }
-
     try {
-      // First, create the sale
+      // Usar a nova função atômica para validar e atualizar stock
+      for (const item of saleData.items) {
+        const { data: stockValid, error: stockError } = await supabase
+          .rpc('atomic_stock_update', {
+            p_product_id: item.product_id,
+            p_quantity_change: -item.quantity, // Negativo para reduzir stock
+            p_tenant_id: tenantId
+          });
+
+        if (stockError) {
+          console.error('Stock validation error:', stockError);
+          toast({
+            title: "Erro de Stock",
+            description: stockError.message,
+            variant: "destructive",
+          });
+          return { error: stockError.message };
+        }
+      }
+
+      // Criar a venda
       const newSale = {
         customer_id: saleData.customer_id,
         payment_method: saleData.payment_method,
@@ -501,10 +500,20 @@ export const useSupabaseData = () => {
 
       if (saleError) {
         console.error('Error creating sale:', saleError);
+        
+        // Reverter alterações de stock se a venda falhou
+        for (const item of saleData.items) {
+          await supabase.rpc('atomic_stock_update', {
+            p_product_id: item.product_id,
+            p_quantity_change: item.quantity, // Positivo para restaurar stock
+            p_tenant_id: tenantId
+          });
+        }
+        
         throw saleError;
       }
 
-      // Then, create the sale items
+      // Criar os itens da venda
       const saleItems = saleData.items.map(item => ({
         sale_id: sale.id,
         product_id: item.product_id,
@@ -523,20 +532,18 @@ export const useSupabaseData = () => {
 
       if (itemsError) {
         console.error('Error creating sale items:', itemsError);
-        throw itemsError;
-      }
-
-      // Update product quantities
-      for (const item of saleData.items) {
-        const product = products.find(p => p.id === item.product_id);
-        if (product) {
-          await supabase
-            .from('products')
-            .update({ 
-              quantity: product.quantity - item.quantity 
-            })
-            .eq('id', item.product_id);
+        
+        // Reverter a venda e o stock se os itens falharam
+        await supabase.from('sales').delete().eq('id', sale.id);
+        for (const item of saleData.items) {
+          await supabase.rpc('atomic_stock_update', {
+            p_product_id: item.product_id,
+            p_quantity_change: item.quantity, // Positivo para restaurar stock
+            p_tenant_id: tenantId
+          });
         }
+        
+        throw itemsError;
       }
 
       // Refresh data
@@ -650,17 +657,14 @@ export const useSupabaseData = () => {
 
       if (saleError) throw saleError;
 
-      // Restore product quantities
+      // Restaurar stock usando função atômica
+      const tenantId = profile.tenant_id || profile.id;
       for (const item of saleItems) {
-        const product = products.find(p => p.id === item.product_id);
-        if (product) {
-          await supabase
-            .from('products')
-            .update({ 
-              quantity: product.quantity + item.quantity 
-            })
-            .eq('id', item.product_id);
-        }
+        await supabase.rpc('atomic_stock_update', {
+          p_product_id: item.product_id,
+          p_quantity_change: item.quantity, // Positivo para restaurar stock
+          p_tenant_id: tenantId
+        });
       }
 
       // Refresh data

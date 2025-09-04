@@ -128,13 +128,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
         console.error('Sign in error:', error);
+        
+        // Log tentativa de login falhada para monitoramento
+        try {
+          await supabase.from('notifications').insert({
+            tenant_id: null,
+            title: 'Tentativa de Login Falhada',
+            message: `Falha no login para ${email}: ${error.message}`,
+            type: 'security_alert',
+            priority: 'medium',
+            metadata: {
+              email,
+              error_code: error.status,
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (logError) {
+          console.error('Error logging failed login:', logError);
+        }
+      } else if (data.user) {
+        // Log login bem-sucedido
+        try {
+          await supabase.from('notifications').insert({
+            tenant_id: null,
+            user_id: data.user.id,
+            title: 'Login Realizado',
+            message: `Login bem-sucedido para ${email}`,
+            type: 'security_alert',
+            priority: 'low',
+            metadata: {
+              email,
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (logError) {
+          console.error('Error logging successful login:', logError);
+        }
       }
       
       return { error: error?.message ?? null };
