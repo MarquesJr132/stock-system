@@ -81,6 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Safety: prevent infinite loading if something stalls
+    const safety = setTimeout(() => {
+      console.warn('AuthContext: safety timeout hit, forcing loading=false');
+      setLoading(false);
+    }, 5000);
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -93,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
         
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           setSession(session);
           setUser(session.user);
           
@@ -123,7 +129,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(safety);
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
