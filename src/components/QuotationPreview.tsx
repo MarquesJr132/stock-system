@@ -132,12 +132,12 @@ export function QuotationPreview({
                   <img
                     src={companySettings.logo_url}
                     alt="Company Logo"
-                    className="h-16 w-auto object-contain"
+                    className="h-16 max-w-32 w-auto object-contain"
                   />
                 )}
               </div>
               <div className="text-right">
-                <h1 className="text-4xl font-bold text-black">COTAÇÃO</h1>
+                <h1 className="text-3xl font-bold text-black">COTAÇÃO</h1>
               </div>
             </div>
 
