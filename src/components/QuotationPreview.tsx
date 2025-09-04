@@ -54,49 +54,34 @@ export function QuotationPreview({
       const element = document.getElementById('quotation-content');
       if (!element) return;
 
-      // Configure html2canvas with fixed width for consistent capture
       const canvas = await html2canvas(element, {
-        width: 794, // A4 width at 96 DPI
-        height: element.scrollHeight,
-        scale: 1,
+        scale: 2,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: '#ffffff',
-        logging: false,
-        removeContainer: true
+        logging: false
       });
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
-
-      // A4 dimensions in mm
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10; // mm
-      const availableWidth = pageWidth - margin * 2;
-      const availableHeight = pageHeight - margin * 2;
-
-      // Calculate image dimensions maintaining aspect ratio
-      const canvasAspectRatio = canvas.width / canvas.height;
       
-      let imgWidth = availableWidth;
-      let imgHeight = availableWidth / canvasAspectRatio;
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
 
-      // If image is too tall for one page, scale down to fit
-      if (imgHeight > availableHeight) {
-        imgHeight = availableHeight;
-        imgWidth = availableHeight * canvasAspectRatio;
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
 
-      // Center the image horizontally if it's narrower than available width
-      const xPosition = margin + (availableWidth - imgWidth) / 2;
-
-      pdf.addImage(imgData, 'PNG', xPosition, margin, imgWidth, imgHeight);
-
-      const customer = customers.find(c => c.id === quotation.customer_id);
-      const fileName = `cotacao_${customer?.name || 'cliente'}_${new Date().toISOString().split('T')[0]}.pdf`;
-      
-      pdf.save(fileName);
+      pdf.save(`cotacao-${quotation.id.slice(-8)}.pdf`);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
     }
@@ -145,57 +130,55 @@ export function QuotationPreview({
         
         <div className="p-4">
           {/* Content for PDF Generation */}
-          <div id="quotation-content" className="bg-white p-6 text-black min-h-[600px]">
+          <div id="quotation-content" className="bg-white p-12 text-black min-h-[600px]">
             {/* Header */}
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-3">
+            <div className="flex justify-between items-start mb-12">
+              <div className="flex items-center space-x-6">
                 {companySettings?.logo_url && (
                   <img
                     src={companySettings.logo_url}
                     alt="Company Logo"
-                    className="h-14 max-w-28 w-auto object-contain"
+                    className="h-24 max-w-40 w-auto object-contain"
                   />
                 )}
               </div>
               <div className="text-right">
-                <h1 className="text-xl font-bold text-black">COTAÇÃO</h1>
-                <p className="text-xs text-gray-600 mt-1">#{quotation.quotation_number || quotation.id.slice(0, 8)}</p>
+                <h1 className="text-3xl font-bold text-black">COTAÇÃO</h1>
+                <p className="text-lg text-gray-600 mt-1">#{quotation.quotation_number || quotation.id.slice(0, 8)}</p>
               </div>
             </div>
 
             {/* Company and Customer Info */}
-            <div className="grid grid-cols-2 gap-8 mb-4">
+            <div className="grid grid-cols-2 gap-12 mb-12">
               <div>
-                <h3 className="text-xs font-semibold text-gray-900 mb-2">DE:</h3>
-                <div className="space-y-1 text-xs">
-                  <p className="font-semibold text-black">{companySettings?.company_name || 'Empresa'}</p>
-                  {companySettings?.address && <p className="text-gray-600">{companySettings.address}</p>}
-                  {companySettings?.phone && <p className="text-gray-600">{companySettings.phone}</p>}
-                  {companySettings?.email && <p className="text-gray-600">{companySettings.email}</p>}
-                  {companySettings?.nuit && <p className="text-gray-600">NUIT: {companySettings.nuit}</p>}
+                <div className="space-y-1 text-sm">
+                  <p className="text-lg font-bold text-black">{companySettings?.company_name || 'Empresa'}</p>
+                  <p className="text-gray-700">{companySettings?.address || ''}</p>
+                  <p className="text-gray-700">{companySettings?.phone || ''}</p>
+                  <p className="text-gray-700">{companySettings?.email || ''}</p>
+                  <p className="text-gray-700">{companySettings?.nuit || ''}</p>
                 </div>
               </div>
               <div>
-                <h3 className="text-xs font-semibold text-gray-900 mb-2">PARA:</h3>
-                <div className="space-y-1 text-xs">
-                  <p className="font-semibold text-black">{customer?.name || 'Cliente Geral'}</p>
-                  {customer?.email && <p className="text-gray-600">{customer.email}</p>}
-                  {customer?.phone && <p className="text-gray-600">{customer.phone}</p>}
-                  {customer?.address && <p className="text-gray-600">{customer.address}</p>}
-                  {customer?.nuit && <p className="text-gray-600">NUIT: {customer.nuit}</p>}
+                <div className="space-y-1 text-sm">
+                  <p className="text-lg font-bold text-black">{customer?.name || 'Cliente Geral'}</p>
+                  {customer?.email && <p className="text-gray-700">Email: {customer.email}</p>}
+                  {customer?.phone && <p className="text-gray-700">Tel: {customer.phone}</p>}
+                  {customer?.address && <p className="text-gray-700">Endereço: {customer.address}</p>}
+                  {customer?.nuit && <p className="text-gray-700">NUIT: {customer.nuit}</p>}
                 </div>
               </div>
             </div>
 
             {/* Quotation Details */}
-            <div className="grid grid-cols-3 gap-4 mb-4 bg-gray-50 p-2 rounded">
+            <div className="grid grid-cols-3 gap-8 mb-12">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Data da Cotação</p>
-                <p className="text-xs font-semibold text-black">{new Date(quotation.created_at).toLocaleDateString('pt-PT')}</p>
+                <p className="text-sm font-medium text-gray-700">Data da Cotação:</p>
+                <p className="text-sm text-black">{new Date(quotation.created_at).toLocaleDateString('pt-PT')}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Válida Até</p>
-                <p className="text-xs font-semibold text-black">
+                <p className="text-sm font-medium text-gray-700">Válida até:</p>
+                <p className="text-sm text-black">
                   {quotation.valid_until 
                     ? new Date(quotation.valid_until).toLocaleDateString('pt-PT')
                     : 'Não especificado'
@@ -203,91 +186,101 @@ export function QuotationPreview({
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</p>
-                <p className="text-xs font-semibold text-black">{getStatusLabel(quotation.status)}</p>
+                <p className="text-sm font-medium text-gray-700">Status:</p>
+                <p className="text-sm text-black">{getStatusLabel(quotation.status)}</p>
               </div>
             </div>
 
             {/* Products Table */}
-            <div className="mb-4">
-              <table className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden">
+            <div className="mb-8">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-900 text-white">
-                    <th className="px-3 py-2 text-left font-medium text-xs">Produto</th>
-                    <th className="px-3 py-2 text-left font-medium text-xs">Descrição</th>
-                    <th className="px-3 py-2 text-center font-medium text-xs">Qtd</th>
-                    <th className="px-3 py-2 text-right font-medium text-xs">Preço Unit.</th>
-                    <th className="px-3 py-2 text-right font-medium text-xs">IVA</th>
-                    <th className="px-3 py-2 text-right font-medium text-xs">Total</th>
+                  <tr className="bg-black text-white">
+                    <th className="px-4 py-2 text-left font-medium text-sm border-r border-gray-600">Produto</th>
+                    <th className="px-4 py-2 text-left font-medium text-sm border-r border-gray-600">Descrição</th>
+                    <th className="px-4 py-2 text-center font-medium text-sm border-r border-gray-600">Qtd</th>
+                    <th className="px-4 py-2 text-right font-medium text-sm border-r border-gray-600">Preço Unit.</th>
+                    <th className="px-4 py-2 text-right font-medium text-sm border-r border-gray-600">IVA</th>
+                    <th className="px-4 py-2 text-right font-medium text-sm">Total</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {quotationItems.map((item: any, index: number) => (
-                    <tr key={item.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="px-3 py-2 border-b border-gray-200">
-                        <div className="font-medium text-xs text-black">{item.products?.name || 'Produto'}</div>
-                      </td>
-                      <td className="px-3 py-2 border-b border-gray-200">
-                        <div className="text-xs text-gray-600">{item.products?.description || '-'}</div>
-                      </td>
-                      <td className="px-3 py-2 text-center text-xs text-black border-b border-gray-200">{item.quantity}</td>
-                      <td className="px-3 py-2 text-right text-xs text-black border-b border-gray-200">
-                        {formatCurrency(item.unit_price)}
-                      </td>
-                      <td className="px-3 py-2 text-right text-xs text-black border-b border-gray-200">
-                        {formatCurrency(item.vat_amount)}
-                      </td>
-                      <td className="px-3 py-2 text-right text-xs font-semibold text-black border-b border-gray-200">
-                        {formatCurrency(item.total)}
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="bg-white">
+                  {quotationItems.map((item: any, index: number) => {
+                    const product = products.find(p => p.id === item.product_id);
+                    return (
+                      <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          <div className="font-medium text-sm text-black">{product?.name || item.products?.name || 'Produto'}</div>
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          <div className="text-sm text-gray-700">{product?.description || item.products?.description || '-'}</div>
+                        </td>
+                        <td className="px-4 py-2 text-center text-sm text-black border-b border-gray-200">{item.quantity}</td>
+                        <td className="px-4 py-2 text-right text-sm text-black border-b border-gray-200">
+                          {formatCurrency(item.unit_price)}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm text-black border-b border-gray-200">
+                          {formatCurrency(item.vat_amount)}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-medium text-black border-b border-gray-200">
+                          {formatCurrency(item.total)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end mb-4">
-              <div className="w-60 bg-gray-50 p-2 rounded-lg">
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between py-1">
-                    <span className="text-gray-600">Subtotal:</span>
+            <div className="flex justify-end mb-12">
+              <div className="w-80">
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="font-medium text-gray-700">Subtotal:</span>
                     <span className="text-black font-medium">{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
                   </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-gray-600">IVA (16%):</span>
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="font-medium text-gray-700">IVA (16%):</span>
                     <span className="text-black font-medium">{formatCurrency(quotation.total_vat_amount)}</span>
                   </div>
-                  <div className="border-t border-gray-300 pt-1 mt-1">
-                    <div className="flex justify-between">
-                      <span className="font-bold text-sm text-black">Total:</span>
-                      <span className="font-bold text-sm text-black">{formatCurrency(quotation.total_amount)}</span>
-                    </div>
+                  <div className="flex justify-between py-3 border-t-2 border-black">
+                    <span className="font-bold text-lg text-black">Total:</span>
+                    <span className="font-bold text-lg text-black">{formatCurrency(quotation.total_amount)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Banking Information - Bottom Left */}
+            {/* Notes */}
+            {quotation.notes && (
+              <div className="mb-12">
+                <h4 className="font-medium text-gray-700 mb-3">Observações:</h4>
+                <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded">
+                  {quotation.notes}
+                </p>
+              </div>
+            )}
+
+            {/* Banking Information */}
             {companySettings && (
               companySettings.bank_name || 
               companySettings.account_number || 
               companySettings.iban
             ) && (
-              <div className="mt-4 pt-3 border-t border-gray-200">
-                <h4 className="text-xs font-semibold text-gray-900 mb-1">Informações Bancárias</h4>
-                <div className="space-y-0.5 text-xs text-gray-600">
+              <div className="mt-12">
+                <div className="space-y-1 text-xs text-gray-600">
                   {companySettings.bank_name && (
-                    <p><span className="font-medium">Banco:</span> {companySettings.bank_name}</p>
+                    <p><strong>Nome do Banco :</strong> {companySettings.bank_name}</p>
                   )}
                   {companySettings.account_holder && (
-                    <p><span className="font-medium">Titular:</span> {companySettings.account_holder}</p>
+                    <p><strong>Titular :</strong> {companySettings.account_holder}</p>
                   )}
                   {companySettings.account_number && (
-                    <p><span className="font-medium">Número de Conta:</span> {companySettings.account_number}</p>
+                    <p><strong>Número de Conta :</strong> {companySettings.account_number}</p>
                   )}
                   {companySettings.iban && (
-                    <p><span className="font-medium">NIB:</span> {companySettings.iban}</p>
+                    <p><strong>NIB:</strong> {companySettings.iban}</p>
                   )}
                 </div>
               </div>
