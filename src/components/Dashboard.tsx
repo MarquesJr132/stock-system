@@ -20,6 +20,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SecurityNotifications } from './SecurityNotifications';
 import { MobileDashboardCard } from "./mobile/MobileDashboardCard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { InteractiveChart } from "./dashboard/InteractiveChart";
+import { PaymentMethodChart } from "./dashboard/PaymentMethodChart";
+import { ABCAnalysis } from "./dashboard/ABCAnalysis";
+import { IntelligentAlerts } from "./dashboard/IntelligentAlerts";
+import { BusinessGoals } from "./dashboard/BusinessGoals";
 
 const Dashboard = () => {
   const { 
@@ -235,137 +240,23 @@ const Dashboard = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Premium Sales Chart */}
-        <Card className="border-0 shadow-elegant">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg gradient-primary">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <CardTitle className="text-xl font-bold">Evolução de Vendas</CardTitle>
-                <CardDescription className="text-sm">
-                  Performance dos últimos 7 dias
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-6">
-            <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
-              <LineChart data={salesData}>
-                <defs>
-                  <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(262 83% 58%)" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(262 83% 58%)" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={isMobile ? 10 : 12}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={isMobile ? 10 : 12}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                    boxShadow: 'var(--shadow-card)',
-                    fontSize: isMobile ? '12px' : '14px'
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="amount" 
-                  stroke="hsl(262 83% 58%)" 
-                  strokeWidth={isMobile ? 2 : 3}
-                  fill="url(#salesGradient)"
-                  dot={{ fill: 'hsl(262 83% 58%)', strokeWidth: 2, r: isMobile ? 4 : 6 }}
-                  activeDot={{ r: isMobile ? 6 : 8, stroke: 'hsl(262 83% 58%)', strokeWidth: 2, fill: 'white' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Business Goals Section */}
+      <BusinessGoals />
 
-        {/* Premium Top Products */}
-        <Card className="border-0 shadow-elegant">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg gradient-secondary">
-                <Package className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <CardTitle className="text-xl font-bold">Top Produtos</CardTitle>
-                <CardDescription className="text-sm">
-                  Produtos mais vendidos
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-6">
-            {topProducts.length === 0 ? (
-              <div className="text-center py-8 sm:py-16">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-muted/10 flex items-center justify-center">
-                  <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
-                </div>
-                <p className="text-foreground font-medium mb-1 text-sm sm:text-base">
-                  Nenhuma venda registada
-                </p>
-                <p className="text-muted-foreground text-xs sm:text-sm">
-                  Os produtos mais vendidos aparecerão aqui quando houver vendas
-                </p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
-                <BarChart data={topProducts}>
-                  <defs>
-                    <linearGradient id="productGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(12 76% 61%)" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(38 92% 50%)" stopOpacity={0.8}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={isMobile ? 10 : 12}
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                    angle={isMobile ? -45 : 0}
-                    textAnchor={isMobile ? "end" : "middle"}
-                    height={isMobile ? 60 : 30}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={isMobile ? 10 : 12}
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '12px',
-                      boxShadow: 'var(--shadow-card)',
-                      fontSize: isMobile ? '12px' : '14px'
-                    }}
-                  />
-                  <Bar 
-                    dataKey="totalSold" 
-                    fill="url(#productGradient)"
-                    radius={[6, 6, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Interactive Sales Chart */}
+        <InteractiveChart />
+
+        {/* Intelligent Alerts */}
+        <IntelligentAlerts />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Payment Method Analytics */}
+        <PaymentMethodChart />
+
+        {/* ABC Analysis */}
+        <ABCAnalysis />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
