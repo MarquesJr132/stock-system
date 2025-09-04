@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 export interface BackupOptions {
   tables?: string[];
@@ -65,50 +66,47 @@ export const useBackupSystem = () => {
   const exportData = async (options: ExportOptions) => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://fkthdlbljhhjutuywepc.supabase.co/functions/v1/export-data`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(options)
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Export failed');
+      // 1) Fetch data directly from Supabase (RLS will protect per-tenant)
+      let query: any = (supabase as any).from(options.table).select('*');
+      if (options.filters) {
+        Object.entries(options.filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            query = query.eq(key, value);
+          }
+        });
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error('Sem dados para exportar');
       }
 
-      // Get filename from response headers
-      const contentDisposition = response.headers.get('content-disposition');
-      const filename = contentDisposition 
-        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
-        : `export_${options.table}_${new Date().toISOString().split('T')[0]}.${options.format}`;
+      // 2) Build a valid Excel file using xlsx
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, options.table.substring(0, 31));
+      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
 
-      // Download file
-      const blob = await response.blob();
+      // 3) Download
+      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filename;
+      a.download = `${options.table}_export_${new Date().toISOString().split('T')[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       toast({
-        title: "Exportação concluída",
-        description: `Dados exportados como ${options.format.toUpperCase()}`
+        title: 'Exportação concluída',
+        description: 'Ficheiro Excel gerado com sucesso'
       });
-
     } catch (error: any) {
       toast({
-        title: "Erro na exportação",
+        title: 'Erro na exportação',
         description: error.message,
-        variant: "destructive"
+        variant: 'destructive'
       });
       throw error;
     } finally {

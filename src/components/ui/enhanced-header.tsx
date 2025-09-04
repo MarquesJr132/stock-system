@@ -58,21 +58,8 @@ export const EnhancedHeader = ({ onTabChange }: EnhancedHeaderProps) => {
           <span className="font-semibold hidden sm:inline">Soluweb</span>
         </div>
 
-        {/* Search */}
-        <div className="flex-1 max-w-md">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start text-muted-foreground gap-2"
-            onClick={() => setShowSearch(true)}
-          >
-            <Search className="h-4 w-4" />
-            <span className="hidden sm:inline">Pesquisar...</span>
-            <Badge variant="secondary" className="ml-auto text-xs hidden md:inline">
-              ⌘K
-            </Badge>
-          </Button>
-        </div>
+        {/* Search disabled temporarily */}
+        <div className="flex-1" />
 
         {/* Actions */}
         <div className="flex items-center gap-2">
@@ -126,25 +113,6 @@ export const EnhancedHeader = ({ onTabChange }: EnhancedHeaderProps) => {
         </div>
       </div>
 
-      {/* Global Search Dialog */}
-      {showSearch && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center pt-20">
-          <div className="bg-background rounded-lg shadow-lg w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden">
-            <GlobalSearch 
-              onResultSelect={handleSearchResultSelect}
-            />
-            <div className="p-4 border-t">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowSearch(false)}
-                className="w-full"
-              >
-                Fechar
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
