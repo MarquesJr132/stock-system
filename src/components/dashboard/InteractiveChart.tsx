@@ -102,7 +102,12 @@ export const InteractiveChart = () => {
                 stroke="hsl(var(--muted-foreground))"
                 fontSize={isMobile ? 10 : 12}
                 tick={{ fontSize: isMobile ? 10 : 12 }}
-                tickFormatter={(value) => formatCurrency(value)}
+                tickFormatter={(value) => {
+                  if (value === 0) return '0';
+                  return formatCurrency(Number(value));
+                }}
+                domain={['dataMin', 'dataMax']}
+                width={isMobile ? 60 : 80}
               />
               <Tooltip 
                 contentStyle={{

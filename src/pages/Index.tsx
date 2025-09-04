@@ -43,7 +43,7 @@ const Index = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard onTabChange={setActiveTab} />;
       case "products":
         return <ProductManagement />;
       case "sales":
@@ -92,7 +92,7 @@ const Index = () => {
       case "audit":
         return <AuditLogs />;
       default:
-        return <Dashboard />;
+        return <Dashboard onTabChange={setActiveTab} />;
     }
   };
 

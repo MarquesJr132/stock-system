@@ -26,7 +26,11 @@ import { ABCAnalysis } from "./dashboard/ABCAnalysis";
 import { IntelligentAlerts } from "./dashboard/IntelligentAlerts";
 import { BusinessGoals } from "./dashboard/BusinessGoals";
 
-const Dashboard = () => {
+interface DashboardProps {
+  onTabChange?: (tab: string) => void;
+}
+
+const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
   const { 
     products, 
     sales, 
@@ -248,7 +252,7 @@ const Dashboard = () => {
         <InteractiveChart />
 
         {/* Intelligent Alerts */}
-        <IntelligentAlerts />
+        <IntelligentAlerts onTabChange={onTabChange} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">

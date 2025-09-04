@@ -8,6 +8,10 @@ import { useEnhancedData } from '@/hooks/useEnhancedData';
 import { formatCurrency } from '@/lib/currency';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+interface IntelligentAlertsProps {
+  onTabChange?: (tab: string) => void;
+}
+
 interface Alert {
   id: string;
   type: 'stock' | 'goal' | 'customer' | 'trend' | 'opportunity';
@@ -17,6 +21,7 @@ interface Alert {
   action?: string;
   data?: any;
 }
+
 
 const getAlertIcon = (type: string) => {
   switch (type) {
@@ -48,7 +53,7 @@ const getAlertColor = (priority: string) => {
   }
 };
 
-export const IntelligentAlerts = () => {
+export const IntelligentAlerts = ({ onTabChange }: IntelligentAlertsProps = {}) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [showAll, setShowAll] = useState(false);
   const { products, sales, getLowStockProducts } = useSupabaseData();
@@ -257,7 +262,22 @@ export const IntelligentAlerts = () => {
                       </p>
                       
                       {alert.action && (
-                        <Button variant="outline" size="sm" className="text-xs">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-xs"
+                          onClick={() => {
+                            if (alert.action === 'Ver produtos' && onTabChange) {
+                              onTabChange('products');
+                            } else if (alert.action === 'Contactar cliente' && onTabChange) {
+                              onTabChange('customers');
+                            } else if (alert.action === 'Ver meta' && onTabChange) {
+                              onTabChange('business');
+                            } else if (alert.action === 'Analisar tendência' && onTabChange) {
+                              onTabChange('reports');
+                            }
+                          }}
+                        >
                           {alert.action}
                         </Button>
                       )}

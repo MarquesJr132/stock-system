@@ -25,17 +25,30 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   const { isMobile, setOpenMobile } = useSidebar();
   const isMobileDevice = useIsMobile();
   
-  const mainItems = [
-    { value: "dashboard", icon: BarChart3, label: "Dashboard" },
-    { value: "products", icon: Package, label: "Produtos" },
-    { value: "sales", icon: ShoppingCart, label: "Vendas" },
-    { value: "quotations", icon: FileText, label: "Cotações" },
-    { value: "special-orders", icon: PackageCheck, label: "Encomendas" },
-    { value: "customers", icon: Users, label: "Clientes" },
-    { value: "reports", icon: TrendingUp, label: "Relatórios" },
-    { value: "business", icon: TrendingUp, label: "Business" },
-    { value: "profile", icon: UserIcon, label: "Perfil" }
-  ];
+  // Filter menu items based on user role
+  const getMainItems = () => {
+    const baseItems = [
+      { value: "dashboard", icon: BarChart3, label: "Dashboard" },
+      { value: "products", icon: Package, label: "Produtos" },
+      { value: "sales", icon: ShoppingCart, label: "Vendas" },
+      { value: "quotations", icon: FileText, label: "Cotações" },
+      { value: "special-orders", icon: PackageCheck, label: "Encomendas" },
+      { value: "customers", icon: Users, label: "Clientes" },
+      { value: "profile", icon: UserIcon, label: "Perfil" }
+    ];
+
+    // Only add reports and business for admins and managers, not for regular users
+    if (userIsAdmin || userIsGerente) {
+      baseItems.splice(-1, 0, // Insert before profile
+        { value: "reports", icon: TrendingUp, label: "Relatórios" },
+        { value: "business", icon: TrendingUp, label: "Business" }
+      );
+    }
+
+    return baseItems;
+  };
+
+  const mainItems = getMainItems();
 
   // Admin items - exclude company, users, and audit for managers
   const adminItems = [
