@@ -200,29 +200,29 @@ export const SupplierManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 p-4 md:p-0">
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+        <CardHeader className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Building className="h-5 w-5" />
               Gestão de Fornecedores
             </CardTitle>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => resetForm()}>
+                <Button onClick={() => resetForm()} size="sm" className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
                   Novo Fornecedor
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingSupplier ? 'Editar Fornecedor' : 'Novo Fornecedor'}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Nome da Empresa *</Label>
                       <Input
@@ -242,7 +242,7 @@ export const SupplierManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <Input
@@ -271,7 +271,7 @@ export const SupplierManagement: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city">Cidade</Label>
                       <Input
@@ -305,7 +305,7 @@ export const SupplierManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="tax_number">Número Fiscal</Label>
                       <Input
@@ -348,11 +348,11 @@ export const SupplierManagement: React.FC = () => {
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={resetForm}>
+                  <div className="flex flex-col sm:flex-row justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={resetForm} className="w-full sm:w-auto">
                       Cancelar
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" className="w-full sm:w-auto">
                       {editingSupplier ? 'Atualizar' : 'Criar'} Fornecedor
                     </Button>
                   </div>
@@ -361,8 +361,8 @@ export const SupplierManagement: React.FC = () => {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4 mb-4">
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -377,52 +377,117 @@ export const SupplierManagement: React.FC = () => {
           {loading ? (
             <div className="text-center py-8">Carregando fornecedores...</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSuppliers.map((supplier) => (
-                  <TableRow key={supplier.id}>
-                    <TableCell className="font-medium">{supplier.name}</TableCell>
-                    <TableCell>{supplier.contact_person || '-'}</TableCell>
-                    <TableCell>{supplier.email || '-'}</TableCell>
-                    <TableCell>{supplier.phone || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'}>
-                        {supplier.status === 'active' ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(supplier)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(supplier.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Contacto</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredSuppliers.map((supplier) => (
+                    <TableRow key={supplier.id}>
+                      <TableCell className="font-medium">{supplier.name}</TableCell>
+                      <TableCell>{supplier.contact_person || '-'}</TableCell>
+                      <TableCell>{supplier.email || '-'}</TableCell>
+                      <TableCell>{supplier.phone || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'}>
+                          {supplier.status === 'active' ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(supplier)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(supplier.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
+
+          {/* Mobile View */}
+          <div className="md:hidden space-y-3">
+            {filteredSuppliers.map((supplier) => (
+              <Card key={supplier.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-semibold text-base">{supplier.name}</h3>
+                      {supplier.contact_person && (
+                        <p className="text-sm text-muted-foreground">{supplier.contact_person}</p>
+                      )}
+                    </div>
+                    <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'}>
+                      {supplier.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {supplier.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{supplier.email}</span>
+                      </div>
+                    )}
+                    {supplier.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{supplier.phone}</span>
+                      </div>
+                    )}
+                    {supplier.city && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{supplier.city}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(supplier)}
+                      className="flex-1"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(supplier.id)}
+                      className="flex-1"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Eliminar
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
 
           {!loading && filteredSuppliers.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">

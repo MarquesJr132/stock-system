@@ -180,9 +180,9 @@ const ProfileManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 p-4 md:p-0">
       <div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
           Meu Perfil
         </h2>
         <p className="text-slate-600 dark:text-slate-400">
@@ -193,7 +193,7 @@ const ProfileManagement = () => {
       {/* Profile Information Card */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
@@ -205,12 +205,12 @@ const ProfileManagement = () => {
             </div>
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <Edit className="h-4 w-4 mr-2" />
                   Editar
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Editar Perfil</DialogTitle>
                 </DialogHeader>
@@ -239,7 +239,7 @@ const ProfileManagement = () => {
                       O email não pode ser alterado por questões de segurança
                     </p>
                   </div>
-                  <div className="flex gap-2 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-2 pt-4">
                     <Button type="submit" disabled={loading} className="flex-1">
                       {loading ? "Atualizando..." : "Atualizar Perfil"}
                     </Button>
@@ -247,6 +247,7 @@ const ProfileManagement = () => {
                       type="button" 
                       variant="outline" 
                       onClick={() => setIsEditDialogOpen(false)}
+                      className="flex-1"
                     >
                       Cancelar
                     </Button>
@@ -257,7 +258,7 @@ const ProfileManagement = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Nome Completo</Label>
               <p className="font-medium">{profile.full_name}</p>
@@ -293,7 +294,7 @@ const ProfileManagement = () => {
       {/* Security Settings Card */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
@@ -305,12 +306,12 @@ const ProfileManagement = () => {
             </div>
             <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <Shield className="h-4 w-4 mr-2" />
                   Alterar Senha
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Alterar Senha</DialogTitle>
                 </DialogHeader>
@@ -360,7 +361,7 @@ const ProfileManagement = () => {
                       </Button>
                     </div>
                   </div>
-                  <div className="flex gap-2 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-2 pt-4">
                     <Button type="submit" disabled={loading} className="flex-1">
                       {loading ? "Alterando..." : "Alterar Senha"}
                     </Button>
@@ -368,6 +369,7 @@ const ProfileManagement = () => {
                       type="button" 
                       variant="outline" 
                       onClick={() => setIsPasswordDialogOpen(false)}
+                      className="flex-1"
                     >
                       Cancelar
                     </Button>

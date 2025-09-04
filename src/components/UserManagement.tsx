@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Profile, useAuth } from '@/contexts/AuthContext';
-import { UserPlus, Users, Trash2, Shield, Crown, User, Settings, Key } from 'lucide-react';
+import { UserPlus, Users, Trash2, Shield, Crown, User, Settings, Key, Edit } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 const UserManagement = () => {
@@ -389,10 +389,10 @@ const UserManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 p-4 md:p-0">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
@@ -410,12 +410,12 @@ const UserManagement = () => {
             {canCreateUsers && (
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button size="sm" className="w-full sm:w-auto">
                     <UserPlus className="h-4 w-4 mr-2" />
                     {isSuperuser ? 'Novo Administrador' : 'Novo Utilizador'}
                   </Button>
                 </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {isSuperuser ? 'Criar Nova Conta de Administrador' : 'Criar Novo Utilizador'}
@@ -495,76 +495,143 @@ const UserManagement = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Data de Criação</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.full_name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
+          {/* Desktop Table */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Função</TableHead>
+                  <TableHead>Data de Criação</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.full_name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={getRoleColor(user.role) as any} 
+                        className="flex items-center gap-1 w-fit"
+                      >
+                        {getRoleIcon(user.role)}
+                        {getRoleLabel(user.role)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(user.created_at).toLocaleDateString('pt-PT')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        {(isSuperuser || (isAdministrator && user.role !== 'administrator')) && 
+                         user.user_id !== profile?.user_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            Editar
+                          </Button>
+                        )}
+                        {(isSuperuser || isAdministrator) && 
+                         user.user_id !== profile?.user_id && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleResetUserPassword(user)}
+                          >
+                            <Key className="h-4 w-4 mr-1" />
+                            Reset Senha
+                          </Button>
+                        )}
+                        {(isSuperuser || (isAdministrator && (user.role === 'user' || user.role === 'gerente'))) && 
+                         user.user_id !== profile?.user_id && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
+            {filteredUsers.map((user) => (
+              <Card key={user.id} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-base truncate">{user.full_name}</h3>
+                      <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Membro desde {new Date(user.created_at).toLocaleDateString('pt-PT')}
+                      </p>
+                    </div>
                     <Badge 
                       variant={getRoleColor(user.role) as any} 
-                      className="flex items-center gap-1 w-fit"
+                      className="flex items-center gap-1 shrink-0"
                     >
                       {getRoleIcon(user.role)}
-                      {getRoleLabel(user.role)}
+                      <span className="hidden sm:inline">{getRoleLabel(user.role)}</span>
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(user.created_at).toLocaleDateString('pt-PT')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      {(isSuperuser || (isAdministrator && user.role !== 'administrator')) && 
-                       user.user_id !== profile?.user_id && (
+                  </div>
+                  
+                  {user.user_id !== profile?.user_id && (
+                    <div className="flex flex-col gap-2 pt-2">
+                      {(isSuperuser || (isAdministrator && user.role !== 'administrator')) && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditUser(user)}
+                          className="w-full justify-start"
                         >
-                          Editar
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar Utilizador
                         </Button>
                       )}
-                      {(isSuperuser || isAdministrator) && 
-                       user.user_id !== profile?.user_id && (
+                      {(isSuperuser || isAdministrator) && (
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => handleResetUserPassword(user)}
+                          className="w-full justify-start"
                         >
-                          <Key className="h-4 w-4 mr-1" />
+                          <Key className="h-4 w-4 mr-2" />
                           Reset Senha
                         </Button>
                       )}
-                      {(isSuperuser || (isAdministrator && (user.role === 'user' || user.role === 'gerente'))) && 
-                       user.user_id !== profile?.user_id && (
+                      {(isSuperuser || (isAdministrator && (user.role === 'user' || user.role === 'gerente'))) && (
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() => handleDeleteUser(user)}
+                          className="w-full justify-start"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Eliminar Utilizador
                         </Button>
                       )}
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
 
           {/* Edit User Dialog */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent>
+            <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Editar Utilizador</DialogTitle>
               </DialogHeader>
@@ -627,13 +694,14 @@ const UserManagement = () => {
                     </Select>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button onClick={handleUpdateUser} className="flex-1">
                     Atualizar Utilizador
                   </Button>
                   <Button 
                     variant="outline" 
                     onClick={() => setIsEditDialogOpen(false)}
+                    className="flex-1"
                   >
                     Cancelar
                   </Button>

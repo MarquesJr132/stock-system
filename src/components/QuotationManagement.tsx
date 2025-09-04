@@ -273,16 +273,16 @@ export default function QuotationManagement() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 p-4 md:p-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Cotações</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Cotações</h2>
           <p className="text-muted-foreground">
             Gerencie as cotações de produtos e serviços
           </p>
         </div>
         {(isAdministrator || isGerente) && (
-          <Button onClick={handleNewQuotation}>
+          <Button onClick={handleNewQuotation} size="sm" className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Nova Cotação
           </Button>
@@ -290,7 +290,7 @@ export default function QuotationManagement() {
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por cliente ou valor..."
@@ -322,17 +322,17 @@ export default function QuotationManagement() {
               <Collapsible key={quotation.id}>
                 <Card className={`transition-all ${!isValidQuotation ? 'border-destructive/50 bg-destructive/5' : ''}`}>
                   <CollapsibleTrigger asChild>
-                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
+                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-start sm:items-center space-x-3">
                           {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            <ChevronDown className="h-4 w-4 text-muted-foreground mt-1 sm:mt-0" />
                           ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            <ChevronRight className="h-4 w-4 text-muted-foreground mt-1 sm:mt-0" />
                           )}
-                          <div>
-                            <CardTitle className="text-lg">{customerName}</CardTitle>
-                            <CardDescription>
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-base sm:text-lg truncate">{customerName}</CardTitle>
+                            <CardDescription className="text-sm">
                               Cotação #{quotation.id.slice(0, 8)} • {formatDateTime(quotation.created_at)}
                               {!isValidQuotation && (
                                 <span className="text-destructive ml-2">• Expirada</span>
@@ -340,10 +340,10 @@ export default function QuotationManagement() {
                             </CardDescription>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <p className="text-2xl font-bold">{formatCurrency(quotation.total_amount)}</p>
-                            <p className="text-sm text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                          <div className="text-left sm:text-right">
+                            <p className="text-xl sm:text-2xl font-bold">{formatCurrency(quotation.total_amount)}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               Válida até: {new Date(quotation.valid_until).toLocaleDateString()}
                             </p>
                           </div>
@@ -354,8 +354,8 @@ export default function QuotationManagement() {
                   </CollapsibleTrigger>
                   
                   <CollapsibleContent>
-                    <CardContent className="pt-0">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <CardContent className="pt-0 p-4">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                         <div>
                           <p className="text-sm font-medium text-muted-foreground">Total</p>
                           <p className="text-lg font-semibold">{formatCurrency(quotation.total_amount)}</p>
@@ -381,7 +381,7 @@ export default function QuotationManagement() {
                         </div>
                       )}
 
-                      <div className="flex space-x-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         {(isAdministrator || isGerente) && (
                           <Button
                             variant="outline"
