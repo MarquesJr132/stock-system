@@ -994,6 +994,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      auto_generate_monthly_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       calculate_monthly_statistics: {
         Args: { target_month: string; target_tenant_id: string }
         Returns: undefined
