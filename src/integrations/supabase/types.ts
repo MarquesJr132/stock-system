@@ -1456,12 +1456,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      sync_all_tenants_total_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       sync_tenant_counters: {
         Args: { tenant_uuid: string }
         Returns: undefined
       }
       sync_tenant_data_usage: {
-        Args: { tenant_uuid: string }
+        Args:
+          | { count_all_data?: boolean; tenant_uuid: string }
+          | { tenant_uuid: string }
         Returns: undefined
       }
     }

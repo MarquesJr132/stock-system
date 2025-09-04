@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const TenantLimitsManagement = () => {
-  const { updateTenantLimits, getAllTenantLimits } = useSupabaseData();
+  const { updateTenantLimits, getAllTenantLimits, syncTenantData, syncAllTenantsTotal } = useSupabaseData();
   const { isSuperuser } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -30,6 +30,7 @@ const TenantLimitsManagement = () => {
     monthly_data_limit: 1000,
     monthly_user_limit: 10
   });
+  const [isGlobalSyncing, setIsGlobalSyncing] = useState(false);
 
   useEffect(() => {
     if (isSuperuser) {
@@ -131,27 +132,28 @@ const TenantLimitsManagement = () => {
     setEditDialogOpen(true);
   };
 
-  const syncTenantData = async (tenantId: string) => {
+  const handleSyncTenant = async (tenantId: string, countAllData: boolean = false) => {
     try {
-      
-      const { error } = await supabase.rpc('sync_tenant_data_usage', {
-        tenant_uuid: tenantId
-      });
-
-      if (error) {
-        console.error('Error syncing tenant data:', error);
-        toast.error(`Erro ao sincronizar dados: ${error.message}`);
-        return;
-      }
-
-      toast.success('Dados sincronizados com sucesso!');
-      // Recarregar os dados após sincronização
+      await syncTenantData(tenantId, countAllData);
       setTimeout(() => {
         loadTenantLimits();
       }, 500);
     } catch (error: any) {
       console.error('Error syncing tenant data:', error);
-      toast.error(`Erro ao sincronizar dados: ${error.message}`);
+    }
+  };
+
+  const handleSyncAllTotal = async () => {
+    setIsGlobalSyncing(true);
+    try {
+      await syncAllTenantsTotal();
+      setTimeout(() => {
+        loadTenantLimits();
+      }, 500);
+    } catch (error: any) {
+      console.error('Error syncing all tenants:', error);
+    } finally {
+      setIsGlobalSyncing(false);
     }
   };
 
@@ -193,21 +195,31 @@ const TenantLimitsManagement = () => {
           </p>
         </div>
         
-        <Button 
-          variant="outline" 
-          onClick={async () => {
-            try {
-              await supabase.rpc('cleanup_orphaned_tenant_limits');
-              toast.success('Registros órfãos removidos com sucesso!');
-              setTimeout(() => loadTenantLimits(), 500);
-            } catch (error) {
-              toast.error('Erro ao limpar registros órfãos');
-            }
-          }}
-          className="text-sm"
-        >
-          Limpar Órfãos
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleSyncAllTotal}
+            disabled={isGlobalSyncing}
+            className="text-sm"
+          >
+            {isGlobalSyncing ? 'Sincronizando...' : 'Recontagem Total'}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={async () => {
+              try {
+                await supabase.rpc('cleanup_orphaned_tenant_limits');
+                toast.success('Registros órfãos removidos com sucesso!');
+                setTimeout(() => loadTenantLimits(), 500);
+              } catch (error) {
+                toast.error('Erro ao limpar registros órfãos');
+              }
+            }}
+            className="text-sm"
+          >
+            Limpar Órfãos
+          </Button>
+        </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -315,7 +327,7 @@ const TenantLimitsManagement = () => {
             const isNearLimit = usagePercentage >= 80 || userUsagePercentage >= 80;
             
             return (
-              <Card key={limit.id} className={`hover:shadow-lg transition-shadow ${isNearLimit ? 'border-yellow-300' : ''}`}>
+              <Card key={limit.id} className={`hover:shadow-lg transition-shadow min-h-[400px] flex flex-col ${isNearLimit ? 'border-yellow-300' : ''}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -334,10 +346,11 @@ const TenantLimitsManagement = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => syncTenantData(limit.tenant_id)}
+                        onClick={() => handleSyncTenant(limit.tenant_id, true)}
                         className="mr-2"
+                        title="Recontagem total"
                       >
-                        Sync
+                        Sync Total
                       </Button>
                       <Button
                         variant="outline"
@@ -349,7 +362,7 @@ const TenantLimitsManagement = () => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
                   {/* Uso de Dados */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
