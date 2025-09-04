@@ -959,6 +959,15 @@ export const useSupabaseData = () => {
     console.log('Adding quotation with data:', quotationData);
     console.log('Current profile:', profile);
     
+    // Generate quotation number
+    const tenantId = profile.tenant_id || profile.id;
+    const { data: quotationNumber, error: numberError } = await supabase
+      .rpc('generate_quotation_number', { tenant_uuid: tenantId });
+
+    if (numberError) {
+      console.error('Error generating quotation number:', numberError);
+    }
+    
     const payload = {
       customer_id: quotationData.customer_id,
       total_amount: quotationData.total_amount,
@@ -970,8 +979,9 @@ export const useSupabaseData = () => {
         ? new Date(quotationData.valid_until).toISOString().slice(0, 10)
         : null,
       notes: quotationData.notes || '',
-      tenant_id: profile.tenant_id || profile.id,
-      created_by: profile.id
+      tenant_id: tenantId,
+      created_by: profile.id,
+      quotation_number: quotationNumber || undefined,
     };
 
     console.log('Quotation payload:', payload);

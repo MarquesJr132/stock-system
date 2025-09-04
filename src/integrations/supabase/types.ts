@@ -563,6 +563,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_method: string
+          quotation_number: string | null
           status: string
           tenant_id: string
           total_amount: number
@@ -578,6 +579,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method: string
+          quotation_number?: string | null
           status?: string
           tenant_id: string
           total_amount: number
@@ -593,6 +595,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: string
+          quotation_number?: string | null
           status?: string
           tenant_id?: string
           total_amount?: number
@@ -1013,6 +1016,10 @@ export type Database = {
       cleanup_tenant_data: {
         Args: { tenant_uuid: string }
         Returns: undefined
+      }
+      generate_quotation_number: {
+        Args: { tenant_uuid: string }
+        Returns: string
       }
       get_administrators: {
         Args: Record<PropertyKey, never>

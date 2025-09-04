@@ -124,25 +124,25 @@ export function QuotationPreview({
         
         <div className="p-6">
           {/* Content for PDF Generation */}
-          <div id="quotation-content" className="bg-white p-12 text-black min-h-[600px]">
+          <div id="quotation-content" className="bg-white p-8 text-black min-h-[600px]">
             {/* Header */}
-            <div className="flex justify-between items-start mb-12">
-              <div className="flex items-center space-x-6">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center space-x-4">
                 {companySettings?.logo_url && (
                   <img
                     src={companySettings.logo_url}
                     alt="Company Logo"
-                    className="h-24 max-w-40 w-auto object-contain"
+                    className="h-16 max-w-32 w-auto object-contain"
                   />
                 )}
               </div>
               <div className="text-right">
-                <h1 className="text-3xl font-bold text-black">COTAÇÃO</h1>
+                <h1 className="text-2xl font-bold text-black">COTAÇÃO</h1>
               </div>
             </div>
 
             {/* Company and Customer Info */}
-            <div className="grid grid-cols-2 gap-16 mb-8">
+            <div className="grid grid-cols-2 gap-12 mb-6">
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">DE:</h3>
                 <div className="space-y-1 text-sm">
@@ -166,10 +166,10 @@ export function QuotationPreview({
             </div>
 
             {/* Quotation Details */}
-            <div className="grid grid-cols-3 gap-8 mb-8 bg-gray-50 p-4 rounded">
+            <div className="grid grid-cols-3 gap-6 mb-6 bg-gray-50 p-3 rounded">
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Cotação #</p>
-                <p className="text-sm font-semibold text-black">{quotation.id}</p>
+                <p className="text-sm font-semibold text-black">{quotation.quotation_number || quotation.id.slice(0, 8)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Data da Cotação</p>
@@ -187,7 +187,7 @@ export function QuotationPreview({
             </div>
 
             {/* Products Table */}
-            <div className="mb-8">
+            <div className="mb-6">
               <table className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden">
                 <thead>
                   <tr className="bg-gray-900 text-white">
@@ -225,8 +225,8 @@ export function QuotationPreview({
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end mb-8">
-              <div className="w-80 bg-gray-50 p-4 rounded-lg">
+            <div className="flex justify-end mb-6">
+              <div className="w-72 bg-gray-50 p-3 rounded-lg">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between py-1">
                     <span className="text-gray-600">Subtotal:</span>
@@ -252,7 +252,7 @@ export function QuotationPreview({
               companySettings.account_number || 
               companySettings.iban
             ) && (
-              <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="mt-8 pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-semibold text-gray-900 mb-2">Informações Bancárias</h4>
                 <div className="space-y-1 text-xs text-gray-600">
                   {companySettings.bank_name && (
