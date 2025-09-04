@@ -353,6 +353,48 @@ export type Database = {
         }
         Relationships: []
       }
+      product_reservations: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string | null
+          id: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          reserved_until: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+          reserved_until: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          reserved_until?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           barcode: string | null
@@ -478,6 +520,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      promotions: {
+        Row: {
+          active: boolean
+          categories: Json | null
+          created_at: string
+          created_by: string
+          current_uses: number
+          customer_ids: Json | null
+          description: string | null
+          end_date: string
+          id: string
+          max_uses: number | null
+          min_quantity: number | null
+          name: string
+          products: Json | null
+          promo_code: string | null
+          start_date: string
+          tenant_id: string
+          type: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          categories?: Json | null
+          created_at?: string
+          created_by: string
+          current_uses?: number
+          customer_ids?: Json | null
+          description?: string | null
+          end_date: string
+          id?: string
+          max_uses?: number | null
+          min_quantity?: number | null
+          name: string
+          products?: Json | null
+          promo_code?: string | null
+          start_date: string
+          tenant_id: string
+          type: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          categories?: Json | null
+          created_at?: string
+          created_by?: string
+          current_uses?: number
+          customer_ids?: Json | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          max_uses?: number | null
+          min_quantity?: number | null
+          name?: string
+          products?: Json | null
+          promo_code?: string | null
+          start_date?: string
+          tenant_id?: string
+          type?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
       }
       purchase_order_items: {
         Row: {
@@ -821,6 +929,45 @@ export type Database = {
           },
         ]
       }
+      seasonal_analytics: {
+        Row: {
+          avg_price: number
+          created_at: string
+          id: string
+          month: number
+          product_id: string
+          quantity_sold: number
+          revenue: number
+          tenant_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          avg_price?: number
+          created_at?: string
+          id?: string
+          month: number
+          product_id: string
+          quantity_sold?: number
+          revenue?: number
+          tenant_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          avg_price?: number
+          created_at?: string
+          id?: string
+          month?: number
+          product_id?: string
+          quantity_sold?: number
+          revenue?: number
+          tenant_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       special_order_items: {
         Row: {
           created_at: string
@@ -921,6 +1068,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stock_locations: {
+        Row: {
+          active: boolean
+          address: string | null
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          tenant_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          tenant_id: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          tenant_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          created_by: string
+          from_location: string | null
+          id: string
+          movement_type: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          reference_id: string | null
+          reference_type: string | null
+          tenant_id: string
+          to_location: string | null
+          unit_cost: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          from_location?: string | null
+          id?: string
+          movement_type: string
+          notes?: string | null
+          product_id: string
+          quantity: number
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id: string
+          to_location?: string | null
+          unit_cost?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          from_location?: string | null
+          id?: string
+          movement_type?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          tenant_id?: string
+          to_location?: string | null
+          unit_cost?: number | null
+        }
+        Relationships: []
       }
       suppliers: {
         Row: {
@@ -1085,6 +1316,14 @@ export type Database = {
       calculate_monthly_statistics: {
         Args: { target_month: string; target_tenant_id: string }
         Returns: undefined
+      }
+      calculate_promotion_discount: {
+        Args: {
+          item_price: number
+          item_quantity: number
+          promotion_id_param: string
+        }
+        Returns: number
       }
       check_data_limit: {
         Args: { data_type_param: string; tenant_uuid: string }
