@@ -125,41 +125,6 @@ export const PWAComponents = () => {
         </Card>
       )}
 
-      {/* Notification Setup */}
-      {Notification.permission !== 'granted' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notificações Push
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              Ative as notificações para receber alertas sobre stock baixo, 
-              vendas importantes e atualizações do sistema.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                Alertas de stock baixo
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                Vendas importantes
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                Atualizações do sistema
-              </div>
-            </div>
-            <Button onClick={handleNotifications} className="w-full">
-              <Bell className="h-4 w-4 mr-2" />
-              Ativar Notificações
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       {/* PWA Features */}
       <Card>
@@ -182,19 +147,6 @@ export const PWAComponents = () => {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <h4 className="font-medium flex items-center gap-2">
-                {Notification.permission === 'granted' ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-600" />
-                )}
-                Notificações Push
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Alertas em tempo real sobre o seu negócio
-              </p>
-            </div>
 
             <div className="space-y-2">
               <h4 className="font-medium flex items-center gap-2">

@@ -74,19 +74,6 @@ export const IntegrationHub = () => {
                 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Backup automático diário</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-xs text-muted-foreground">Agendado</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Backups criados automaticamente às 02:00
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Notificações de stock baixo</span>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
@@ -113,64 +100,8 @@ export const IntegrationHub = () => {
                   <h3 className="text-lg font-medium mb-2">Totalmente na Cloud</h3>
                   <p className="text-muted-foreground text-sm">
                     Todos os dados são armazenados de forma segura na cloud.
-                    Backup automático e sincronização multi-dispositivo incluídos.
+                    Sincronização multi-dispositivo incluída.
                   </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  Exportação Automática
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Configure exportações automáticas de relatórios em intervalos regulares.
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Relatório mensal</span>
-                    <span className="text-xs text-muted-foreground">Todo dia 1</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Backup semanal</span>
-                    <span className="text-xs text-muted-foreground">Domingos</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Lista de produtos</span>
-                    <span className="text-xs text-muted-foreground">Diário</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Importação Inteligente
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Sistema de importação com validação automática e correção de erros.
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Validação de dados</span>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Detecção de duplicados</span>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Rollback automático</span>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
