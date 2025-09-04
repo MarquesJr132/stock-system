@@ -65,7 +65,7 @@ export const BackupSystem = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
-              Backup Manual
+              Backup
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -98,33 +98,6 @@ export const BackupSystem = () => {
           </CardContent>
         </Card>
 
-        {/* Backup Automático */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Backup Automático
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="auto-backup"
-                checked={autoBackupEnabled}
-                onCheckedChange={handleAutoBackupToggle}
-              />
-              <Label htmlFor="auto-backup">Backup diário automático</Label>
-            </div>
-            {autoBackupEnabled && (
-              <div className="p-3 bg-accent/10 rounded-lg">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Cloud className="h-4 w-4" />
-                  Backup será criado automaticamente todos os dias às 02:00
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Exportar Dados */}
         <Card>

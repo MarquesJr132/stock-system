@@ -41,7 +41,7 @@ export const PWAComponents = () => {
   return (
     <div className="space-y-6">
       {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -74,19 +74,6 @@ export const PWAComponents = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Bell className="h-5 w-5" />
-                <span className="font-medium">Notificações</span>
-              </div>
-              <Badge variant={Notification.permission === 'granted' ? "default" : "secondary"}>
-                {Notification.permission === 'granted' ? 'Ativadas' : 'Desativadas'}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Installation Card */}
