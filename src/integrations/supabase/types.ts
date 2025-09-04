@@ -56,6 +56,51 @@ export type Database = {
         }
         Relationships: []
       }
+      business_goals: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_value: number
+          description: string | null
+          goal_type: string
+          id: string
+          period_end: string
+          period_start: string
+          status: string | null
+          target_value: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_value?: number
+          description?: string | null
+          goal_type: string
+          id?: string
+          period_end: string
+          period_start: string
+          status?: string | null
+          target_value: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_value?: number
+          description?: string | null
+          goal_type?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          status?: string | null
+          target_value?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           account_holder: string | null
@@ -269,6 +314,42 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      payment_analytics: {
+        Row: {
+          average_amount: number
+          created_at: string
+          id: string
+          month_year: string
+          payment_method: string
+          tenant_id: string
+          total_amount: number
+          transaction_count: number
+          updated_at: string
+        }
+        Insert: {
+          average_amount?: number
+          created_at?: string
+          id?: string
+          month_year: string
+          payment_method: string
+          tenant_id: string
+          total_amount?: number
+          transaction_count?: number
+          updated_at?: string
+        }
+        Update: {
+          average_amount?: number
+          created_at?: string
+          id?: string
+          month_year?: string
+          payment_method?: string
+          tenant_id?: string
+          total_amount?: number
+          transaction_count?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1020,6 +1101,17 @@ export type Database = {
       generate_quotation_number: {
         Args: { tenant_uuid: string }
         Returns: string
+      }
+      get_abc_analysis: {
+        Args: { tenant_uuid: string }
+        Returns: {
+          abc_category: string
+          cumulative_percentage: number
+          product_id: string
+          product_name: string
+          revenue_percentage: number
+          total_revenue: number
+        }[]
       }
       get_administrators: {
         Args: Record<PropertyKey, never>
