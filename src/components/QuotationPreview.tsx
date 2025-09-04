@@ -142,36 +142,42 @@ export function QuotationPreview({
             </div>
 
             {/* Company and Customer Info */}
-            <div className="grid grid-cols-2 gap-12 mb-12">
+            <div className="grid grid-cols-2 gap-16 mb-8">
               <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">DE:</h3>
                 <div className="space-y-1 text-sm">
-                  <p className="text-lg font-bold text-black">{companySettings?.company_name || 'Empresa'}</p>
-                  <p className="text-gray-700">{companySettings?.address || ''}</p>
-                  <p className="text-gray-700">{companySettings?.phone || ''}</p>
-                  <p className="text-gray-700">{companySettings?.email || ''}</p>
-                  <p className="text-gray-700">{companySettings?.nuit || ''}</p>
+                  <p className="font-semibold text-black">{companySettings?.company_name || 'Empresa'}</p>
+                  {companySettings?.address && <p className="text-gray-600">{companySettings.address}</p>}
+                  {companySettings?.phone && <p className="text-gray-600">{companySettings.phone}</p>}
+                  {companySettings?.email && <p className="text-gray-600">{companySettings.email}</p>}
+                  {companySettings?.nuit && <p className="text-gray-600">NUIT: {companySettings.nuit}</p>}
                 </div>
               </div>
               <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">PARA:</h3>
                 <div className="space-y-1 text-sm">
-                  <p className="text-lg font-bold text-black">{customer?.name || 'Cliente Geral'}</p>
-                  {customer?.email && <p className="text-gray-700">Email: {customer.email}</p>}
-                  {customer?.phone && <p className="text-gray-700">Tel: {customer.phone}</p>}
-                  {customer?.address && <p className="text-gray-700">Endereço: {customer.address}</p>}
-                  {customer?.nuit && <p className="text-gray-700">NUIT: {customer.nuit}</p>}
+                  <p className="font-semibold text-black">{customer?.name || 'Cliente Geral'}</p>
+                  {customer?.email && <p className="text-gray-600">{customer.email}</p>}
+                  {customer?.phone && <p className="text-gray-600">{customer.phone}</p>}
+                  {customer?.address && <p className="text-gray-600">{customer.address}</p>}
+                  {customer?.nuit && <p className="text-gray-600">NUIT: {customer.nuit}</p>}
                 </div>
               </div>
             </div>
 
             {/* Quotation Details */}
-            <div className="grid grid-cols-2 gap-8 mb-12">
+            <div className="grid grid-cols-3 gap-8 mb-8 bg-gray-50 p-4 rounded">
               <div>
-                <p className="text-sm font-medium text-gray-700">Data da Cotação:</p>
-                <p className="text-sm text-black">{new Date(quotation.created_at).toLocaleDateString('pt-PT')}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Cotação #</p>
+                <p className="text-sm font-semibold text-black">{quotation.id}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Válida Até:</p>
-                <p className="text-sm text-black">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Data da Cotação</p>
+                <p className="text-sm font-semibold text-black">{new Date(quotation.created_at).toLocaleDateString('pt-PT')}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Válida Até</p>
+                <p className="text-sm font-semibold text-black">
                   {quotation.valid_until 
                     ? new Date(quotation.valid_until).toLocaleDateString('pt-PT')
                     : 'Não especificado'
@@ -182,57 +188,59 @@ export function QuotationPreview({
 
             {/* Products Table */}
             <div className="mb-8">
-              <table className="w-full border-collapse">
-                 <thead>
-                   <tr className="bg-black text-white">
-                     <th className="px-4 py-2 text-left font-medium text-sm border-r border-gray-600">Produto</th>
-                     <th className="px-4 py-2 text-left font-medium text-sm border-r border-gray-600">Descrição</th>
-                     <th className="px-4 py-2 text-center font-medium text-sm border-r border-gray-600">Qtd</th>
-                     <th className="px-4 py-2 text-right font-medium text-sm border-r border-gray-600">Preço Unit.</th>
-                     <th className="px-4 py-2 text-right font-medium text-sm border-r border-gray-600">IVA</th>
-                     <th className="px-4 py-2 text-right font-medium text-sm">Total</th>
-                   </tr>
-                 </thead>
-                <tbody className="bg-white">
+              <table className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden">
+                <thead>
+                  <tr className="bg-gray-900 text-white">
+                    <th className="px-4 py-3 text-left font-medium text-sm">Produto</th>
+                    <th className="px-4 py-3 text-left font-medium text-sm">Descrição</th>
+                    <th className="px-4 py-3 text-center font-medium text-sm">Qtd</th>
+                    <th className="px-4 py-3 text-right font-medium text-sm">Preço Unit.</th>
+                    <th className="px-4 py-3 text-right font-medium text-sm">IVA</th>
+                    <th className="px-4 py-3 text-right font-medium text-sm">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {quotationItems.map((item: any, index: number) => (
-                     <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                       <td className="px-4 py-2 border-b border-gray-200">
-                         <div className="font-medium text-sm text-black">{item.products?.name || 'Produto'}</div>
-                       </td>
-                       <td className="px-4 py-2 border-b border-gray-200">
-                         <div className="text-sm text-gray-700">{item.products?.description || '-'}</div>
-                       </td>
-                       <td className="px-4 py-2 text-center text-sm text-black border-b border-gray-200">{item.quantity}</td>
-                       <td className="px-4 py-2 text-right text-sm text-black border-b border-gray-200">
-                         {formatCurrency(item.unit_price)}
-                       </td>
-                       <td className="px-4 py-2 text-right text-sm text-black border-b border-gray-200">
-                         {formatCurrency(item.vat_amount)}
-                       </td>
-                       <td className="px-4 py-2 text-right text-sm font-medium text-black border-b border-gray-200">
-                         {formatCurrency(item.total)}
-                       </td>
-                     </tr>
+                    <tr key={item.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                      <td className="px-4 py-3 border-b border-gray-200">
+                        <div className="font-medium text-sm text-black">{item.products?.name || 'Produto'}</div>
+                      </td>
+                      <td className="px-4 py-3 border-b border-gray-200">
+                        <div className="text-sm text-gray-600">{item.products?.description || '-'}</div>
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm text-black border-b border-gray-200">{item.quantity}</td>
+                      <td className="px-4 py-3 text-right text-sm text-black border-b border-gray-200">
+                        {formatCurrency(item.unit_price)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-black border-b border-gray-200">
+                        {formatCurrency(item.vat_amount)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm font-semibold text-black border-b border-gray-200">
+                        {formatCurrency(item.total)}
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end mb-12">
-              <div className="w-80">
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="font-medium text-gray-700">Subtotal:</span>
+            <div className="flex justify-end mb-8">
+              <div className="w-80 bg-gray-50 p-4 rounded-lg">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between py-1">
+                    <span className="text-gray-600">Subtotal:</span>
                     <span className="text-black font-medium">{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="font-medium text-gray-700">IVA (16%):</span>
+                  <div className="flex justify-between py-1">
+                    <span className="text-gray-600">IVA (16%):</span>
                     <span className="text-black font-medium">{formatCurrency(quotation.total_vat_amount)}</span>
                   </div>
-                  <div className="flex justify-between py-3 border-t-2 border-black">
-                    <span className="font-bold text-lg text-black">Total:</span>
-                    <span className="font-bold text-lg text-black">{formatCurrency(quotation.total_amount)}</span>
+                  <div className="border-t border-gray-300 pt-2 mt-2">
+                    <div className="flex justify-between">
+                      <span className="font-bold text-lg text-black">Total:</span>
+                      <span className="font-bold text-lg text-black">{formatCurrency(quotation.total_amount)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -244,19 +252,20 @@ export function QuotationPreview({
               companySettings.account_number || 
               companySettings.iban
             ) && (
-              <div className="mt-12">
+              <div className="mt-16 pt-8 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Informações Bancárias</h4>
                 <div className="space-y-1 text-xs text-gray-600">
                   {companySettings.bank_name && (
-                    <p><strong>Nome do Banco :</strong> {companySettings.bank_name}</p>
+                    <p><span className="font-medium">Banco:</span> {companySettings.bank_name}</p>
                   )}
                   {companySettings.account_holder && (
-                    <p><strong>Titular :</strong> {companySettings.account_holder}</p>
+                    <p><span className="font-medium">Titular:</span> {companySettings.account_holder}</p>
                   )}
                   {companySettings.account_number && (
-                    <p><strong>Número de Conta :</strong> {companySettings.account_number}</p>
+                    <p><span className="font-medium">Número de Conta:</span> {companySettings.account_number}</p>
                   )}
                   {companySettings.iban && (
-                    <p><strong>NIB:</strong> {companySettings.iban}</p>
+                    <p><span className="font-medium">NIB:</span> {companySettings.iban}</p>
                   )}
                 </div>
               </div>
