@@ -132,7 +132,7 @@ export function QuotationPreview({
                   <img
                     src={companySettings.logo_url}
                     alt="Company Logo"
-                    className="h-16 max-w-32 w-auto object-contain"
+                    className="h-24 max-w-40 w-auto object-contain"
                   />
                 )}
               </div>
@@ -151,30 +151,6 @@ export function QuotationPreview({
                   <p className="text-gray-700">{companySettings?.email || ''}</p>
                   <p className="text-gray-700">{companySettings?.nuit || ''}</p>
                 </div>
-                
-                {/* Banking Information */}
-                {companySettings && (
-                  companySettings.bank_name || 
-                  companySettings.account_number || 
-                  companySettings.iban
-                ) && (
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <div className="space-y-1 text-xs text-gray-600">
-                      {companySettings.bank_name && (
-                        <p><strong>Nome do Banco :</strong> {companySettings.bank_name}</p>
-                      )}
-                      {companySettings.account_holder && (
-                        <p><strong>Titular :</strong> {companySettings.account_holder}</p>
-                      )}
-                      {companySettings.account_number && (
-                        <p><strong>Número de Conta :</strong> {companySettings.account_number}</p>
-                      )}
-                      {companySettings.iban && (
-                        <p><strong>NIB:</strong> {companySettings.iban}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
               <div>
                 <div className="space-y-1 text-sm">
@@ -188,7 +164,7 @@ export function QuotationPreview({
             </div>
 
             {/* Quotation Details */}
-            <div className="grid grid-cols-4 gap-8 mb-12">
+            <div className="grid grid-cols-2 gap-8 mb-12">
               <div>
                 <p className="text-sm font-medium text-gray-700">Data da Cotação:</p>
                 <p className="text-sm text-black">{new Date(quotation.created_at).toLocaleDateString('pt-PT')}</p>
@@ -201,14 +177,6 @@ export function QuotationPreview({
                     : 'Não especificado'
                   }
                 </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Método de Pagamento:</p>
-                <p className="text-sm text-black">{getPaymentLabel(quotation.payment_method)}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Estado:</p>
-                <p className="text-sm text-black">{getStatusLabel(quotation.status)}</p>
               </div>
             </div>
 
@@ -270,6 +238,29 @@ export function QuotationPreview({
               </div>
             </div>
 
+            {/* Banking Information - Bottom Left */}
+            {companySettings && (
+              companySettings.bank_name || 
+              companySettings.account_number || 
+              companySettings.iban
+            ) && (
+              <div className="mt-12">
+                <div className="space-y-1 text-xs text-gray-600">
+                  {companySettings.bank_name && (
+                    <p><strong>Nome do Banco :</strong> {companySettings.bank_name}</p>
+                  )}
+                  {companySettings.account_holder && (
+                    <p><strong>Titular :</strong> {companySettings.account_holder}</p>
+                  )}
+                  {companySettings.account_number && (
+                    <p><strong>Número de Conta :</strong> {companySettings.account_number}</p>
+                  )}
+                  {companySettings.iban && (
+                    <p><strong>NIB:</strong> {companySettings.iban}</p>
+                  )}
+                </div>
+              </div>
+            )}
 
           </div>
 
