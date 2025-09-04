@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EnhancedHeader } from "@/components/ui/enhanced-header";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { OfflineIndicator } from "@/components/ui/offline-indicator";
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -24,7 +24,7 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
             {children}
           </main>
         </SidebarInset>
-        <OfflineIndicator />
+        
       </div>
     </SidebarProvider>
   );

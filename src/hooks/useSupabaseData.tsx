@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast, toast } from '@/hooks/use-toast';
+import { useOfflineStorage } from './useOfflineStorage';
+import { useOfflineSync } from './useOfflineSync';
 
 // Updated interfaces to match Supabase schema
 export interface Product {
@@ -101,6 +103,9 @@ export interface CompanySettings {
 }
 
 export const useSupabaseData = () => {
+  const { saveData, getData, addPendingOperation, isInitialized } = useOfflineStorage();
+  const { syncStatus } = useOfflineSync();
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
@@ -114,10 +119,19 @@ export const useSupabaseData = () => {
 
   // Fetch all data when user is authenticated
   useEffect(() => {
-    if (user && profile) {
+    if (user && profile && isInitialized) {
       fetchAllData();
+    } else if (!user) {
+      // Clear data when user logs out
+      setProducts([]);
+      setCustomers([]);
+      setSales([]);
+      setSaleItems([]);
+      setCompanySettings(null);
+      setTenantLimits(null);
+      setDataUsage([]);
     }
-  }, [user, profile]);
+  }, [user, profile, isInitialized]);
 
   const fetchAllData = async () => {
     try {
@@ -146,18 +160,36 @@ export const useSupabaseData = () => {
   const fetchProducts = async () => {
     if (!profile) return;
     
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('tenant_id', profile.tenant_id || profile.id)
-      .order('created_at', { ascending: false });
+    try {
+      if (syncStatus.isOnline) {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('tenant_id', profile.tenant_id || profile.id)
+          .order('created_at', { ascending: false });
 
-    if (error) {
+        if (error) throw error;
+        
+        const products = data || [];
+        setProducts(products);
+        await saveData('products', products);
+      } else {
+        const offlineProducts = await getData('products');
+        setProducts(offlineProducts);
+      }
+    } catch (error) {
       console.error('Error fetching products:', error);
-      return;
+      
+      try {
+        const offlineProducts = await getData('products');
+        setProducts(offlineProducts);
+        if (offlineProducts.length > 0) {
+          toast({ title: "Offline", description: "Carregando produtos offline" });
+        }
+      } catch (offlineError) {
+        console.error('Offline products fetch failed:', offlineError);
+      }
     }
-    
-    setProducts(data || []);
   };
 
   const fetchCustomers = async () => {

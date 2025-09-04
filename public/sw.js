@@ -243,14 +243,28 @@ self.addEventListener('sync', (event) => {
 
 async function syncOfflineActions() {
   try {
-    // Get offline actions from IndexedDB or other storage
-    // This would sync any actions performed while offline
     console.log('Syncing offline actions...');
     
-    // Example: sync offline sales, stock movements, etc.
-    // Implementation would depend on your offline storage strategy
+    // Send message to main app to trigger sync
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'SYNC_OFFLINE_DATA'
+      });
+    });
     
+    console.log('Offline sync triggered');
   } catch (error) {
     console.error('Error syncing offline actions:', error);
   }
 }
+
+// Enhanced message handling
+self.addEventListener('message', event => {
+  if (event.data.type === 'REGISTER_SYNC') {
+    // Register for background sync
+    self.registration.sync.register('sync-offline-actions').catch(err => {
+      console.error('Failed to register sync:', err);
+    });
+  }
+});
