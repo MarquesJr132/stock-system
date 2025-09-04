@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { useToast, toast } from '@/hooks/use-toast';
 
 // Updated interfaces to match Supabase schema
 export interface Product {
@@ -275,7 +275,6 @@ export const useSupabaseData = () => {
         toast({
           title: "Modo Offline",
           description: limitCheck.warning || "Verificação de limite pausada - modo offline",
-          variant: "default",
         });
       } else {
         toast({
@@ -290,7 +289,6 @@ export const useSupabaseData = () => {
       toast({
         title: "Modo Offline",
         description: limitCheck.warning,
-        variant: "default",
       });
     }
 
@@ -916,14 +914,17 @@ export const useSupabaseData = () => {
 
   const checkDataLimit = async (tenantId: string) => {
     try {
+      console.log('checkDataLimit called:', { tenantId, isOnline: navigator.onLine });
       // Check if we're offline
       if (!navigator.onLine) {
         // Get cached limits from localStorage
         const cachedLimits = localStorage.getItem(`tenant_limits_${tenantId}`);
         if (cachedLimits) {
+          console.log('Found cached limits:', JSON.parse(cachedLimits));
           const limits = JSON.parse(cachedLimits);
           const canCreate = limits.current_month_usage < limits.monthly_data_limit;
           if (!canCreate) {
+            console.log('Offline limit check failed:', limits);
             return { 
               canCreate: false, 
               error: "Limite de dados atingido (verificação offline)",
