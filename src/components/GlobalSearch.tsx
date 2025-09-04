@@ -111,9 +111,9 @@ export const GlobalSearch = ({ onResultSelect }: GlobalSearchProps) => {
   ];
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto p-4">
       {/* Search Input */}
-      <div className="relative">
+      <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           ref={inputRef}
@@ -121,7 +121,8 @@ export const GlobalSearch = ({ onResultSelect }: GlobalSearchProps) => {
           placeholder="Pesquisar produtos, clientes, vendas..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-10 pr-16 h-12"
+          className="pl-10 pr-16 h-12 text-base"
+          autoFocus
         />
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
           <Button
@@ -145,7 +146,7 @@ export const GlobalSearch = ({ onResultSelect }: GlobalSearchProps) => {
 
       {/* Active Filters */}
       {activeFilters.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
+        <div className="flex flex-wrap gap-2 mb-4">
           {activeFilters.map((filter) => (
             <Badge key={filter.id} variant="secondary" className="gap-1">
               {filter.name}: {filter.value}
@@ -172,7 +173,7 @@ export const GlobalSearch = ({ onResultSelect }: GlobalSearchProps) => {
 
       {/* Search History */}
       {showHistory && searchHistory.length > 0 && (
-        <Card className="mt-2">
+        <Card className="mb-4">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium">Histórico de Pesquisa</h3>
@@ -205,7 +206,7 @@ export const GlobalSearch = ({ onResultSelect }: GlobalSearchProps) => {
 
       {/* Filters Panel */}
       {showFilters && (
-        <Card className="mt-2">
+        <Card className="mb-4">
           <CardContent className="p-4">
             <div className="space-y-4">
               {/* Add New Filter */}
@@ -324,7 +325,7 @@ export const GlobalSearch = ({ onResultSelect }: GlobalSearchProps) => {
 
       {/* Results */}
       {query && (
-        <Card className="mt-2">
+        <Card>
           <CardContent className="p-4">
             {isLoading ? (
               <div className="text-center py-8">

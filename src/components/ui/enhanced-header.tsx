@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, User, LogOut } from 'lucide-react';
+import { Search, User, LogOut, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +22,7 @@ interface EnhancedHeaderProps {
 export const EnhancedHeader = ({ onTabChange }: EnhancedHeaderProps) => {
   const [showSearch, setShowSearch] = useState(false);
   const { profile, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const handleSearchResultSelect = (result: any) => {
     setShowSearch(false);
@@ -74,6 +76,20 @@ export const EnhancedHeader = ({ onTabChange }: EnhancedHeaderProps) => {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="h-8 w-8 p-0"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
+
           {/* Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

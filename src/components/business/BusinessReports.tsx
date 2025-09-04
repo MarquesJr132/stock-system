@@ -405,25 +405,6 @@ export const BusinessReports = () => {
         </Card>
       </div>
 
-      {/* Export Options */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <h4 className="font-semibold mb-2">Exportar Relatórios</h4>
-            <p className="text-sm text-muted-foreground mb-4">
-              Exporte dados para análise externa ou envio para contabilidade
-            </p>
-            <div className="flex justify-center gap-4">
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                Exportar Excel
-              </button>
-              <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                Exportar PDF
-              </button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
