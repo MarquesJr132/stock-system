@@ -124,115 +124,105 @@ export function QuotationPreview({
         
         <div className="p-6">
           {/* Content for PDF Generation */}
-          <div id="quotation-content" className="bg-white text-black min-h-[297mm] px-8 py-6" style={{ fontFamily: 'Arial, sans-serif' }}>
+          <div id="quotation-content" className="bg-white p-12 text-black min-h-[600px]">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-              {/* Logo */}
-              <div className="flex-shrink-0">
-                {companySettings?.logo_url ? (
-                  <img 
-                    src={companySettings.logo_url} 
-                    alt="Logo da empresa" 
-                    className="h-12 w-auto object-contain"
+            <div className="flex justify-between items-start mb-12">
+              <div className="flex items-center space-x-6">
+                {companySettings?.[0]?.logo_url && (
+                  <img
+                    src={companySettings[0].logo_url}
+                    alt="Company Logo"
+                    className="h-16 w-auto object-contain"
                   />
-                ) : (
-                  <div className="h-12 w-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                    Logo
-                  </div>
                 )}
+                <div>
+                  <h1 className="text-3xl font-bold text-black">
+                    {companySettings?.[0]?.company_name || 'Empresa'}
+                  </h1>
+                </div>
               </div>
-              
-              {/* Quotation Title */}
               <div className="text-right">
-                <h1 className="text-xl font-bold text-gray-900 mb-1">COTAÇÃO</h1>
-                <p className="text-sm text-gray-600">Nº {quotation.id.split('-')[0]}</p>
+                <h1 className="text-4xl font-bold text-black">COTAÇÃO</h1>
               </div>
             </div>
 
             {/* Company and Customer Info */}
-            <div className="grid grid-cols-2 gap-12 mb-6">
-              {/* Company Info */}
+            <div className="grid grid-cols-2 gap-12 mb-12">
               <div>
-                <div className="space-y-0.5 text-sm">
-                  <p className="text-base font-bold text-gray-900">{companySettings?.company_name}</p>
-                  {companySettings?.address && <p className="text-gray-700">{companySettings.address}</p>}
-                  {companySettings?.phone && <p className="text-gray-700">{companySettings.phone}</p>}
-                  {companySettings?.email && <p className="text-gray-700">{companySettings.email}</p>}
-                  {companySettings?.nuit && <p className="text-gray-700">NUIT: {companySettings.nuit}</p>}
+                <div className="space-y-1 text-sm">
+                  <p className="text-lg font-bold text-black">{companySettings?.[0]?.company_name || 'Empresa'}</p>
+                  <p className="text-gray-700">{companySettings?.[0]?.address || ''}</p>
+                  <p className="text-gray-700">Tel: {companySettings?.[0]?.phone || ''}</p>
+                  <p className="text-gray-700">Email: {companySettings?.[0]?.email || ''}</p>
+                  <p className="text-gray-700">NUIT: {companySettings?.[0]?.nuit || ''}</p>
                 </div>
               </div>
-
-              {/* Customer and Quote Info */}
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-1">PARA:</p>
-                  <div className="space-y-0.5 text-sm">
-                    {customer ? (
-                      <>
-                        <p className="font-semibold text-gray-900">{customer.name}</p>
-                        {customer.address && <p className="text-gray-700">{customer.address}</p>}
-                        {customer.phone && <p className="text-gray-700">{customer.phone}</p>}
-                        {customer.email && <p className="text-gray-700">{customer.email}</p>}
-                        {customer.nuit && <p className="text-gray-700">NUIT: {customer.nuit}</p>}
-                      </>
-                    ) : (
-                      <p className="text-gray-700">Cliente não especificado</p>
-                    )}
-                  </div>
-                </div>
-                
+              <div>
                 <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-gray-900">Data da Cotação:</span>
-                    <span className="text-gray-700">{new Date(quotation.created_at).toLocaleDateString('pt-PT')}</span>
-                  </div>
-                  {quotation.valid_until && (
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-gray-900">Data de Validade:</span>
-                      <span className="text-gray-700">{new Date(quotation.valid_until).toLocaleDateString('pt-PT')}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-gray-900">Método de Pagamento:</span>
-                    <span className="text-gray-700">{getPaymentLabel(quotation.payment_method)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-gray-900">Estado:</span>
-                    <span className={getStatusColor(quotation.status)}>{getStatusLabel(quotation.status)}</span>
-                  </div>
+                  <p className="text-lg font-bold text-black">{customer?.name || 'Cliente Geral'}</p>
+                  {customer?.email && <p className="text-gray-700">Email: {customer.email}</p>}
+                  {customer?.phone && <p className="text-gray-700">Tel: {customer.phone}</p>}
+                  {customer?.address && <p className="text-gray-700">Endereço: {customer.address}</p>}
+                  {customer?.nuit && <p className="text-gray-700">NUIT: {customer.nuit}</p>}
                 </div>
               </div>
             </div>
 
+            {/* Quotation Details */}
+            <div className="grid grid-cols-4 gap-8 mb-12">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Data da Cotação:</p>
+                <p className="text-sm text-black">{new Date(quotation.created_at).toLocaleDateString('pt-PT')}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">Válida Até:</p>
+                <p className="text-sm text-black">
+                  {quotation.valid_until 
+                    ? new Date(quotation.valid_until).toLocaleDateString('pt-PT')
+                    : 'Não especificado'
+                  }
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">Método de Pagamento:</p>
+                <p className="text-sm text-black">{getPaymentLabel(quotation.payment_method)}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">Estado:</p>
+                <p className="text-sm text-black">{getStatusLabel(quotation.status)}</p>
+              </div>
+            </div>
+
             {/* Products Table */}
-            <div className="mb-6">
+            <div className="mb-12">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-800 text-white">
-                    <th className="px-3 py-3 text-left text-sm font-semibold w-12">Nº</th>
-                    <th className="px-3 py-3 text-left text-sm font-semibold">Descrição</th>
-                    <th className="px-3 py-3 text-center text-sm font-semibold w-16">Qtd</th>
-                    <th className="px-3 py-3 text-right text-sm font-semibold w-24">Taxa</th>
-                    <th className="px-3 py-3 text-right text-sm font-semibold w-28">Total</th>
+                  <tr className="bg-black text-white">
+                    <th className="px-6 py-4 text-left font-medium text-sm border-r border-gray-600">Produto</th>
+                    <th className="px-6 py-4 text-left font-medium text-sm border-r border-gray-600">Descrição</th>
+                    <th className="px-6 py-4 text-center font-medium text-sm border-r border-gray-600">Qtd</th>
+                    <th className="px-6 py-4 text-right font-medium text-sm border-r border-gray-600">Preço Unit.</th>
+                    <th className="px-6 py-4 text-right font-medium text-sm border-r border-gray-600">IVA</th>
+                    <th className="px-6 py-4 text-right font-medium text-sm">Total</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {quotationItems.map((item, index) => (
-                    <tr key={item.id} className="border-b border-gray-200">
-                      <td className="px-3 py-2 text-sm text-gray-700">{index + 1}</td>
-                      <td className="px-3 py-2 text-sm">
-                        <div>
-                          <p className="font-medium text-gray-900">{item.product?.name}</p>
-                          {item.product?.description && (
-                            <p className="text-gray-600 text-xs">{item.product.description}</p>
-                          )}
-                        </div>
+                <tbody className="bg-white">
+                  {quotationItems.map((item: any, index: number) => (
+                    <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <td className="px-6 py-4 border-b border-gray-200">
+                        <div className="font-medium text-sm text-black">{item.products?.name || 'Produto'}</div>
                       </td>
-                      <td className="px-3 py-2 text-center text-sm text-gray-700">{item.quantity}</td>
-                      <td className="px-3 py-2 text-right text-sm text-gray-700">
+                      <td className="px-6 py-4 border-b border-gray-200">
+                        <div className="text-sm text-gray-700">{item.products?.description || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 text-center text-sm text-black border-b border-gray-200">{item.quantity}</td>
+                      <td className="px-6 py-4 text-right text-sm text-black border-b border-gray-200">
                         {formatCurrency(item.unit_price)}
                       </td>
-                      <td className="px-3 py-2 text-right text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 text-right text-sm text-black border-b border-gray-200">
+                        {formatCurrency(item.vat_amount)}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm font-medium text-black border-b border-gray-200">
                         {formatCurrency(item.total)}
                       </td>
                     </tr>
@@ -242,51 +232,64 @@ export function QuotationPreview({
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end mb-6">
-              <div className="w-72 space-y-1">
-                <div className="flex justify-between py-1 text-sm">
-                  <span className="text-gray-700">Subtotal:</span>
-                  <span className="text-gray-900 font-medium">{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
-                </div>
-                <div className="flex justify-between py-1 text-sm">
-                  <span className="text-gray-700">IVA (16%):</span>
-                  <span className="text-gray-900 font-medium">{formatCurrency(quotation.total_vat_amount)}</span>
-                </div>
-                <div className="border-t border-gray-400 pt-2">
-                  <div className="flex justify-between">
-                    <span className="text-base font-bold text-gray-900">TOTAL:</span>
-                    <span className="text-base font-bold text-gray-900">{formatCurrency(quotation.total_amount)}</span>
+            <div className="flex justify-end mb-12">
+              <div className="w-80">
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="font-medium text-gray-700">Subtotal:</span>
+                    <span className="text-black font-medium">{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="font-medium text-gray-700">IVA (17%):</span>
+                    <span className="text-black font-medium">{formatCurrency(quotation.total_vat_amount)}</span>
+                  </div>
+                  <div className="flex justify-between py-3 border-t-2 border-black">
+                    <span className="font-bold text-lg text-black">Total:</span>
+                    <span className="font-bold text-lg text-black">{formatCurrency(quotation.total_amount)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Notes */}
             {quotation.notes && (
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-2">Observações:</h4>
-                <p className="text-sm text-gray-700">{quotation.notes}</p>
+              <div className="mb-12">
+                <h4 className="font-medium text-gray-700 mb-3">Observações:</h4>
+                <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded">
+                  {quotation.notes}
+                </p>
               </div>
             )}
 
-            {/* Banking Info Footer */}
-            {(companySettings?.bank_name || companySettings?.account_number || companySettings?.iban || companySettings?.phone) && (
-              <div className="mt-auto pt-4 border-t border-gray-300">
-                <div className="flex flex-wrap gap-8 text-xs text-gray-600">
-                  {companySettings.bank_name && (
-                    <span><strong>Banco:</strong> {companySettings.bank_name}</span>
-                  )}
-                  {companySettings.account_holder && (
-                    <span><strong>Titular:</strong> {companySettings.account_holder}</span>
-                  )}
-                  {companySettings.account_number && (
-                    <span><strong>Conta:</strong> {companySettings.account_number}</span>
-                  )}
-                  {companySettings.iban && (
-                    <span><strong>IBAN:</strong> {companySettings.iban}</span>
-                  )}
-                  {companySettings.phone && (
-                    <span><strong>Tel:</strong> {companySettings.phone}</span>
-                  )}
+            {/* Banking Information Footer */}
+            {companySettings?.[0] && (
+              companySettings[0].bank_name || 
+              companySettings[0].account_number || 
+              companySettings[0].iban
+            ) && (
+              <div className="border-t-2 border-gray-300 pt-6 mt-12">
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <div className="flex justify-center items-center space-x-6">
+                      {companySettings[0].bank_name && (
+                        <span><strong>Banco:</strong> {companySettings[0].bank_name}</span>
+                      )}
+                      {companySettings[0].account_holder && (
+                        <span><strong>Titular:</strong> {companySettings[0].account_holder}</span>
+                      )}
+                      {companySettings[0].account_number && (
+                        <span><strong>Conta:</strong> {companySettings[0].account_number}</span>
+                      )}
+                    </div>
+                    {companySettings[0].iban && (
+                      <div>
+                        <strong>IBAN:</strong> {companySettings[0].iban}
+                      </div>
+                    )}
+                    <div className="mt-2">
+                      <strong>Tel:</strong> {companySettings[0].phone} | <strong>Email:</strong> {companySettings[0].email}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

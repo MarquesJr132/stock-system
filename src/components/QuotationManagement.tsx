@@ -113,17 +113,21 @@ export default function QuotationManagement() {
       setLoading(true);
       const items = await getQuotationItems(quotation.id);
       
-      const quotationItems = items?.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        includes_vat: item.includes_vat,
-        vat_amount: item.vat_amount,
-        subtotal: item.subtotal,
-        total: item.total,
-        product_name: item.product_name || 'Produto não encontrado'
-      })) || [];
+      const quotationItems = items?.map(item => {
+        // Find the product from the products array using product_id
+        const product = products.find(p => p.id === item.product_id);
+        return {
+          id: item.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          includes_vat: item.includes_vat,
+          vat_amount: item.vat_amount,
+          subtotal: item.subtotal,
+          total: item.total,
+          product_name: product?.name || 'Produto não encontrado'
+        };
+      }) || [];
       
       setCurrentQuotation({
         ...quotation,

@@ -940,23 +940,21 @@ export const useSupabaseData = () => {
   };
 
   const getQuotationItems = async (quotationId: string) => {
-    const { data, error } = await supabase
-      .from('quotation_items')
-      .select('*')
-      .eq('quotation_id', quotationId);
+    try {
+      const { data, error } = await supabase
+        .from('quotation_items')
+        .select(`
+          *,
+          products (*)
+        `)
+        .eq('quotation_id', quotationId);
 
-    if (error) throw error;
-    
-    // Manually join with products since the relationship might not exist yet
-    const itemsWithProducts = data?.map(item => {
-      const product = products.find(p => p.id === item.product_id);
-      return {
-        ...item,
-        product_name: product?.name || 'Produto não encontrado'
-      };
-    }) || [];
-
-    return itemsWithProducts;
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching quotation items:', error);
+      throw error;
+    }
   };
 
   // Helper functions for data analysis
