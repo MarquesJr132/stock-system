@@ -1333,6 +1333,10 @@ export type Database = {
         Args: { tenant_uuid: string }
         Returns: boolean
       }
+      cleanup_orphaned_tenant_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_tenant_data: {
         Args: { tenant_uuid: string }
         Returns: undefined
