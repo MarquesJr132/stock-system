@@ -31,14 +31,39 @@ export const useBackupSystem = () => {
       if (data.success) {
         // Convert backup data to Excel format
         const workbook = XLSX.utils.book_new();
+
+        const normalizeRows = (tableData: any) => {
+          if (Array.isArray(tableData)) return tableData;
+          if (tableData && typeof tableData === 'object') {
+            if (Array.isArray((tableData as any).data)) return (tableData as any).data;
+            if (Array.isArray((tableData as any).rows)) return (tableData as any).rows;
+            if (Array.isArray((tableData as any).items)) return (tableData as any).items;
+            const values = Object.values(tableData as Record<string, any>);
+            if (values.length && values.every(v => v && typeof v === 'object')) {
+              return values as any[];
+            }
+          }
+          // Fallback: wrap any other shape to ensure a non-empty worksheet
+          return [{ value: JSON.stringify(tableData) }];
+        };
         
         // Add each table as a separate sheet
         Object.entries(data.backup).forEach(([tableName, tableData]: [string, any]) => {
-          if (Array.isArray(tableData) && tableData.length > 0) {
-            const worksheet = XLSX.utils.json_to_sheet(tableData);
+          try {
+            const rows = normalizeRows(tableData);
+            const worksheet = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(workbook, worksheet, tableName.substring(0, 31));
+          } catch (e) {
+            const worksheet = XLSX.utils.aoa_to_sheet([["data"], [JSON.stringify(tableData)]]);
             XLSX.utils.book_append_sheet(workbook, worksheet, tableName.substring(0, 31));
           }
         });
+
+        // Ensure workbook has at least one sheet
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+          const ws = XLSX.utils.aoa_to_sheet([["Info"], ["Sem dados disponíveis"]]);
+          XLSX.utils.book_append_sheet(workbook, ws, 'Backup');
+        }
         
         // Generate Excel file
         const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
