@@ -64,18 +64,49 @@ serve(async (req) => {
     }
 
     const { userId, profileId } = await req.json();
-    if (!userId || !profileId) {
+
+    // Normalize params and allow fallback lookup
+    let targetUserId = userId as string | null;
+    let targetProfileId = profileId as string | null;
+
+    if (!targetUserId && !targetProfileId) {
       return new Response(JSON.stringify({ error: 'Parâmetros inválidos' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    // If only profileId provided, fetch user_id
+    if (!targetUserId && targetProfileId) {
+      const { data: pById } = await supabaseAdmin
+        .from('profiles')
+        .select('user_id')
+        .eq('id', targetProfileId)
+        .maybeSingle();
+      targetUserId = pById?.user_id ?? null;
+    }
+
+    // If only userId provided, fetch profile id
+    if (!targetProfileId && targetUserId) {
+      const { data: pByUser } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('user_id', targetUserId)
+        .maybeSingle();
+      targetProfileId = pByUser?.id ?? null;
+    }
+
+    if (!targetProfileId) {
+      return new Response(JSON.stringify({ error: 'Perfil alvo não encontrado' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     // Fetch target profile
     const { data: targetProfile, error: targetErr } = await supabaseAdmin
       .from('profiles')
       .select('*')
-      .eq('id', profileId)
+      .eq('id', targetProfileId as string)
       .single();
 
     if (targetErr || !targetProfile) {
@@ -106,28 +137,38 @@ serve(async (req) => {
       });
     }
 
+    // If administrator (not superuser), enforce same-tenant deletion
+    if (callerProfile.role === 'administrator' && targetProfile.tenant_id !== callerProfile.tenant_id) {
+      return new Response(JSON.stringify({ error: 'Não pode eliminar utilizadores de outro tenant' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Reassign created_by data to another admin in tenant before deletion
     const { error: reassignErr } = await supabaseAdmin.rpc('reassign_user_data_before_deletion', {
-      user_profile_id: profileId,
+      user_profile_id: targetProfileId as string,
     });
     if (reassignErr) {
       console.warn('Reassign data warning:', reassignErr.message);
     }
 
-    // Delete from auth first
-    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
-    if (authDeleteError) {
-      return new Response(JSON.stringify({ error: 'Erro ao eliminar do Auth: ' + authDeleteError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Delete from auth first (if exists)
+    if (targetUserId) {
+      const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
+      if (authDeleteError && !/not\s?found/i.test(authDeleteError.message)) {
+        return new Response(JSON.stringify({ error: 'Erro ao eliminar do Auth: ' + authDeleteError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Then delete profile (ignore if already removed via cascade or triggers)
     const { error: profileDeleteError } = await supabaseAdmin
       .from('profiles')
       .delete()
-      .eq('id', profileId);
+      .eq('id', targetProfileId as string);
 
     if (profileDeleteError) {
       // Log but continue
