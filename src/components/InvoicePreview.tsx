@@ -137,16 +137,16 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             {/* Header */}
             <div className="flex justify-between items-start mb-12">
               <div className="flex items-center space-x-6">
-                {companySettings?.[0]?.logo_url && (
+                {companySettings?.logo_url && (
                   <img
-                    src={companySettings[0].logo_url}
+                    src={companySettings.logo_url}
                     alt="Company Logo"
                     className="h-16 w-auto object-contain"
                   />
                 )}
                 <div>
                   <h1 className="text-3xl font-bold text-black">
-                    {companySettings?.[0]?.company_name || 'Empresa'}
+                    {companySettings?.company_name || 'Empresa'}
                   </h1>
                 </div>
               </div>
@@ -159,11 +159,11 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             <div className="grid grid-cols-2 gap-12 mb-12">
               <div>
                 <div className="space-y-1 text-sm">
-                  <p className="text-lg font-bold text-black">{companySettings?.[0]?.company_name || 'Empresa'}</p>
-                  <p className="text-gray-700">{companySettings?.[0]?.address || ''}</p>
-                  <p className="text-gray-700">Tel: {companySettings?.[0]?.phone || ''}</p>
-                  <p className="text-gray-700">Email: {companySettings?.[0]?.email || ''}</p>
-                  <p className="text-gray-700">NUIT: {companySettings?.[0]?.nuit || ''}</p>
+                  <p className="text-lg font-bold text-black">{companySettings?.company_name || 'Empresa'}</p>
+                  <p className="text-gray-700">{companySettings?.address || ''}</p>
+                  <p className="text-gray-700">{companySettings?.phone || ''}</p>
+                  <p className="text-gray-700">{companySettings?.email || ''}</p>
+                  <p className="text-gray-700">{companySettings?.nuit || ''}</p>
                 </div>
               </div>
               <div>
@@ -243,7 +243,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                     <span className="text-black font-medium">{formatCurrency(sale.total_amount - sale.total_vat_amount)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="font-medium text-gray-700">IVA (17%):</span>
+                    <span className="font-medium text-gray-700">IVA (16%):</span>
                     <span className="text-black font-medium">{formatCurrency(sale.total_vat_amount)}</span>
                   </div>
                   <div className="flex justify-between py-3 border-t-2 border-black">
@@ -265,32 +265,32 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             )}
 
             {/* Banking Information Footer */}
-            {companySettings?.[0] && (
-              companySettings[0].bank_name || 
-              companySettings[0].account_number || 
-              companySettings[0].iban
+            {companySettings && (
+              companySettings.bank_name || 
+              companySettings.account_number || 
+              companySettings.iban
             ) && (
               <div className="border-t-2 border-gray-300 pt-6 mt-12">
                 <div className="text-center">
                   <div className="text-xs text-gray-600 space-y-1">
                     <div className="flex justify-center items-center space-x-6">
-                      {companySettings[0].bank_name && (
-                        <span><strong>Banco:</strong> {companySettings[0].bank_name}</span>
+                      {companySettings.bank_name && (
+                        <span><strong>Banco:</strong> {companySettings.bank_name}</span>
                       )}
-                      {companySettings[0].account_holder && (
-                        <span><strong>Titular:</strong> {companySettings[0].account_holder}</span>
+                      {companySettings.account_holder && (
+                        <span><strong>Titular:</strong> {companySettings.account_holder}</span>
                       )}
-                      {companySettings[0].account_number && (
-                        <span><strong>Conta:</strong> {companySettings[0].account_number}</span>
+                      {companySettings.account_number && (
+                        <span><strong>Conta:</strong> {companySettings.account_number}</span>
                       )}
                     </div>
-                    {companySettings[0].iban && (
+                    {companySettings.iban && (
                       <div>
-                        <strong>IBAN:</strong> {companySettings[0].iban}
+                        <strong>IBAN:</strong> {companySettings.iban}
                       </div>
                     )}
                     <div className="mt-2">
-                      <strong>Tel:</strong> {companySettings[0].phone} | <strong>Email:</strong> {companySettings[0].email}
+                      <strong>Tel:</strong> {companySettings.phone} | <strong>Email:</strong> {companySettings.email}
                     </div>
                   </div>
                 </div>
