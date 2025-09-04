@@ -126,35 +126,35 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle>Visualização da Factura</DialogTitle>
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[95vh] overflow-y-auto p-0 m-2 sm:m-4">
+        <DialogHeader className="p-4 sm:p-6 pb-0">
+          <DialogTitle className="text-lg sm:text-xl">Visualização da Factura</DialogTitle>
         </DialogHeader>
         
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {/* Content for PDF Generation */}
-          <div id="invoice-content" className="bg-white p-12 text-black min-h-[600px]">
+          <div id="invoice-content" className="bg-white p-6 sm:p-12 text-black min-h-[600px]">
             {/* Header */}
-            <div className="flex justify-between items-start mb-12">
+            <div className="flex flex-col sm:flex-row justify-between items-start mb-8 sm:mb-12 space-y-4 sm:space-y-0">
               <div className="flex items-center space-x-6">
                 {companySettings?.logo_url && (
                   <img
                     src={companySettings.logo_url}
                     alt="Company Logo"
-                    className="h-24 max-w-40 w-auto object-contain"
+                    className="h-16 sm:h-24 max-w-32 sm:max-w-40 w-auto object-contain"
                   />
                 )}
               </div>
-              <div className="text-right">
-                <h1 className="text-3xl font-bold text-black">FACTURA</h1>
+              <div className="text-left sm:text-right">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black">FACTURA</h1>
               </div>
             </div>
 
             {/* Company and Customer Info */}
-            <div className="grid grid-cols-2 gap-12 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 mb-8 sm:mb-12">
               <div>
                 <div className="space-y-1 text-sm">
-                  <p className="text-lg font-bold text-black">{companySettings?.company_name || 'Empresa'}</p>
+                  <p className="text-base sm:text-lg font-bold text-black">{companySettings?.company_name || 'Empresa'}</p>
                   <p className="text-gray-700">{companySettings?.address || ''}</p>
                   <p className="text-gray-700">{companySettings?.phone || ''}</p>
                   <p className="text-gray-700">{companySettings?.email || ''}</p>
@@ -163,7 +163,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
               </div>
               <div>
                 <div className="space-y-1 text-sm">
-                  <p className="text-lg font-bold text-black">{customer?.name || 'Cliente Geral'}</p>
+                  <p className="text-base sm:text-lg font-bold text-black">{customer?.name || 'Cliente Geral'}</p>
                   {customer?.email && <p className="text-gray-700">Email: {customer.email}</p>}
                   {customer?.phone && <p className="text-gray-700">Tel: {customer.phone}</p>}
                   {customer?.address && <p className="text-gray-700">Endereço: {customer.address}</p>}
@@ -173,7 +173,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             </div>
 
             {/* Sale Details */}
-            <div className="grid grid-cols-2 gap-8 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-8 sm:mb-12">
               <div>
                 <p className="text-sm font-medium text-gray-700">Data da Venda:</p>
                 <p className="text-sm text-black">{new Date(sale.created_at).toLocaleDateString('pt-PT')}</p>
@@ -185,16 +185,16 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             </div>
 
             {/* Products Table */}
-            <div className="mb-8">
-              <table className="w-full border-collapse">
+            <div className="mb-8 overflow-x-auto">
+              <table className="w-full border-collapse min-w-[600px]">
                  <thead>
                    <tr className="bg-black text-white">
-                     <th className="px-4 py-2 text-left font-medium text-sm border-r border-gray-600">Produto</th>
-                     <th className="px-4 py-2 text-left font-medium text-sm border-r border-gray-600">Descrição</th>
-                     <th className="px-4 py-2 text-center font-medium text-sm border-r border-gray-600">Qtd</th>
-                     <th className="px-4 py-2 text-right font-medium text-sm border-r border-gray-600">Preço Unit.</th>
-                     <th className="px-4 py-2 text-right font-medium text-sm border-r border-gray-600">IVA</th>
-                     <th className="px-4 py-2 text-right font-medium text-sm">Total</th>
+                     <th className="px-2 sm:px-4 py-2 text-left font-medium text-xs sm:text-sm border-r border-gray-600">Produto</th>
+                     <th className="px-2 sm:px-4 py-2 text-left font-medium text-xs sm:text-sm border-r border-gray-600 hidden sm:table-cell">Descrição</th>
+                     <th className="px-2 sm:px-4 py-2 text-center font-medium text-xs sm:text-sm border-r border-gray-600">Qtd</th>
+                     <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm border-r border-gray-600">Preço Unit.</th>
+                     <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm border-r border-gray-600 hidden sm:table-cell">IVA</th>
+                     <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">Total</th>
                    </tr>
                  </thead>
                 <tbody className="bg-white">
@@ -202,20 +202,20 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                     const product = products.find(p => p.id === item.product_id);
                     return (
                        <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                         <td className="px-4 py-2 border-b border-gray-200">
-                           <div className="font-medium text-sm text-black">{product?.name || 'Produto'}</div>
+                         <td className="px-2 sm:px-4 py-2 border-b border-gray-200">
+                           <div className="font-medium text-xs sm:text-sm text-black">{product?.name || 'Produto'}</div>
                          </td>
-                         <td className="px-4 py-2 border-b border-gray-200">
-                           <div className="text-sm text-gray-700">{product?.description || '-'}</div>
+                         <td className="px-2 sm:px-4 py-2 border-b border-gray-200 hidden sm:table-cell">
+                           <div className="text-xs sm:text-sm text-gray-700">{product?.description || '-'}</div>
                          </td>
-                         <td className="px-4 py-2 text-center text-sm text-black border-b border-gray-200">{item.quantity}</td>
-                         <td className="px-4 py-2 text-right text-sm text-black border-b border-gray-200">
+                         <td className="px-2 sm:px-4 py-2 text-center text-xs sm:text-sm text-black border-b border-gray-200">{item.quantity}</td>
+                         <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm text-black border-b border-gray-200">
                            {formatCurrency(item.unit_price)}
                          </td>
-                         <td className="px-4 py-2 text-right text-sm text-black border-b border-gray-200">
+                         <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm text-black border-b border-gray-200 hidden sm:table-cell">
                            {formatCurrency(item.vat_amount)}
                          </td>
-                         <td className="px-4 py-2 text-right text-sm font-medium text-black border-b border-gray-200">
+                         <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium text-black border-b border-gray-200">
                            {formatCurrency(item.total)}
                          </td>
                        </tr>
@@ -282,11 +282,11 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 border-t border-gray-200">
+            <Button variant="outline" onClick={onClose} className="order-2 sm:order-1">
               Fechar
             </Button>
-            <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700 order-1 sm:order-2">
               Gerar PDF
             </Button>
           </div>
