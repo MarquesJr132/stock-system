@@ -141,7 +141,7 @@ export const EnhancedHeader = ({ onTabChange }: EnhancedHeaderProps) => {
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">Última Sincronização</span>
                           <span className="text-sm text-muted-foreground">
-                            {formatDistanceToNow(syncStatus.lastSync, { 
+                            {formatDistanceToNow(new Date(syncStatus.lastSync as any), { 
                               addSuffix: true, 
                               locale: ptBR 
                             })}
