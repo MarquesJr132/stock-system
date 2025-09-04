@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Plus, Search, ShoppingCart, CreditCard, Banknote, Users, Printer, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSupabaseData, SaleItem } from "@/hooks/useSupabaseData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -16,8 +17,8 @@ import InvoicePreview from "./InvoicePreview";
 import { formatCurrency } from "@/lib/currency";
 
 const SalesManagement = () => {
-  const { products, customers, sales, addSale, updateSale, fetchSaleItemsBySaleId } = useSupabaseData();
-  const { isAdministrator } = useAuth();
+  const { products, customers, sales, addSale, updateSale, deleteSale, fetchSaleItemsBySaleId } = useSupabaseData();
+  const { isAdministrator, isGerente } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -88,6 +89,20 @@ const SalesManagement = () => {
     }, 0);
 
     return { subtotal, vatAmount, total, profit };
+  };
+
+  const handleDeleteSale = async (saleId: string) => {
+    try {
+      const result = await deleteSale(saleId);
+      if (result.data) {
+        // If the expanded sale was deleted, close expansion
+        if (expandedSaleId === saleId) {
+          setExpandedSaleId(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting sale:', error);
+    }
   };
 
   const handleSaveSale = async () => {
@@ -344,7 +359,7 @@ const SalesManagement = () => {
 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2 pt-2 border-t">
-                      {isAdministrator && (
+                      {(isAdministrator || isGerente) && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -370,6 +385,39 @@ const SalesManagement = () => {
                         <Printer className="h-4 w-4" />
                         Gerar Fatura
                       </Button>
+                      {(isAdministrator || isGerente) && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-2 text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Apagar
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar Eliminação</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja eliminar esta venda? Esta ação não pode ser desfeita.
+                                O stock dos produtos será restaurado.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteSale(sale.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </CardContent>
                 </CollapsibleContent>

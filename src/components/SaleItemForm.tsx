@@ -189,35 +189,50 @@ const SaleItemForm: React.FC<SaleItemFormProps> = ({ products, items, onItemsCha
               <CollapsibleContent>
                 <CardContent className="pt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2">
-                      <Label>Produto</Label>
-                      <Select
-                        value={item.product_id || item.productId || ""}
-                        onValueChange={(value) => updateItem(index, "product_id", value)}
-                      >
-                        <SelectTrigger className="bg-background">
-                          <SelectValue placeholder="Selecionar produto" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border shadow-lg z-50">
-                          {products.filter(product => product.category !== 'encomenda_especial').map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} - {formatCurrency(product.sale_price)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                      <div className="lg:col-span-2">
+                        <Label>Produto</Label>
+                        <Select
+                          value={item.product_id || item.productId || ""}
+                          onValueChange={(value) => updateItem(index, "product_id", value)}
+                        >
+                          <SelectTrigger className="bg-background">
+                            <SelectValue placeholder="Selecionar produto" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border border-border shadow-lg z-50">
+                            {products.filter(product => product.category !== 'encomenda_especial').map((product) => (
+                              <SelectItem key={product.id} value={product.id} disabled={product.quantity <= 0}>
+                                {product.name} - {formatCurrency(product.sale_price)}
+                                <span className={`ml-2 text-xs ${product.quantity <= 0 ? 'text-destructive' : product.quantity <= (product.min_stock || 5) ? 'text-yellow-600' : 'text-muted-foreground'}`}>
+                                  (Stock: {product.quantity})
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedProduct && selectedProduct.quantity <= 0 && (
+                          <p className="text-xs text-destructive mt-1">Produto sem stock disponível</p>
+                        )}
+                      </div>
 
-                    <div>
-                      <Label>Quantidade</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity || 1}
-                        onChange={(e) => updateItem(index, "quantity", e.target.value)}
-                        className="bg-background"
-                      />
-                    </div>
+                      <div>
+                        <Label>Quantidade</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max={selectedProduct ? selectedProduct.quantity : undefined}
+                          value={item.quantity || 1}
+                          onChange={(e) => updateItem(index, "quantity", e.target.value)}
+                          className="bg-background"
+                        />
+                        {selectedProduct && item.quantity > selectedProduct.quantity && (
+                          <p className="text-xs text-destructive mt-1">
+                            Quantidade excede stock disponível ({selectedProduct.quantity})
+                          </p>
+                        )}
+                        {selectedProduct && selectedProduct.quantity <= (selectedProduct.min_stock || 5) && selectedProduct.quantity > 0 && (
+                          <p className="text-xs text-yellow-600 mt-1">Stock baixo</p>
+                        )}
+                      </div>
 
                     <div>
                       <Label>Preço Unitário</Label>

@@ -460,6 +460,27 @@ export const useSupabaseData = () => {
       return { error: 'Data limit exceeded' };
     }
 
+    // Validate stock for all items before creating sale
+    for (const item of saleData.items) {
+      const product = products.find(p => p.id === item.product_id);
+      if (!product) {
+        toast({
+          title: "Erro de Stock",
+          description: `Produto não encontrado: ${item.product_id}`,
+          variant: "destructive",
+        });
+        return { error: 'Product not found' };
+      }
+      if (product.quantity < item.quantity) {
+        toast({
+          title: "Stock Insuficiente",
+          description: `O produto "${product.name}" tem apenas ${product.quantity} unidades em stock. Você tentou vender ${item.quantity}.`,
+          variant: "destructive",
+        });
+        return { error: 'Insufficient stock' };
+      }
+    }
+
     try {
       // First, create the sale
       const newSale = {
@@ -1064,6 +1085,96 @@ export const useSupabaseData = () => {
     return sales.filter(sale => new Date(sale.created_at) >= firstDay).length;
   };
 
+  // Delete functions
+  const deleteSale = async (saleId: string) => {
+    if (!profile) return { error: 'User not authenticated' };
+
+    try {
+      // Get sale items to restore stock
+      const saleItems = await fetchSaleItemsBySaleId(saleId);
+      
+      // Delete sale items first
+      const { error: itemsError } = await supabase
+        .from('sale_items')
+        .delete()
+        .eq('sale_id', saleId);
+
+      if (itemsError) throw itemsError;
+
+      // Delete the sale
+      const { error: saleError } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', saleId);
+
+      if (saleError) throw saleError;
+
+      // Restore product quantities
+      for (const item of saleItems) {
+        const product = products.find(p => p.id === item.product_id);
+        if (product) {
+          await supabase
+            .from('products')
+            .update({ 
+              quantity: product.quantity + item.quantity 
+            })
+            .eq('id', item.product_id);
+        }
+      }
+
+      // Refresh data
+      await fetchAllData();
+
+      toast({
+        title: "Sucesso",
+        description: "Venda eliminada com sucesso",
+      });
+      return { data: true };
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao eliminar venda: " + error.message,
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+  };
+
+  const deleteQuotationComplete = async (quotationId: string) => {
+    if (!profile) return { error: 'User not authenticated' };
+
+    try {
+      // Delete quotation items first
+      const { error: itemsError } = await supabase
+        .from('quotation_items')
+        .delete()
+        .eq('quotation_id', quotationId);
+
+      if (itemsError) throw itemsError;
+
+      // Delete the quotation
+      const { error: quotationError } = await supabase
+        .from('quotations')
+        .delete()
+        .eq('id', quotationId);
+
+      if (quotationError) throw quotationError;
+
+      toast({
+        title: "Sucesso",
+        description: "Cotação eliminada com sucesso",
+      });
+      return { data: true };
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao eliminar cotação: " + error.message,
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+  };
+
   return {
     // Data
     products,
@@ -1084,6 +1195,7 @@ export const useSupabaseData = () => {
     deleteCustomer,
     addSale,
     updateSale,
+    deleteSale,
     fetchSaleItemsBySaleId,
     updateCompanySettings,
     updateTenantLimits,
@@ -1096,6 +1208,7 @@ export const useSupabaseData = () => {
     addQuotation,
     updateQuotation,
     deleteQuotation,
+    deleteQuotationComplete,
     getQuotationItems,
     
     // Helper functions

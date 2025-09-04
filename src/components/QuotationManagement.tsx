@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Eye, Edit, FileText } from "lucide-react";
+import { Search, Plus, Eye, Edit, FileText, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -52,6 +53,7 @@ export default function QuotationManagement() {
     getQuotations,
     addQuotation,
     updateQuotation,
+    deleteQuotationComplete,
     getQuotationItems
   } = useSupabaseData();
 
@@ -237,6 +239,21 @@ export default function QuotationManagement() {
     setIsDialogOpen(true);
   };
 
+  const handleDeleteQuotation = async (quotationId: string) => {
+    try {
+      const result = await deleteQuotationComplete(quotationId);
+      if (result.data) {
+        loadQuotations(); // Refresh the list
+        // If the expanded quotation was deleted, close expansion
+        const newExpanded = new Set(expandedQuotations);
+        newExpanded.delete(quotationId);
+        setExpandedQuotations(newExpanded);
+      }
+    } catch (error) {
+      console.error('Error deleting quotation:', error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       pending: { label: "Pendente", variant: "secondary" as const },
@@ -387,6 +404,37 @@ export default function QuotationManagement() {
                           <Eye className="mr-2 h-4 w-4" />
                           Visualizar
                         </Button>
+                        {(isAdministrator || isGerente) && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Apagar
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar Eliminação</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja eliminar esta cotação? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteQuotation(quotation.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </div>
                     </CardContent>
                   </CollapsibleContent>
