@@ -189,40 +189,40 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             </div>
 
             {/* Products Table */}
-            <div className="mb-12">
+            <div className="mb-8">
               <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-black text-white">
-                    <th className="px-6 py-4 text-left font-medium text-sm border-r border-gray-600">Produto</th>
-                    <th className="px-6 py-4 text-left font-medium text-sm border-r border-gray-600">Descrição</th>
-                    <th className="px-6 py-4 text-center font-medium text-sm border-r border-gray-600">Qtd</th>
-                    <th className="px-6 py-4 text-right font-medium text-sm border-r border-gray-600">Preço Unit.</th>
-                    <th className="px-6 py-4 text-right font-medium text-sm border-r border-gray-600">IVA</th>
-                    <th className="px-6 py-4 text-right font-medium text-sm">Total</th>
-                  </tr>
-                </thead>
+                 <thead>
+                   <tr className="bg-black text-white">
+                     <th className="px-4 py-2 text-left font-medium text-sm border-r border-gray-600">Produto</th>
+                     <th className="px-4 py-2 text-left font-medium text-sm border-r border-gray-600">Descrição</th>
+                     <th className="px-4 py-2 text-center font-medium text-sm border-r border-gray-600">Qtd</th>
+                     <th className="px-4 py-2 text-right font-medium text-sm border-r border-gray-600">Preço Unit.</th>
+                     <th className="px-4 py-2 text-right font-medium text-sm border-r border-gray-600">IVA</th>
+                     <th className="px-4 py-2 text-right font-medium text-sm">Total</th>
+                   </tr>
+                 </thead>
                 <tbody className="bg-white">
                   {saleItems.map((item: any, index: number) => {
                     const product = products.find(p => p.id === item.product_id);
                     return (
-                      <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                        <td className="px-6 py-4 border-b border-gray-200">
-                          <div className="font-medium text-sm text-black">{product?.name || 'Produto'}</div>
-                        </td>
-                        <td className="px-6 py-4 border-b border-gray-200">
-                          <div className="text-sm text-gray-700">{product?.description || '-'}</div>
-                        </td>
-                        <td className="px-6 py-4 text-center text-sm text-black border-b border-gray-200">{item.quantity}</td>
-                        <td className="px-6 py-4 text-right text-sm text-black border-b border-gray-200">
-                          {formatCurrency(item.unit_price)}
-                        </td>
-                        <td className="px-6 py-4 text-right text-sm text-black border-b border-gray-200">
-                          {formatCurrency(item.vat_amount)}
-                        </td>
-                        <td className="px-6 py-4 text-right text-sm font-medium text-black border-b border-gray-200">
-                          {formatCurrency(item.total)}
-                        </td>
-                      </tr>
+                       <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                         <td className="px-4 py-2 border-b border-gray-200">
+                           <div className="font-medium text-sm text-black">{product?.name || 'Produto'}</div>
+                         </td>
+                         <td className="px-4 py-2 border-b border-gray-200">
+                           <div className="text-sm text-gray-700">{product?.description || '-'}</div>
+                         </td>
+                         <td className="px-4 py-2 text-center text-sm text-black border-b border-gray-200">{item.quantity}</td>
+                         <td className="px-4 py-2 text-right text-sm text-black border-b border-gray-200">
+                           {formatCurrency(item.unit_price)}
+                         </td>
+                         <td className="px-4 py-2 text-right text-sm text-black border-b border-gray-200">
+                           {formatCurrency(item.vat_amount)}
+                         </td>
+                         <td className="px-4 py-2 text-right text-sm font-medium text-black border-b border-gray-200">
+                           {formatCurrency(item.total)}
+                         </td>
+                       </tr>
                     );
                   })}
                 </tbody>
