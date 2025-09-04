@@ -333,10 +333,10 @@ const TenantLimitsManagement = () => {
                     <div className="flex-1">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Users className="h-5 w-5" />
-                        {limit.admin_email || `Tenant #${limit.tenant_id.slice(-8)}`}
+                        {limit.admin_full_name || administrators.find(a => a.tenant_id === limit.tenant_id || a.id === limit.tenant_id)?.full_name || `Admin #${limit.tenant_id.slice(-8)}`}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Admin: {limit.admin_full_name || administrators.find(a => a.tenant_id === limit.tenant_id || a.id === limit.tenant_id)?.full_name || 'Nome não disponível'}
+                        Tenant ID: {limit.tenant_id.slice(-8)}
                       </p>
                     </div>
                     <div className="flex gap-2">
