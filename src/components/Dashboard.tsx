@@ -439,21 +439,32 @@ const Dashboard = () => {
                 </p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <defs>
                     <linearGradient id="categoryGradient1" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="hsl(262 83% 58%)" />
-                      <stop offset="100%" stopColor="hsl(220 70% 50%)" />
+                      <stop offset="0%" stopColor="hsl(var(--primary))" />
+                      <stop offset="100%" stopColor="hsl(262 83% 68%)" />
                     </linearGradient>
                     <linearGradient id="categoryGradient2" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="hsl(12 76% 61%)" />
-                      <stop offset="100%" stopColor="hsl(38 92% 50%)" />
+                      <stop offset="0%" stopColor="hsl(var(--accent))" />
+                      <stop offset="100%" stopColor="hsl(38 92% 60%)" />
                     </linearGradient>
                     <linearGradient id="categoryGradient3" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="hsl(142 76% 36%)" />
-                      <stop offset="100%" stopColor="hsl(172 76% 45%)" />
+                      <stop offset="0%" stopColor="hsl(142 76% 46%)" />
+                      <stop offset="100%" stopColor="hsl(172 76% 55%)" />
                     </linearGradient>
+                    <linearGradient id="categoryGradient4" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="hsl(315 100% 70%)" />
+                      <stop offset="100%" stopColor="hsl(280 100% 75%)" />
+                    </linearGradient>
+                    <linearGradient id="categoryGradient5" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="hsl(45 100% 65%)" />
+                      <stop offset="100%" stopColor="hsl(25 100% 70%)" />
+                    </linearGradient>
+                    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="rgba(0,0,0,0.1)" />
+                    </filter>
                   </defs>
                   <Pie
                     data={products.reduce((acc, product) => {
@@ -471,17 +482,57 @@ const Dashboard = () => {
                       return acc;
                     }, [] as any[])}
                     cx="50%"
-                    cy="50%"
+                    cy="45%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={90}
+                    label={({ name, percent, value, index, cx, cy, midAngle, innerRadius, outerRadius }) => {
+                      const radius = innerRadius + (outerRadius - innerRadius) * 1.3;
+                      const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+                      const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+                      
+                      if (percent < 0.05) return null; // Hide labels for slices < 5%
+                      
+                      return (
+                        <text 
+                          x={x} 
+                          y={y} 
+                          fill="hsl(var(--foreground))" 
+                          textAnchor={x > cx ? 'start' : 'end'} 
+                          dominantBaseline="central"
+                          className="text-sm font-medium"
+                        >
+                          {`${name}`}
+                        </text>
+                      );
+                    }}
+                    outerRadius={100}
+                    innerRadius={35}
+                    paddingAngle={2}
                     fill="url(#categoryGradient1)"
                     dataKey="value"
+                    filter="url(#shadow)"
                   >
-                    {products.filter(product => product.category !== 'encomenda_especial').map((_, index) => {
-                      const gradients = ['url(#categoryGradient1)', 'url(#categoryGradient2)', 'url(#categoryGradient3)'];
+                    {products.reduce((acc, product) => {
+                      const category = product.category || 'Sem categoria';
+                      const existing = acc.find(item => item.name === category);
+                      if (!existing) {
+                        acc.push({ name: category });
+                      }
+                      return acc;
+                    }, [] as any[]).map((_, index) => {
+                      const gradients = [
+                        'url(#categoryGradient1)', 
+                        'url(#categoryGradient2)', 
+                        'url(#categoryGradient3)',
+                        'url(#categoryGradient4)',
+                        'url(#categoryGradient5)'
+                      ];
                       return (
-                        <Cell key={`cell-${index}`} fill={gradients[index % gradients.length]} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={gradients[index % gradients.length]}
+                          stroke="rgba(255,255,255,0.8)"
+                          strokeWidth={2}
+                        />
                       );
                     })}
                   </Pie>
@@ -490,8 +541,15 @@ const Dashboard = () => {
                     contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
-                      borderRadius: '12px',
-                      boxShadow: 'var(--shadow-card)'
+                      borderRadius: '16px',
+                      boxShadow: 'var(--shadow-elegant)',
+                      padding: '12px 16px',
+                      fontSize: '14px'
+                    }}
+                    labelStyle={{
+                      color: 'hsl(var(--foreground))',
+                      fontWeight: '600',
+                      marginBottom: '4px'
                     }}
                   />
                 </PieChart>
