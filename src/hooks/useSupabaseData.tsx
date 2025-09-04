@@ -270,12 +270,28 @@ export const useSupabaseData = () => {
     const limitCheck = await checkDataLimit(tenantId);
     
     if (!limitCheck.canCreate) {
+      // Handle offline mode differently
+      if (limitCheck.isOffline) {
+        toast({
+          title: "Modo Offline",
+          description: limitCheck.warning || "Verificação de limite pausada - modo offline",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Limite Atingido",
+          description: "Você atingiu o limite mensal de dados. Entre em contato com o seu administrador para aumentar o limite.",
+          variant: "destructive",
+        });
+        return { error: 'Data limit exceeded' };
+      }
+    } else if (limitCheck.warning) {
+      // Show offline warning
       toast({
-        title: "Limite Atingido",
-        description: "Você atingiu o limite mensal de dados. Entre em contato com o seu administrador para aumentar o limite.",
-        variant: "destructive",
+        title: "Modo Offline",
+        description: limitCheck.warning,
+        variant: "default",
       });
-      return { error: 'Data limit exceeded' };
     }
 
     const newProduct = {
@@ -857,26 +873,24 @@ export const useSupabaseData = () => {
   };
 
   const getAllTenantLimits = async () => {
-    if (!profile?.role || profile.role !== 'superuser') {
+    try {
+      // First cleanup orphaned records
+      await supabase.rpc('cleanup_orphaned_tenant_limits');
       
-      return { error: 'Apenas superusers podem ver todos os limites' };
+      // Use the new function that includes admin info
+      const { data, error } = await supabase
+        .rpc('get_tenant_limits_with_admin_info');
+
+      if (error) {
+        console.error('Error fetching tenant limits:', error);
+        return { data: null, error: error.message };
+      }
+
+      return { data: data || [] };
+    } catch (error: any) {
+      console.error('Exception fetching tenant limits:', error);
+      return { data: null, error: error.message };
     }
-
-    
-    const { data, error } = await supabase
-      .from('tenant_limits')
-      .select(`
-        *
-      `)
-      .order('created_at', { ascending: false });
-
-    
-    if (error) {
-      console.error('Error fetching tenant limits:', error);
-      return { error: error.message };
-    }
-
-    return { data };
   };
 
   const checkUserLimit = async (tenantId: string) => {
@@ -902,6 +916,28 @@ export const useSupabaseData = () => {
 
   const checkDataLimit = async (tenantId: string) => {
     try {
+      // Check if we're offline
+      if (!navigator.onLine) {
+        // Get cached limits from localStorage
+        const cachedLimits = localStorage.getItem(`tenant_limits_${tenantId}`);
+        if (cachedLimits) {
+          const limits = JSON.parse(cachedLimits);
+          const canCreate = limits.current_month_usage < limits.monthly_data_limit;
+          if (!canCreate) {
+            return { 
+              canCreate: false, 
+              error: "Limite de dados atingido (verificação offline)",
+              isOffline: true 
+            };
+          }
+        }
+        // If offline and no cached limits, allow creation with warning
+        return { 
+          canCreate: true, 
+          warning: "Modo offline: validação de limite pausada",
+          isOffline: true 
+        };
+      }
       
       const { data, error } = await supabase
         .rpc('check_data_limit', {
@@ -909,7 +945,6 @@ export const useSupabaseData = () => {
           data_type_param: 'check'
         });
 
-      
       if (error) {
         console.error('Error checking data limit:', error);
         return { canCreate: false, error: error.message };
@@ -918,6 +953,14 @@ export const useSupabaseData = () => {
       return { canCreate: data };
     } catch (error: any) {
       console.error('Exception checking data limit:', error);
+      // If network error and offline, allow creation
+      if (!navigator.onLine) {
+        return { 
+          canCreate: true, 
+          warning: "Erro de rede: criação permitida offline",
+          isOffline: true 
+        };
+      }
       return { canCreate: false, error: error.message };
     }
   };

@@ -1382,6 +1382,22 @@ export type Database = {
         Args: { current_value: number; previous_value: number }
         Returns: string
       }
+      get_tenant_limits_with_admin_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          admin_email: string
+          admin_full_name: string
+          created_at: string
+          current_month_usage: number
+          current_month_users: number
+          id: string
+          limit_period_start: string
+          monthly_data_limit: number
+          monthly_user_limit: number
+          tenant_id: string
+          updated_at: string
+        }[]
+      }
       get_user_profile: {
         Args: { user_uuid: string }
         Returns: {

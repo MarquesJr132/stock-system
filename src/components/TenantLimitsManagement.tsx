@@ -193,6 +193,22 @@ const TenantLimitsManagement = () => {
           </p>
         </div>
         
+        <Button 
+          variant="outline" 
+          onClick={async () => {
+            try {
+              await supabase.rpc('cleanup_orphaned_tenant_limits');
+              toast.success('Registros órfãos removidos com sucesso!');
+              setTimeout(() => loadTenantLimits(), 500);
+            } catch (error) {
+              toast.error('Erro ao limpar registros órfãos');
+            }
+          }}
+          className="text-sm"
+        >
+          Limpar Órfãos
+        </Button>
+        
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
@@ -305,10 +321,10 @@ const TenantLimitsManagement = () => {
                     <div className="flex-1">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Users className="h-5 w-5" />
-                        Tenant #{limit.tenant_id.slice(-8)}
+                        {limit.admin_email || `Tenant #${limit.tenant_id.slice(-8)}`}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Admin: {administrators.find(a => a.tenant_id === limit.tenant_id || a.id === limit.tenant_id)?.full_name || 'Nome não disponível'}
+                        Admin: {limit.admin_full_name || administrators.find(a => a.tenant_id === limit.tenant_id || a.id === limit.tenant_id)?.full_name || 'Nome não disponível'}
                       </p>
                     </div>
                     <div className="flex gap-2">
