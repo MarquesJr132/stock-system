@@ -157,29 +157,55 @@ export const useOfflineSync = () => {
 
         case 'sales':
           if (type === 'create') {
-            // Handle sales with items
-            const { sale_items, ...saleData } = data;
-            const { data: createdSale } = await supabase
+            // Handle sales with items idempotently using client-assigned ID
+            const { sale_items, ...saleData } = data as any;
+            const providedId = (saleData as any).id || ((typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? (crypto as any).randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
+
+            let insertedNew = false;
+            let effectiveSaleId = providedId;
+
+            const { data: createdSale, error: insertError } = await supabase
               .from('sales')
-              .insert({ ...saleData, tenant_id })
+              .insert({ id: providedId, ...saleData, tenant_id })
               .select()
               .single();
 
-            if (createdSale && sale_items?.length > 0) {
+            if (insertError) {
+              // If duplicate key, the sale already exists – continue without failing
+              if ((insertError as any).code === '23505' || (insertError as any).message?.toLowerCase?.().includes('duplicate')) {
+                insertedNew = false;
+              } else {
+                throw insertError;
+              }
+            } else if (createdSale) {
+              insertedNew = true;
+              effectiveSaleId = createdSale.id;
+            }
+
+            // Replace sale items to avoid duplicates
+            await supabase
+              .from('sale_items')
+              .delete()
+              .eq('sale_id', effectiveSaleId)
+              .eq('tenant_id', tenant_id);
+
+            if (sale_items?.length > 0) {
               const itemsWithSaleId = sale_items.map((item: any) => ({
                 ...item,
-                sale_id: createdSale.id,
+                sale_id: effectiveSaleId,
                 tenant_id
               }));
               await supabase.from('sale_items').insert(itemsWithSaleId);
 
-              // Update product quantities
-              for (const item of sale_items) {
-                await supabase.rpc('atomic_stock_update', {
-                  p_product_id: item.product_id,
-                  p_quantity_change: -item.quantity,
-                  p_tenant_id: tenant_id
-                });
+              // Only update product quantities if we actually inserted a new sale record
+              if (insertedNew) {
+                for (const item of sale_items) {
+                  await supabase.rpc('atomic_stock_update', {
+                    p_product_id: item.product_id,
+                    p_quantity_change: -item.quantity,
+                    p_tenant_id: tenant_id
+                  });
+                }
               }
             }
           } else if (type === 'update') {

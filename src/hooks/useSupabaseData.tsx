@@ -803,8 +803,12 @@ export const useSupabaseData = () => {
         }
       }
 
-      // Create sale
+      // Prepare sale payload with a client-assigned id for idempotency
+      const saleId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+        ? (crypto as any).randomUUID()
+        : `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
       const newSale = {
+        id: saleId,
         customer_id: saleData.customer_id,
         payment_method: saleData.payment_method,
         total_amount: saleData.total_amount,
@@ -916,8 +920,8 @@ export const useSupabaseData = () => {
         }
       } else {
         // Offline mode: Create temporary sale and update local stock
-        const tempSaleId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const tempSale = { ...newSale, id: tempSaleId, created_at: new Date().toISOString() };
+        const tempSaleId = saleId;
+        const tempSale = { ...newSale, created_at: new Date().toISOString() };
         
         // Create temporary sale items
         const tempSaleItems = saleData.items.map((item: any) => ({
