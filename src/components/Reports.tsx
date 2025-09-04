@@ -315,7 +315,7 @@ const Reports = () => {
                   <LineChart data={salesByDay}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <YAxis />
+                    <YAxis tickFormatter={(value) => formatCurrency(Number(value))} />
                     <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Vendas']} />
                     <Line 
                       type="monotone" 
