@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, User, LogOut, Moon, Sun } from 'lucide-react';
+import { Search, User, LogOut, Moon, Sun, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { GlobalSearch } from '@/components/GlobalSearch';
 import { useAuth } from '@/contexts/AuthContext';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface EnhancedHeaderProps {
   onTabChange?: (tab: string) => void;
@@ -50,6 +51,9 @@ export const EnhancedHeader = ({ onTabChange }: EnhancedHeaderProps) => {
   return (
     <header className="h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
       <div className="flex h-14 items-center px-4 gap-4">
+        {/* Sidebar Trigger */}
+        <SidebarTrigger className="h-8 w-8 p-0" />
+        
         {/* Logo/Brand */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">

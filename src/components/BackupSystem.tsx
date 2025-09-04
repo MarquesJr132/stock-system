@@ -60,45 +60,6 @@ export const BackupSystem = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Backup Manual */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Backup
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Tabelas para Backup</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {tables.map((table) => (
-                  <label key={table.value} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedTables.includes(table.value)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedTables([...selectedTables, table.value]);
-                        } else {
-                          setSelectedTables(selectedTables.filter(t => t !== table.value));
-                        }
-                      }}
-                      className="rounded"
-                    />
-                    <span className="text-sm">{table.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <Button onClick={handleBackup} disabled={isLoading} className="w-full">
-              <Download className="h-4 w-4 mr-2" />
-              {isLoading ? 'Criando...' : 'Criar Backup'}
-            </Button>
-          </CardContent>
-        </Card>
-
-
         {/* Exportar Dados */}
         <Card>
           <CardHeader>
