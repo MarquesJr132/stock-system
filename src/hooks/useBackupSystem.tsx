@@ -29,14 +29,27 @@ export const useBackupSystem = () => {
       if (error) throw error;
 
       if (data.success) {
-        // Download backup as JSON file
-        const blob = new Blob([JSON.stringify(data.backup, null, 2)], {
-          type: 'application/json'
+        // Convert backup data to Excel format
+        const workbook = XLSX.utils.book_new();
+        
+        // Add each table as a separate sheet
+        Object.entries(data.backup).forEach(([tableName, tableData]: [string, any]) => {
+          if (Array.isArray(tableData) && tableData.length > 0) {
+            const worksheet = XLSX.utils.json_to_sheet(tableData);
+            XLSX.utils.book_append_sheet(workbook, worksheet, tableName.substring(0, 31));
+          }
         });
+        
+        // Generate Excel file
+        const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { 
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        });
+        
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `backup_${new Date().toISOString().split('T')[0]}.xlsx`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -44,7 +57,7 @@ export const useBackupSystem = () => {
 
         toast({
           title: "Backup criado",
-          description: `Backup realizado com sucesso (${(data.size / 1024).toFixed(1)} KB)`
+          description: `Backup Excel realizado com sucesso`
         });
 
         return data.backup;

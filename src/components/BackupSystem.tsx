@@ -125,19 +125,10 @@ export const BackupSystem = () => {
             </div>
             <div>
               <Label>Formato</Label>
-              <Select value={exportFormat} onValueChange={(value: 'excel') => setExportFormat(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="excel">
-                    <div className="flex items-center gap-2">
-                      <FileSpreadsheet className="h-4 w-4" />
-                      Excel
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/50">
+                <FileSpreadsheet className="h-4 w-4" />
+                <span className="text-sm font-medium">Excel (.xlsx)</span>
+              </div>
             </div>
             <Button onClick={handleExport} disabled={isLoading} className="w-full">
               <Download className="h-4 w-4 mr-2" />
