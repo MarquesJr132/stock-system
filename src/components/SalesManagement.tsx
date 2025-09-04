@@ -49,7 +49,17 @@ const SalesManagement = () => {
 
   const loadSaleForEdit = async (sale: any) => {
     try {
-      const saleItems = await fetchSaleItemsBySaleId(sale.id);
+      let saleItems = await fetchSaleItemsBySaleId(sale.id);
+
+      // Fallback: itens embutidos na venda (para vendas antigas/offline)
+      if ((!saleItems || saleItems.length === 0) && Array.isArray((sale as any).sale_items) && (sale as any).sale_items.length > 0) {
+        saleItems = (sale as any).sale_items.map((it: any) => ({
+          ...it,
+          sale_id: sale.id,
+          tenant_id: sale.tenant_id
+        }));
+      }
+
       const formattedItems = saleItems.map(item => {
         const product = products.find(p => p.id === item.product_id);
         return {

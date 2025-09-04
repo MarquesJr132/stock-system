@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   BarChart, 
   Bar, 
@@ -33,6 +34,7 @@ import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { formatCurrency } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import * as XLSX from "xlsx";
 
 const Reports = () => {
   const { products, customers, sales, getTotalValue, getDailyProfit } = useSupabaseData();
@@ -181,6 +183,31 @@ const Reports = () => {
               <SelectItem value="365">Último ano</SelectItem>
             </SelectContent>
           </Select>
+
+          {(profile?.role === 'administrator' || profile?.role === 'gerente' || profile?.role === 'superuser') && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                const rows = filteredSales.map((s) => {
+                  const c = customers.find((x) => x.id === s.customer_id);
+                  return {
+                    Data: new Date(s.created_at).toLocaleDateString('pt-PT'),
+                    Cliente: c?.name || 'Cliente Geral',
+                    Total: s.total_amount,
+                    IVA: s.total_vat_amount,
+                    Lucro: s.total_profit,
+                    Pagamento: s.payment_method,
+                  };
+                });
+                const ws = XLSX.utils.json_to_sheet(rows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Vendas');
+                XLSX.writeFile(wb, `relatorio_vendas_${new Date().toISOString().slice(0,10)}.xlsx`);
+              }}
+            >
+              Exportar Excel
+            </Button>
+          )}
         </div>
       </div>
 

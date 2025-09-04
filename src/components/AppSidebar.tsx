@@ -50,11 +50,8 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
 
   const mainItems = getMainItems();
 
-  // Admin items - exclude company, users, and audit for managers
   const adminItems = [
     { value: "suppliers", icon: Truck, label: "Fornecedores" },
-    // Hide purchase orders for now
-    // { value: "purchase-orders", icon: FileText, label: "Compras" }
   ];
 
   // Only administrators (not managers) get access to company, users, and integrations
@@ -66,6 +63,11 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     adminItems.push(
       { value: "integrations", icon: Smartphone, label: "Integrações" }
     );
+  }
+
+  // Managers and Administrators can access Audit Logs
+  if (userIsAdmin || userIsGerente) {
+    adminItems.push({ value: "audit", icon: History, label: "Auditoria" });
   }
 
   const isActive = (tab: string) => activeTab === tab;

@@ -33,10 +33,21 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
     if (!sale?.id) return;
     setLoading(true);
     try {
-      const items = await fetchSaleItemsBySaleId(sale.id);
-      setSaleItems(items);
+      let items = await fetchSaleItemsBySaleId(sale.id);
+
+      // Fallback: algumas vendas antigas podem ter os itens embutidos no objeto da venda
+      if ((!items || items.length === 0) && Array.isArray((sale as any).sale_items) && (sale as any).sale_items.length > 0) {
+        items = (sale as any).sale_items.map((it: any) => ({
+          ...it,
+          sale_id: sale.id,
+          tenant_id: sale.tenant_id
+        }));
+      }
+
+      setSaleItems(items || []);
     } catch (error) {
       console.error('Error loading sale items:', error);
+      setSaleItems([]);
     } finally {
       setLoading(false);
     }
