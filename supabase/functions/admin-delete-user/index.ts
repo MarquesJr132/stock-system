@@ -145,13 +145,8 @@ serve(async (req) => {
       });
     }
 
-    // Reassign created_by data to another admin in tenant before deletion
-    const { error: reassignErr } = await supabaseAdmin.rpc('reassign_user_data_before_deletion', {
-      user_profile_id: targetProfileId as string,
-    });
-    if (reassignErr) {
-      console.warn('Reassign data warning:', reassignErr.message);
-    }
+    // Skipping heavy reassignment to avoid timeouts; data attribution can be handled separately if needed
+    // Previously: await supabaseAdmin.rpc('reassign_user_data_before_deletion', { user_profile_id: targetProfileId as string })
 
     // Delete from auth first (if exists)
     if (targetUserId) {
