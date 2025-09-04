@@ -2,7 +2,7 @@
   "name": "Sistema de Gestão de Stock",
   "short_name": "StockSystem",
   "description": "Sistema completo de gestão de inventário e vendas",
-  "start_url": "/",
+  "start_url": "/stock-system/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
@@ -35,21 +35,21 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "Acessar dashboard principal",
-      "url": "/",
+      "url": "/stock-system/",
       "icons": [{ "src": "/placeholder.svg", "sizes": "96x96" }]
     },
     {
       "name": "Vendas",
       "short_name": "Vendas",
       "description": "Gestão de vendas",
-      "url": "/?tab=sales",
+      "url": "/stock-system/?tab=sales",
       "icons": [{ "src": "/placeholder.svg", "sizes": "96x96" }]
     },
     {
       "name": "Produtos",
       "short_name": "Produtos",
       "description": "Gestão de produtos",
-      "url": "/?tab=products",
+      "url": "/stock-system/?tab=products",
       "icons": [{ "src": "/placeholder.svg", "sizes": "96x96" }]
     }
   ],

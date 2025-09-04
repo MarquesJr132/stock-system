@@ -32,7 +32,8 @@ export const usePWA = () => {
     const registerSW = async () => {
       if ('serviceWorker' in navigator) {
         try {
-          const registration = await navigator.serviceWorker.register('/sw.js');
+          const basePath = import.meta.env.PROD ? '/stock-system' : '';
+          const registration = await navigator.serviceWorker.register(`${basePath}/sw.js`);
           setSwRegistration(registration);
           console.log('Service Worker registered successfully');
 

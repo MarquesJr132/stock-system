@@ -1,11 +1,14 @@
 const CACHE_NAME = 'stock-system-v1.0.0';
 const RUNTIME_CACHE = 'runtime-cache-v1';
 
+// Get base path for GitHub Pages deployment
+const BASE_PATH = '/stock-system';
+
 // Critical resources to cache immediately
 const PRECACHE_URLS = [
-  '/',
-  '/manifest.json',
-  '/favicon.ico'
+  BASE_PATH + '/',
+  BASE_PATH + '/manifest.json',
+  BASE_PATH + '/favicon.ico'
 ];
 
 // API endpoints to cache for offline functionality
@@ -158,6 +161,15 @@ async function handleGeneralRequest(request) {
       console.log('Serving cached response:', request.url);
       return cachedResponse;
     }
+    
+    // For navigation requests, try to return the main app
+    if (request.mode === 'navigate') {
+      const appResponse = await cache.match(BASE_PATH + '/');
+      if (appResponse) {
+        return appResponse;
+      }
+    }
+    
     throw error;
   }
 }
@@ -201,7 +213,7 @@ self.addEventListener('notificationclick', (event) => {
   
   event.notification.close();
   
-  const urlToOpen = event.notification.data?.url || '/';
+  const urlToOpen = event.notification.data?.url || BASE_PATH + '/';
   
   event.waitUntil(
     self.clients.matchAll({ type: 'window' }).then((clientList) => {
