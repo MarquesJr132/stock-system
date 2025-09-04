@@ -188,6 +188,45 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_statistics: {
+        Row: {
+          created_at: string
+          id: string
+          month_year: string
+          tenant_id: string
+          total_customers: number
+          total_profit: number
+          total_sales: number
+          total_stock: number
+          total_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month_year: string
+          tenant_id: string
+          total_customers?: number
+          total_profit?: number
+          total_sales?: number
+          total_stock?: number
+          total_value?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month_year?: string
+          tenant_id?: string
+          total_customers?: number
+          total_profit?: number
+          total_sales?: number
+          total_stock?: number
+          total_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -955,6 +994,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      calculate_monthly_statistics: {
+        Args: { target_month: string; target_tenant_id: string }
+        Returns: undefined
+      }
       check_data_limit: {
         Args: { data_type_param: string; tenant_uuid: string }
         Returns: boolean
@@ -987,6 +1030,10 @@ export type Database = {
       }
       get_current_user_tenant: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_percentage_change: {
+        Args: { current_value: number; previous_value: number }
         Returns: string
       }
       get_user_profile: {

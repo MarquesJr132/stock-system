@@ -1,4 +1,4 @@
-
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -30,9 +30,45 @@ const Dashboard = () => {
     getDailyProfit, 
     getLowStockProducts,
     getTopSellingProducts,
-    getSalesData
+    getSalesData,
+    calculateCurrentMonthStatistics,
+    getPercentageChanges
   } = useSupabaseData();
   const { isAdministrator } = useAuth();
+
+  const [percentages, setPercentages] = useState({
+    stockChange: 'N/A',
+    valueChange: 'N/A', 
+    customerChange: 'N/A',
+    profitChange: 'N/A'
+  });
+
+  // Calculate percentages on component mount
+  useEffect(() => {
+    const calculatePercentages = async () => {
+      if (!loading && calculateCurrentMonthStatistics && getPercentageChanges) {
+        try {
+          // Calculate current month statistics first
+          await calculateCurrentMonthStatistics();
+          
+          // Then get percentage changes
+          const changes = await getPercentageChanges();
+          if (changes && typeof changes === 'object') {
+            setPercentages({
+              stockChange: changes.stockChange || 'N/A',
+              valueChange: changes.valueChange || 'N/A',
+              customerChange: changes.customerChange || 'N/A',
+              profitChange: changes.profitChange || 'N/A'
+            });
+          }
+        } catch (error) {
+          console.error('Error calculating percentages:', error);
+        }
+      }
+    };
+
+    calculatePercentages();
+  }, [loading, calculateCurrentMonthStatistics, getPercentageChanges]);
 
   if (loading) {
     return (
@@ -75,34 +111,41 @@ const Dashboard = () => {
   const topProducts = getTopSellingProducts();
   const salesData = getSalesData();
 
+  // Helper function to determine change type
+  const getChangeType = (change: string) => {
+    if (change === 'N/A') return 'neutral';
+    const numericChange = parseFloat(change.replace('%', ''));
+    return numericChange >= 0 ? 'positive' : 'negative';
+  };
+
   const stats = [
     {
       title: "Valor Total do Stock",
       value: formatCurrency(totalValue),
       icon: Banknote,
-      change: "+5.2%",
-      changeType: "positive"
+      change: percentages.valueChange,
+      changeType: getChangeType(percentages.valueChange)
     },
     {
       title: "Produtos em Stock",
       value: totalStock.toString(),
       icon: Package,
-      change: "-2.1%",
-      changeType: "negative"
+      change: percentages.stockChange,
+      changeType: getChangeType(percentages.stockChange)
     },
     {
       title: "Clientes Registados",
       value: customers.length.toString(),
       icon: Users,
-      change: "+12.5%",
-      changeType: "positive"
+      change: percentages.customerChange,
+      changeType: getChangeType(percentages.customerChange)
     },
     ...(isAdministrator ? [{
       title: "Lucro Hoje",
       value: formatCurrency(dailyProfit),
       icon: Target,
-      change: "+8.1%",
-      changeType: "positive"
+      change: percentages.profitChange,
+      changeType: getChangeType(percentages.profitChange) as 'positive' | 'negative' | 'neutral'
     }] : [])
   ];
 
@@ -158,12 +201,16 @@ const Dashboard = () => {
                 <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
                   stat.changeType === "positive" 
                     ? "bg-green-500/10 text-green-500" 
-                    : "bg-red-500/10 text-red-500"
+                    : stat.changeType === "negative"
+                    ? "bg-red-500/10 text-red-500"
+                    : "bg-gray-500/10 text-gray-500"
                 }`}>
                   {stat.changeType === "positive" ? (
                     <TrendingUp className="h-3 w-3" />
-                  ) : (
+                  ) : stat.changeType === "negative" ? (
                     <TrendingDown className="h-3 w-3" />
+                  ) : (
+                    <Target className="h-3 w-3" />
                   )}
                   <span>{stat.change}</span>
                 </div>

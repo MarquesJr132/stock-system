@@ -1179,6 +1179,92 @@ export const useSupabaseData = () => {
     return sales.filter(sale => new Date(sale.created_at) >= firstDay).length;
   };
 
+  // New functions for percentage calculations
+  const calculateCurrentMonthStatistics = async () => {
+    if (!profile) return;
+    
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM format
+    const tenantId = profile.tenant_id || profile.id;
+    
+    // Call the database function to calculate and store current month statistics
+    await supabase.rpc('calculate_monthly_statistics', {
+      target_tenant_id: tenantId,
+      target_month: currentMonth
+    });
+  };
+
+  const getPercentageChanges = async () => {
+    if (!profile) return {};
+    
+    const tenantId = profile.tenant_id || profile.id;
+    const currentDate = new Date();
+    const currentMonth = currentDate.toISOString().substring(0, 7);
+    
+    // Get previous month
+    const prevDate = new Date(currentDate);
+    prevDate.setMonth(prevDate.getMonth() - 1);
+    const previousMonth = prevDate.toISOString().substring(0, 7);
+    
+    try {
+      // Get current and previous month statistics
+      const { data: currentStats } = await supabase
+        .from('monthly_statistics')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('month_year', currentMonth)
+        .single();
+        
+      const { data: previousStats } = await supabase
+        .from('monthly_statistics')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('month_year', previousMonth)
+        .single();
+      
+      // Calculate current values
+      const currentTotalStock = getTotalStock();
+      const currentTotalValue = getTotalValue();
+      const currentCustomers = customers.length;
+      const currentDailyProfit = getDailyProfit();
+      
+      // Calculate percentages using the database function
+      const { data: stockChange } = await supabase.rpc('get_percentage_change', {
+        current_value: currentTotalStock,
+        previous_value: previousStats?.total_stock || 0
+      });
+      
+      const { data: valueChange } = await supabase.rpc('get_percentage_change', {
+        current_value: currentTotalValue,
+        previous_value: previousStats?.total_value || 0
+      });
+      
+      const { data: customerChange } = await supabase.rpc('get_percentage_change', {
+        current_value: currentCustomers,
+        previous_value: previousStats?.total_customers || 0
+      });
+      
+      const { data: profitChange } = await supabase.rpc('get_percentage_change', {
+        current_value: currentDailyProfit,
+        previous_value: previousStats?.total_profit || 0
+      });
+      
+      return {
+        stockChange: stockChange || 'N/A',
+        valueChange: valueChange || 'N/A',
+        customerChange: customerChange || 'N/A',
+        profitChange: profitChange || 'N/A'
+      };
+    } catch (error) {
+      console.error('Error calculating percentage changes:', error);
+      return {
+        stockChange: 'N/A',
+        valueChange: 'N/A',
+        customerChange: 'N/A',
+        profitChange: 'N/A'
+      };
+    }
+  };
+
 
   return {
     // Data
@@ -1225,6 +1311,10 @@ export const useSupabaseData = () => {
     getTopSellingProducts,
     getCurrentMonthSales,
     getCurrentMonthProfit,
-    getCurrentMonthSalesQuantity
+    getCurrentMonthSalesQuantity,
+    
+    // New percentage calculation functions
+    calculateCurrentMonthStatistics,
+    getPercentageChanges
   };
 };
