@@ -1,4 +1,4 @@
-import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, User as UserIcon, Building, Truck, FileText, Shield, LogOut, PackageCheck } from "lucide-react";
+import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, User as UserIcon, Building, Truck, FileText, Shield, LogOut, PackageCheck, Smartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
@@ -33,6 +33,8 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     { value: "special-orders", icon: PackageCheck, label: "Encomendas" },
     { value: "customers", icon: Users, label: "Clientes" },
     { value: "reports", icon: TrendingUp, label: "Relatórios" },
+    { value: "business", icon: TrendingUp, label: "Business" },
+    { value: "integrations", icon: Smartphone, label: "Integrações" },
     { value: "profile", icon: UserIcon, label: "Perfil" }
   ];
 

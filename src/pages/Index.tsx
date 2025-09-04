@@ -18,7 +18,11 @@ import { AuditLogs } from "@/components/AuditLogs";
 import SuperuserManagement from "@/components/SuperuserManagement";
 import { LoadingSpinner } from "@/components/layout/LoadingSpinner";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BusinessReports } from '@/components/business/BusinessReports';
+import { PromotionsManagement } from '@/components/business/PromotionsManagement';
+import { StockMovements } from '@/components/business/StockMovements';
+import { IntegrationHub } from '@/components/IntegrationHub';
 
 const Index = () => {
   const { user, loading, isSuperuser } = useAuth();
@@ -52,6 +56,29 @@ const Index = () => {
         return <CustomerManagement />;
       case "reports":
         return <Reports />;
+      case "business":
+        return (
+          <div className="space-y-6">
+            <Tabs defaultValue="reports" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="reports">Relatórios</TabsTrigger>
+                <TabsTrigger value="promotions">Promoções</TabsTrigger>
+                <TabsTrigger value="stock-movements">Stock</TabsTrigger>
+              </TabsList>
+              <TabsContent value="reports">
+                <BusinessReports />
+              </TabsContent>
+              <TabsContent value="promotions">
+                <PromotionsManagement />
+              </TabsContent>
+              <TabsContent value="stock-movements">
+                <StockMovements />
+              </TabsContent>
+            </Tabs>
+          </div>
+        );
+      case "integrations":
+        return <IntegrationHub />;
       case "profile":
         return <ProfileManagement />;
       case "company":
