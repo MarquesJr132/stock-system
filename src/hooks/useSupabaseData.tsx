@@ -347,16 +347,35 @@ export const useSupabaseData = () => {
   };
 
   const fetchSaleItemsBySaleId = async (saleId: string) => {
-    const { data, error } = await supabase
-      .from('sale_items')
-      .select('*')
-      .eq('sale_id', saleId);
+    console.debug('fetchSaleItemsBySaleId: Loading items for sale:', saleId, 'Online:', syncStatus.isOnline);
+    
+    if (syncStatus.isOnline) {
+      try {
+        const { data, error } = await supabase
+          .from('sale_items')
+          .select('*')
+          .eq('sale_id', saleId);
 
-    if (error) {
-      console.error('Error fetching sale items:', error);
+        if (error) throw error;
+        
+        console.debug('fetchSaleItemsBySaleId: Online fetch successful:', data?.length || 0, 'items');
+        return data || [];
+      } catch (error) {
+        console.warn('fetchSaleItemsBySaleId: Online fetch failed, trying offline:', error);
+        // Fall through to offline fetch
+      }
+    }
+
+    // Offline or online failed - try IndexedDB
+    try {
+      const offlineSaleItems = await getData('sale_items');
+      const filteredItems = offlineSaleItems.filter((item: any) => item.sale_id === saleId);
+      console.debug('fetchSaleItemsBySaleId: Offline fetch successful:', filteredItems.length, 'items');
+      return filteredItems;
+    } catch (offlineError) {
+      console.error('fetchSaleItemsBySaleId: Offline fetch failed:', offlineError);
       return [];
     }
-    return data || [];
   };
 
   const fetchCompanySettings = async () => {
@@ -870,6 +889,16 @@ export const useSupabaseData = () => {
             throw itemsError;
           }
 
+          // Save sale_items to IndexedDB for offline access
+          try {
+            const currentSaleItems = await getData('sale_items');
+            const updatedSaleItems = [...currentSaleItems, ...saleItems];
+            await saveData('sale_items', updatedSaleItems);
+            console.debug('Sale items saved to IndexedDB:', saleItems.length, 'items');
+          } catch (saveError) {
+            console.warn('Failed to save sale items to IndexedDB:', saveError);
+          }
+
           await fetchAllData();
 
           toast({
@@ -890,6 +919,21 @@ export const useSupabaseData = () => {
         const tempSaleId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const tempSale = { ...newSale, id: tempSaleId, created_at: new Date().toISOString() };
         
+        // Create temporary sale items
+        const tempSaleItems = saleData.items.map((item: any) => ({
+          id: `temp_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          sale_id: tempSaleId,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal,
+          total: item.total,
+          vat_amount: item.vat_amount || 0,
+          includes_vat: item.includes_vat || false,
+          tenant_id: tenantId,
+          created_at: new Date().toISOString()
+        }));
+        
         // Update local stock
         const updatedProducts = products.map(product => {
           const item = saleData.items.find(i => i.product_id === product.id);
@@ -902,8 +946,15 @@ export const useSupabaseData = () => {
         setProducts(updatedProducts);
         setSales(prev => [tempSale, ...prev]);
         
+        // Save sale items to IndexedDB
+        const currentSaleItems = await getData('sale_items');
+        const updatedSaleItems = [...currentSaleItems, ...tempSaleItems];
+        
         await saveData('products', updatedProducts);
         await saveData('sales', [tempSale, ...sales]);
+        await saveData('sale_items', updatedSaleItems);
+        
+        console.debug('Offline sale created with', tempSaleItems.length, 'items saved to IndexedDB');
         
         // Queue for sync
         await addPendingOperation({

@@ -2,44 +2,65 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { WifiOff, Wifi, RefreshCw, Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { WifiOff, Wifi, RefreshCw, Clock, AlertCircle, CheckCircle, Database } from "lucide-react";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export const OfflineStatus = () => {
   const { syncStatus, manualSync } = useOfflineSync();
 
-  if (syncStatus.isOnline && syncStatus.pendingCount === 0) {
-    return null;
-  }
+  // Always show status indicator, but minimal when online with no pending ops
+  const hasIssues = !syncStatus.isOnline || syncStatus.pendingCount > 0 || syncStatus.syncErrors.length > 0;
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-      {/* Offline Indicator */}
-      {!syncStatus.isOnline && (
-        <Badge variant="destructive" className="flex items-center gap-2 py-2 px-3">
-          <WifiOff className="h-4 w-4" />
-          Modo Offline
-        </Badge>
-      )}
-
-      {/* Sync Status */}
-      {syncStatus.pendingCount > 0 && (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Badge 
-              variant={syncStatus.isOnline ? "default" : "secondary"} 
-              className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:opacity-80"
-            >
-              {syncStatus.isSyncing ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
+    <div className="fixed top-4 right-4 z-50">
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className={cn(
+              "relative",
+              hasIssues ? "border-orange-500/50 bg-orange-50/50 dark:bg-orange-950/20" : "opacity-75 hover:opacity-100"
+            )}
+          >
+            {/* Connection Status Icon */}
+            <div className="flex items-center gap-2">
+              {syncStatus.isOnline ? (
+                <Wifi className="h-3 w-3 text-green-600 dark:text-green-400" />
               ) : (
-                <Clock className="h-4 w-4" />
+                <WifiOff className="h-3 w-3 text-red-600 dark:text-red-400" />
               )}
-              {syncStatus.pendingCount} operação(ões) pendente(s)
-            </Badge>
-          </DialogTrigger>
+              
+              {/* Pending Operations */}
+              {syncStatus.pendingCount > 0 && (
+                <div className="flex items-center gap-1">
+                  <Database className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                  <span className="text-xs font-medium">{syncStatus.pendingCount}</span>
+                  {syncStatus.isSyncing && (
+                    <RefreshCw className="h-3 w-3 animate-spin text-blue-600 dark:text-blue-400" />
+                  )}
+                </div>
+              )}
+              
+              {/* Errors */}
+              {syncStatus.syncErrors.length > 0 && (
+                <AlertCircle className="h-3 w-3 text-red-600 dark:text-red-400" />
+              )}
+              
+              {/* Status Text - only show if there are issues */}
+              {hasIssues && (
+                <span className="text-xs hidden sm:inline">
+                  {!syncStatus.isOnline ? 'Offline' : 
+                   syncStatus.pendingCount > 0 ? 'Pendente' : 
+                   'Online'}
+                </span>
+              )}
+            </div>
+          </Button>
+        </DialogTrigger>
           
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -152,7 +173,6 @@ export const OfflineStatus = () => {
             </div>
           </DialogContent>
         </Dialog>
-      )}
     </div>
   );
 };

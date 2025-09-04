@@ -31,8 +31,12 @@ export const useOfflineSync = () => {
   
   const { user } = useAuth();
 
-  // Health check for real connectivity
-  const checkRealConnectivity = useCallback(async (): Promise<boolean> => {
+  // Health check for real connectivity with retry logic
+  const checkRealConnectivity = useCallback(async (retryCount = 0): Promise<boolean> => {
+    const maxRetries = 3;
+    const baseTimeout = 800;
+    const timeout = baseTimeout + (retryCount * 500); // Exponential backoff
+    
     if (!navigator.onLine) {
       console.debug('Navigator offline, skipping connectivity check');
       return false;
@@ -40,10 +44,12 @@ export const useOfflineSync = () => {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1500);
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
       const SUPABASE_URL = "https://fkthdlbljhhjutuywepc.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrdGhkbGJsamhoanV0dXl3ZXBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTIwMDgsImV4cCI6MjA3MDA4ODAwOH0.nOAh8oTgWmg5GLT15QmYhPfIM80w5WmX6fpwD3XyR7Y";
+      
+      console.debug(`Connectivity check attempt ${retryCount + 1}/${maxRetries + 1}, timeout: ${timeout}ms`);
       
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/`,
@@ -58,10 +64,18 @@ export const useOfflineSync = () => {
 
       clearTimeout(timeoutId);
       const isConnected = response.status < 500;
-      console.debug('Connectivity check:', isConnected ? 'online' : 'offline');
+      console.debug(`Connectivity check result: ${isConnected ? 'online' : 'offline'} (status: ${response.status})`);
       return isConnected;
     } catch (error) {
-      console.debug('Connectivity check failed:', error);
+      console.debug(`Connectivity check failed (attempt ${retryCount + 1}):`, error);
+      
+      // Retry with exponential backoff if we haven't exceeded max retries
+      if (retryCount < maxRetries && (error as any).name !== 'AbortError') {
+        console.debug(`Retrying connectivity check in ${(retryCount + 1) * 500}ms...`);
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 500));
+        return checkRealConnectivity(retryCount + 1);
+      }
+      
       return false;
     }
   }, []);
