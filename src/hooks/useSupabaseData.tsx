@@ -144,10 +144,12 @@ export const useSupabaseData = () => {
   };
 
   const fetchProducts = async () => {
+    if (!profile) return;
     
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .eq('tenant_id', profile.tenant_id || profile.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -159,10 +161,12 @@ export const useSupabaseData = () => {
   };
 
   const fetchCustomers = async () => {
+    if (!profile) return;
     
     const { data, error } = await supabase
       .from('customers')
       .select('*')
+      .eq('tenant_id', profile.tenant_id || profile.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -174,9 +178,12 @@ export const useSupabaseData = () => {
   };
 
   const fetchSales = async () => {
+    if (!profile) return;
+    
     const { data, error } = await supabase
       .from('sales')
       .select('*')
+      .eq('tenant_id', profile.tenant_id || profile.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -187,9 +194,12 @@ export const useSupabaseData = () => {
   };
 
   const fetchSaleItems = async () => {
+    if (!profile) return;
+    
     const { data, error } = await supabase
       .from('sale_items')
       .select('*')
+      .eq('tenant_id', profile.tenant_id || profile.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -213,9 +223,12 @@ export const useSupabaseData = () => {
   };
 
   const fetchCompanySettings = async () => {
+    if (!profile) return;
+    
     const { data, error } = await supabase
       .from('company_settings')
       .select('*')
+      .eq('tenant_id', profile.tenant_id || profile.id)
       .single();
 
     if (error) {

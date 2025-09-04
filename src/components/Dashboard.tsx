@@ -186,15 +186,15 @@ const Dashboard = () => {
           <Card key={index} className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 hover:scale-105">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-              <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider leading-tight">
                 {stat.title}
               </CardTitle>
               <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <stat.icon className="h-5 w-5 text-primary" />
+                <stat.icon className="h-4 w-4 text-primary" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10">
-              <div className="text-3xl font-bold text-foreground mb-2">
+              <div className="text-xl sm:text-2xl font-bold text-foreground mb-2 break-words">
                 {stat.value}
               </div>
               <div className="flex items-center space-x-2">
