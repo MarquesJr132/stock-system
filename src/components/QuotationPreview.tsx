@@ -54,23 +54,44 @@ export function QuotationPreview({
       const element = document.getElementById('quotation-content');
       if (!element) return;
 
+      // Configure html2canvas with fixed width for consistent capture
       const canvas = await html2canvas(element, {
-        scale: 2,
+        width: 794, // A4 width at 96 DPI
+        height: element.scrollHeight,
+        scale: 1,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        logging: false,
+        removeContainer: true
       });
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
 
+      // A4 dimensions in mm
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 5; // mm
-      const imgWidth = pageWidth - margin * 2;
-      const imgHeight = pageHeight - margin * 2;
+      const margin = 10; // mm
+      const availableWidth = pageWidth - margin * 2;
+      const availableHeight = pageHeight - margin * 2;
 
-      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      // Calculate image dimensions maintaining aspect ratio
+      const canvasAspectRatio = canvas.width / canvas.height;
+      
+      let imgWidth = availableWidth;
+      let imgHeight = availableWidth / canvasAspectRatio;
+
+      // If image is too tall for one page, scale down to fit
+      if (imgHeight > availableHeight) {
+        imgHeight = availableHeight;
+        imgWidth = availableHeight * canvasAspectRatio;
+      }
+
+      // Center the image horizontally if it's narrower than available width
+      const xPosition = margin + (availableWidth - imgWidth) / 2;
+
+      pdf.addImage(imgData, 'PNG', xPosition, margin, imgWidth, imgHeight);
 
       const customer = customers.find(c => c.id === quotation.customer_id);
       const fileName = `cotacao_${customer?.name || 'cliente'}_${new Date().toISOString().split('T')[0]}.pdf`;
