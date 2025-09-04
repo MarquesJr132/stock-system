@@ -15,7 +15,7 @@ export const OfflineStatus = () => {
   const hasIssues = !syncStatus.isOnline || syncStatus.pendingCount > 0 || syncStatus.syncErrors.length > 0;
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed top-16 right-4 z-40 md:top-4 md:right-4 md:z-50">
       <Dialog>
         <DialogTrigger asChild>
           <Button 
