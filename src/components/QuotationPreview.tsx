@@ -124,7 +124,7 @@ export function QuotationPreview({
         
         <div className="p-6">
           {/* Content for PDF Generation */}
-          <div id="quotation-content" className="bg-white p-12 text-black min-h-[600px]">
+          <div id="quotation-content" className="bg-white p-12 text-black min-h-[600px] relative">
             {/* Header */}
             <div className="flex justify-between items-start mb-12">
               <div className="flex items-center space-x-6">
@@ -132,12 +132,12 @@ export function QuotationPreview({
                   <img
                     src={companySettings.logo_url}
                     alt="Company Logo"
-                    className="h-16 w-auto object-contain"
+                    className="h-12 max-w-24 w-auto object-contain"
                   />
                 )}
               </div>
               <div className="text-right">
-                <h1 className="text-4xl font-bold text-black">COTAÇÃO</h1>
+                <h1 className="text-2xl font-bold text-black">COTAÇÃO</h1>
               </div>
             </div>
 
@@ -253,8 +253,8 @@ export function QuotationPreview({
               companySettings.account_number || 
               companySettings.iban
             ) && (
-              <div className="border-t-2 border-gray-300 pt-6 mt-12">
-                <div className="text-center">
+              <div className="absolute bottom-0 left-0 right-0 border-t-2 border-gray-300 pt-6 pb-6 bg-white">
+                <div className="text-center px-12">
                   <div className="text-xs text-gray-600 space-y-1">
                     <div className="flex justify-center items-center space-x-6">
                       {companySettings.bank_name && (
