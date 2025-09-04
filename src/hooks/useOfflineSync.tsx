@@ -31,19 +31,74 @@ export const useOfflineSync = () => {
   
   const { user } = useAuth();
 
-  // Update online status
-  useEffect(() => {
-    const handleOnline = () => setSyncStatus(prev => ({ ...prev, isOnline: true }));
-    const handleOffline = () => setSyncStatus(prev => ({ ...prev, isOnline: false }));
+  // Health check for real connectivity
+  const checkRealConnectivity = useCallback(async (): Promise<boolean> => {
+    if (!navigator.onLine) {
+      console.debug('Navigator offline, skipping connectivity check');
+      return false;
+    }
 
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
+
+      const SUPABASE_URL = "https://fkthdlbljhhjutuywepc.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrdGhkbGJsamhoanV0dXl3ZXBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTIwMDgsImV4cCI6MjA3MDA4ODAwOH0.nOAh8oTgWmg5GLT15QmYhPfIM80w5WmX6fpwD3XyR7Y";
+      
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/`,
+        {
+          method: 'HEAD',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+          },
+          signal: controller.signal,
+        }
+      );
+
+      clearTimeout(timeoutId);
+      const isConnected = response.status < 500;
+      console.debug('Connectivity check:', isConnected ? 'online' : 'offline');
+      return isConnected;
+    } catch (error) {
+      console.debug('Connectivity check failed:', error);
+      return false;
+    }
+  }, []);
+
+  // Update online status with real connectivity check
+  useEffect(() => {
+    const updateConnectivity = async () => {
+      const isReallyOnline = await checkRealConnectivity();
+      setSyncStatus(prev => ({ ...prev, isOnline: isReallyOnline }));
+    };
+
+    const handleOnline = () => {
+      console.debug('Navigator online event');
+      updateConnectivity();
+    };
+    
+    const handleOffline = () => {
+      console.debug('Navigator offline event');
+      setSyncStatus(prev => ({ ...prev, isOnline: false }));
+    };
+
+    // Initial check
+    updateConnectivity();
+
+    // Event listeners
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Periodic health check every 30 seconds
+    const healthCheckInterval = setInterval(updateConnectivity, 30000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      clearInterval(healthCheckInterval);
     };
-  }, []);
+  }, [checkRealConnectivity]);
 
   // Update pending count
   useEffect(() => {

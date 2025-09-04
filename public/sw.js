@@ -1,12 +1,13 @@
 const CACHE_NAME = 'stock-system-v1.0.0';
 const RUNTIME_CACHE = 'runtime-cache-v1';
 
-// Get base path for GitHub Pages deployment
-const BASE_PATH = '/stock-system';
+// Get base path dynamically
+const BASE_PATH = self.registration.scope.replace(self.location.origin, '').replace(/\/$/, '');
 
 // Critical resources to cache immediately
 const PRECACHE_URLS = [
   BASE_PATH + '/',
+  BASE_PATH + '/index.html',
   BASE_PATH + '/manifest.json',
   BASE_PATH + '/favicon.ico'
 ];
@@ -72,6 +73,26 @@ self.addEventListener('fetch', (event) => {
   
   // Skip chrome-extension requests
   if (url.protocol === 'chrome-extension:') {
+    return;
+  }
+
+  // Handle navigation requests (SPA routing)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          // Try network first for navigation
+          const response = await fetch(request);
+          return response;
+        } catch (error) {
+          // Fallback to cached index.html for SPA routing
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(BASE_PATH + '/index.html') || 
+                                 await cache.match(BASE_PATH + '/');
+          return cachedResponse || new Response('App not available offline', { status: 503 });
+        }
+      })()
+    );
     return;
   }
   

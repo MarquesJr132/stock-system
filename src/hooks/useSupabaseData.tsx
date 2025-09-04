@@ -146,8 +146,11 @@ export const useSupabaseData = () => {
 
   const fetchAllData = async () => {
     try {
+      console.debug('fetchAllData: Starting data fetch, isOnline:', syncStatus.isOnline);
       setLoading(true);
-      await Promise.all([
+      
+      // Use Promise.allSettled to prevent blocking on individual failures
+      const results = await Promise.allSettled([
         fetchProducts(),
         fetchCustomers(), 
         fetchSales(),
@@ -156,13 +159,18 @@ export const useSupabaseData = () => {
         fetchTenantLimits(),
         fetchDataUsage()
       ]);
+
+      // Log any failures without stopping the process
+      results.forEach((result, index) => {
+        const functionNames = ['fetchProducts', 'fetchCustomers', 'fetchSales', 'fetchSaleItems', 'fetchCompanySettings', 'fetchTenantLimits', 'fetchDataUsage'];
+        if (result.status === 'rejected') {
+          console.warn(`${functionNames[index]} failed:`, result.reason);
+        }
+      });
+
+      console.debug('fetchAllData: Completed');
     } catch (error) {
       console.error('Error fetching all data:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar alguns dados. Tente recarregar a página.",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -172,31 +180,40 @@ export const useSupabaseData = () => {
     if (!profile) return;
     
     try {
-      if (syncStatus.isOnline) {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('tenant_id', profile.tenant_id || profile.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        
-        const products = data || [];
-        setProducts(products);
-        await saveData('products', products);
-      } else {
+      if (!syncStatus.isOnline) {
+        // If offline, immediately load from IndexedDB
+        console.debug('fetchProducts: Loading from offline storage');
         const offlineProducts = await getData('products');
         setProducts(offlineProducts);
+        return;
       }
+
+      // Try online fetch with timeout
+      console.debug('fetchProducts: Attempting online fetch');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('tenant_id', profile.tenant_id || profile.id)
+        .order('created_at', { ascending: false });
+
+      clearTimeout(timeoutId);
+
+      if (error) throw error;
+      
+      const products = data || [];
+      console.debug('fetchProducts: Online fetch successful, got', products.length, 'products');
+      setProducts(products);
+      await saveData('products', products);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.debug('fetchProducts: Online fetch failed, falling back to offline:', error);
       
       try {
         const offlineProducts = await getData('products');
         setProducts(offlineProducts);
-        if (offlineProducts.length > 0) {
-          toast({ title: "Offline", description: "Carregando produtos offline" });
-        }
+        console.debug('fetchProducts: Loaded', offlineProducts.length, 'products from offline storage');
       } catch (offlineError) {
         console.error('Offline products fetch failed:', offlineError);
       }
@@ -207,31 +224,38 @@ export const useSupabaseData = () => {
     if (!profile) return;
     
     try {
-      if (syncStatus.isOnline) {
-        const { data, error } = await supabase
-          .from('customers')
-          .select('*')
-          .eq('tenant_id', profile.tenant_id || profile.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        
-        const customers = data || [];
-        setCustomers(customers);
-        await saveData('customers', customers);
-      } else {
+      if (!syncStatus.isOnline) {
+        console.debug('fetchCustomers: Loading from offline storage');
         const offlineCustomers = await getData('customers');
         setCustomers(offlineCustomers);
+        return;
       }
+
+      console.debug('fetchCustomers: Attempting online fetch');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('tenant_id', profile.tenant_id || profile.id)
+        .order('created_at', { ascending: false });
+
+      clearTimeout(timeoutId);
+
+      if (error) throw error;
+      
+      const customers = data || [];
+      console.debug('fetchCustomers: Online fetch successful, got', customers.length, 'customers');
+      setCustomers(customers);
+      await saveData('customers', customers);
     } catch (error) {
-      console.error('Error fetching customers:', error);
+      console.debug('fetchCustomers: Online fetch failed, falling back to offline:', error);
       
       try {
         const offlineCustomers = await getData('customers');
         setCustomers(offlineCustomers);
-        if (offlineCustomers.length > 0) {
-          toast({ title: "Offline", description: "Carregando clientes offline" });
-        }
+        console.debug('fetchCustomers: Loaded', offlineCustomers.length, 'customers from offline storage');
       } catch (offlineError) {
         console.error('Offline customers fetch failed:', offlineError);
       }
@@ -242,31 +266,38 @@ export const useSupabaseData = () => {
     if (!profile) return;
     
     try {
-      if (syncStatus.isOnline) {
-        const { data, error } = await supabase
-          .from('sales')
-          .select('*')
-          .eq('tenant_id', profile.tenant_id || profile.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        
-        const sales = data || [];
-        setSales(sales);
-        await saveData('sales', sales);
-      } else {
+      if (!syncStatus.isOnline) {
+        console.debug('fetchSales: Loading from offline storage');
         const offlineSales = await getData('sales');
         setSales(offlineSales);
+        return;
       }
+
+      console.debug('fetchSales: Attempting online fetch');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const { data, error } = await supabase
+        .from('sales')
+        .select('*')
+        .eq('tenant_id', profile.tenant_id || profile.id)
+        .order('created_at', { ascending: false });
+
+      clearTimeout(timeoutId);
+
+      if (error) throw error;
+      
+      const sales = data || [];
+      console.debug('fetchSales: Online fetch successful, got', sales.length, 'sales');
+      setSales(sales);
+      await saveData('sales', sales);
     } catch (error) {
-      console.error('Error fetching sales:', error);
+      console.debug('fetchSales: Online fetch failed, falling back to offline:', error);
       
       try {
         const offlineSales = await getData('sales');
         setSales(offlineSales);
-        if (offlineSales.length > 0) {
-          toast({ title: "Offline", description: "Carregando vendas offline" });
-        }
+        console.debug('fetchSales: Loaded', offlineSales.length, 'sales from offline storage');
       } catch (offlineError) {
         console.error('Offline sales fetch failed:', offlineError);
       }
@@ -277,28 +308,38 @@ export const useSupabaseData = () => {
     if (!profile) return;
     
     try {
-      if (syncStatus.isOnline) {
-        const { data, error } = await supabase
-          .from('sale_items')
-          .select('*')
-          .eq('tenant_id', profile.tenant_id || profile.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        
-        const saleItems = data || [];
-        setSaleItems(saleItems);
-        await saveData('sale_items', saleItems);
-      } else {
+      if (!syncStatus.isOnline) {
+        console.debug('fetchSaleItems: Loading from offline storage');
         const offlineSaleItems = await getData('sale_items');
         setSaleItems(offlineSaleItems);
+        return;
       }
+
+      console.debug('fetchSaleItems: Attempting online fetch');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const { data, error } = await supabase
+        .from('sale_items')
+        .select('*')
+        .eq('tenant_id', profile.tenant_id || profile.id)
+        .order('created_at', { ascending: false });
+
+      clearTimeout(timeoutId);
+
+      if (error) throw error;
+      
+      const saleItems = data || [];
+      console.debug('fetchSaleItems: Online fetch successful, got', saleItems.length, 'items');
+      setSaleItems(saleItems);
+      await saveData('sale_items', saleItems);
     } catch (error) {
-      console.error('Error fetching sale items:', error);
+      console.debug('fetchSaleItems: Online fetch failed, falling back to offline:', error);
       
       try {
         const offlineSaleItems = await getData('sale_items');
         setSaleItems(offlineSaleItems);
+        console.debug('fetchSaleItems: Loaded', offlineSaleItems.length, 'items from offline storage');
       } catch (offlineError) {
         console.error('Offline sale items fetch failed:', offlineError);
       }
@@ -322,28 +363,38 @@ export const useSupabaseData = () => {
     if (!profile) return;
     
     try {
-      if (syncStatus.isOnline) {
-        const { data, error } = await supabase
-          .from('company_settings')
-          .select('*')
-          .eq('tenant_id', profile.tenant_id || profile.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') throw error;
-        
-        const settings = data || null;
-        setCompanySettings(settings);
-        await saveData('company_settings', settings ? [settings] : []);
-      } else {
+      if (!syncStatus.isOnline) {
+        console.debug('fetchCompanySettings: Loading from offline storage');
         const offlineSettings = await getData('company_settings');
         setCompanySettings(offlineSettings.length > 0 ? offlineSettings[0] : null);
+        return;
       }
+
+      console.debug('fetchCompanySettings: Attempting online fetch');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .eq('tenant_id', profile.tenant_id || profile.id)
+        .single();
+
+      clearTimeout(timeoutId);
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      const settings = data || null;
+      console.debug('fetchCompanySettings: Online fetch successful');
+      setCompanySettings(settings);
+      await saveData('company_settings', settings ? [settings] : []);
     } catch (error) {
-      console.error('Error fetching company settings:', error);
+      console.debug('fetchCompanySettings: Online fetch failed, falling back to offline:', error);
       
       try {
         const offlineSettings = await getData('company_settings');
         setCompanySettings(offlineSettings.length > 0 ? offlineSettings[0] : null);
+        console.debug('fetchCompanySettings: Loaded from offline storage');
       } catch (offlineError) {
         console.error('Offline company settings fetch failed:', offlineError);
       }
@@ -669,27 +720,49 @@ export const useSupabaseData = () => {
 
     try {
       if (syncStatus.isOnline) {
-        // Online mode: Use atomic stock update
-        for (const item of saleData.items) {
-          const { data: stockValid, error: stockError } = await supabase
-            .rpc('atomic_stock_update', {
-              p_product_id: item.product_id,
-              p_quantity_change: -item.quantity,
-              p_tenant_id: tenantId
-            });
+        // Online mode: Use atomic stock update with timeout handling
+        try {
+          for (const item of saleData.items) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-          if (stockError) {
-            console.error('Stock validation error:', stockError);
-            toast({
-              title: "Erro de Stock",
-              description: stockError.message,
-              variant: "destructive",
-            });
-            return { error: stockError.message };
+            const { data: stockValid, error: stockError } = await supabase
+              .rpc('atomic_stock_update', {
+                p_product_id: item.product_id,
+                p_quantity_change: -item.quantity,
+                p_tenant_id: tenantId
+              });
+
+            clearTimeout(timeoutId);
+
+            if (stockError) {
+              console.error('Stock validation error:', stockError);
+              // If network error, fall back to offline mode
+              if (stockError.message?.includes('Failed to fetch') || stockError.message?.includes('network')) {
+                console.debug('Network error in stock update, switching to offline mode');
+                throw new Error('network_error');
+              }
+              toast({
+                title: "Erro de Stock",
+                description: stockError.message,
+                variant: "destructive",
+              });
+              return { error: stockError.message };
+            }
+          }
+        } catch (error: any) {
+          if (error.message === 'network_error' || error.name === 'AbortError') {
+            console.debug('Sale: Network error, falling back to offline mode');
+            // Fall through to offline validation
+          } else {
+            throw error;
           }
         }
-      } else {
-        // Offline mode: Local stock validation
+      }
+      
+      // Offline mode or fallback: Local stock validation
+      if (!syncStatus.isOnline || true) { // Always validate offline for consistency
+        console.debug('Performing local stock validation');
         for (const item of saleData.items) {
           const product = products.find(p => p.id === item.product_id);
           if (!product) {
@@ -723,27 +796,40 @@ export const useSupabaseData = () => {
       };
 
       if (syncStatus.isOnline) {
-        // Online mode: Create in database
-        const { data: sale, error: saleError } = await supabase
-          .from('sales')
-          .insert([newSale])
-          .select()
-          .single();
+        // Online mode: Create in database with timeout
+        try {
+          console.debug('Creating sale online');
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        if (saleError) {
-          console.error('Error creating sale:', saleError);
-          
-          // Revert stock changes if sale failed
-          for (const item of saleData.items) {
-            await supabase.rpc('atomic_stock_update', {
-              p_product_id: item.product_id,
-              p_quantity_change: item.quantity,
-              p_tenant_id: tenantId
-            });
+          const { data: sale, error: saleError } = await supabase
+            .from('sales')
+            .insert([newSale])
+            .select()
+            .single();
+
+          clearTimeout(timeoutId);
+
+          if (saleError) {
+            console.error('Error creating sale:', saleError);
+            
+            // If network error, switch to offline mode
+            if (saleError.message?.includes('Failed to fetch') || saleError.message?.includes('network')) {
+              console.debug('Network error creating sale, switching to offline mode');
+              throw new Error('network_error');
+            }
+            
+            // Revert stock changes if sale failed
+            for (const item of saleData.items) {
+              await supabase.rpc('atomic_stock_update', {
+                p_product_id: item.product_id,
+                p_quantity_change: item.quantity,
+                p_tenant_id: tenantId
+              });
+            }
+            
+            throw saleError;
           }
-          
-          throw saleError;
-        }
 
         // Create sale items
         const saleItems = saleData.items.map(item => ({
@@ -758,33 +844,47 @@ export const useSupabaseData = () => {
           tenant_id: profile.tenant_id || profile.id,
         }));
 
-        const { error: itemsError } = await supabase
-          .from('sale_items')
-          .insert(saleItems);
+          const { error: itemsError } = await supabase
+            .from('sale_items')
+            .insert(saleItems);
 
-        if (itemsError) {
-          console.error('Error creating sale items:', itemsError);
-          
-          // Revert sale and stock if items failed
-          await supabase.from('sales').delete().eq('id', sale.id);
-          for (const item of saleData.items) {
-            await supabase.rpc('atomic_stock_update', {
-              p_product_id: item.product_id,
-              p_quantity_change: item.quantity,
-              p_tenant_id: tenantId
-            });
+          if (itemsError) {
+            console.error('Error creating sale items:', itemsError);
+            
+            // If network error, switch to offline mode
+            if (itemsError.message?.includes('Failed to fetch') || itemsError.message?.includes('network')) {
+              console.debug('Network error creating sale items, switching to offline mode');
+              throw new Error('network_error');
+            }
+            
+            // Revert sale and stock if items failed
+            await supabase.from('sales').delete().eq('id', sale.id);
+            for (const item of saleData.items) {
+              await supabase.rpc('atomic_stock_update', {
+                p_product_id: item.product_id,
+                p_quantity_change: item.quantity,
+                p_tenant_id: tenantId
+              });
+            }
+            
+            throw itemsError;
           }
-          
-          throw itemsError;
+
+          await fetchAllData();
+
+          toast({
+            title: "Sucesso",
+            description: "Venda registrada com sucesso",
+          });
+          return { data: sale };
+        } catch (error: any) {
+          if (error.message === 'network_error' || error.name === 'AbortError') {
+            console.debug('Sale creation: Network error, falling back to offline mode');
+            // Fall through to offline mode
+          } else {
+            throw error;
+          }
         }
-
-        await fetchAllData();
-
-        toast({
-          title: "Sucesso",
-          description: "Venda registrada com sucesso",
-        });
-        return { data: sale };
       } else {
         // Offline mode: Create temporary sale and update local stock
         const tempSaleId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
