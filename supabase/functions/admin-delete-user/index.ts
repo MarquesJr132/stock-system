@@ -106,6 +106,14 @@ serve(async (req) => {
       });
     }
 
+    // Reassign created_by data to another admin in tenant before deletion
+    const { error: reassignErr } = await supabaseAdmin.rpc('reassign_user_data_before_deletion', {
+      user_profile_id: profileId,
+    });
+    if (reassignErr) {
+      console.warn('Reassign data warning:', reassignErr.message);
+    }
+
     // Delete from auth first
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (authDeleteError) {

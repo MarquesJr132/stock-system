@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/currency";
@@ -86,6 +86,24 @@ export function QuotationPreview({
       console.error('Erro ao gerar PDF:', error);
     }
   };
+
+  const groupedQuotationItems = useMemo(() => {
+    const map = new Map<string, any>();
+    (quotationItems || []).forEach((item: any) => {
+      const key = item.product_id || item.id;
+      const existing = map.get(key);
+      if (existing) {
+        existing.quantity += Number(item.quantity) || 0;
+        existing.vat_amount = (Number(existing.vat_amount) || 0) + (Number(item.vat_amount) || 0);
+        existing.subtotal = (Number(existing.subtotal) || 0) + (Number(item.subtotal) || 0);
+        const lineTotal = (Number(item.total) || (Number(item.unit_price) || 0) * (Number(item.quantity) || 0));
+        existing.total = (Number(existing.total) || 0) + lineTotal;
+      } else {
+        map.set(key, { ...item });
+      }
+    });
+    return Array.from(map.values());
+  }, [quotationItems]);
 
   if (!quotation) return null;
 
@@ -205,10 +223,10 @@ export function QuotationPreview({
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {quotationItems.map((item: any, index: number) => {
+                  {groupedQuotationItems.map((item: any, index: number) => {
                     const product = products.find(p => p.id === item.product_id);
                     return (
-                      <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <tr key={(item.product_id || item.id) + '-' + index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                         <td className="px-2 sm:px-4 py-2 border-b border-gray-200">
                           <div className="font-medium text-xs sm:text-sm text-black">{product?.name || item.products?.name || 'Produto'}</div>
                         </td>

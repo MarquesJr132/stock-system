@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,6 +52,24 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
       setLoading(false);
     }
   };
+
+  const groupedSaleItems = useMemo(() => {
+    const map = new Map<string, any>();
+    (saleItems || []).forEach((item: any) => {
+      const key = item.product_id || item.id;
+      const existing = map.get(key);
+      if (existing) {
+        existing.quantity += Number(item.quantity) || 0;
+        existing.vat_amount = (Number(existing.vat_amount) || 0) + (Number(item.vat_amount) || 0);
+        existing.subtotal = (Number(existing.subtotal) || 0) + (Number(item.subtotal) || 0);
+        const lineTotal = (Number(item.total) || (Number(item.unit_price) || 0) * (Number(item.quantity) || 0));
+        existing.total = (Number(existing.total) || 0) + lineTotal;
+      } else {
+        map.set(key, { ...item });
+      }
+    });
+    return Array.from(map.values());
+  }, [saleItems]);
 
   if (!sale) return null;
 
@@ -209,7 +227,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                    </tr>
                  </thead>
                 <tbody className="bg-white">
-                  {saleItems.map((item: any, index: number) => {
+                  {groupedSaleItems.map((item: any, index: number) => {
                     const product = products.find(p => p.id === item.product_id);
                     return (
                        <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>

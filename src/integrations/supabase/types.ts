@@ -1448,6 +1448,10 @@ export type Database = {
         Args: { user_email: string }
         Returns: undefined
       }
+      reassign_user_data_before_deletion: {
+        Args: { user_profile_id: string }
+        Returns: undefined
+      }
       reset_monthly_usage: {
         Args: Record<PropertyKey, never>
         Returns: undefined
