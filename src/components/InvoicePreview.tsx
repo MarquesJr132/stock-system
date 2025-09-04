@@ -160,6 +160,30 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                   <p className="text-gray-700">{companySettings?.email || ''}</p>
                   <p className="text-gray-700">{companySettings?.nuit || ''}</p>
                 </div>
+                
+                {/* Banking Information */}
+                {companySettings && (
+                  companySettings.bank_name || 
+                  companySettings.account_number || 
+                  companySettings.iban
+                ) && (
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <div className="space-y-1 text-xs text-gray-600">
+                      {companySettings.bank_name && (
+                        <p><strong>Nome do Banco :</strong> {companySettings.bank_name}</p>
+                      )}
+                      {companySettings.account_holder && (
+                        <p><strong>Titular :</strong> {companySettings.account_holder}</p>
+                      )}
+                      {companySettings.account_number && (
+                        <p><strong>Número de Conta :</strong> {companySettings.account_number}</p>
+                      )}
+                      {companySettings.iban && (
+                        <p><strong>NIB:</strong> {companySettings.iban}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <div className="space-y-1 text-sm">
@@ -259,38 +283,6 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
               </div>
             )}
 
-            {/* Banking Information Footer */}
-            {companySettings && (
-              companySettings.bank_name || 
-              companySettings.account_number || 
-              companySettings.iban
-            ) && (
-              <div className="border-t-2 border-gray-300 pt-6 mt-12">
-                <div className="text-center">
-                  <div className="text-xs text-gray-600 space-y-1">
-                    <div className="flex justify-center items-center space-x-6">
-                      {companySettings.bank_name && (
-                        <span><strong>Banco:</strong> {companySettings.bank_name}</span>
-                      )}
-                      {companySettings.account_holder && (
-                        <span><strong>Titular:</strong> {companySettings.account_holder}</span>
-                      )}
-                      {companySettings.account_number && (
-                        <span><strong>Conta:</strong> {companySettings.account_number}</span>
-                      )}
-                    </div>
-                    {companySettings.iban && (
-                      <div>
-                        <strong>IBAN:</strong> {companySettings.iban}
-                      </div>
-                    )}
-                    <div className="mt-2">
-                      <strong>Tel:</strong> {companySettings.phone} | <strong>Email:</strong> {companySettings.email}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Action Buttons */}
