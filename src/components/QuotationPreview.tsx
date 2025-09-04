@@ -117,207 +117,173 @@ export function QuotationPreview({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Pré-visualização da Cotação</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle>Visualização da Cotação</DialogTitle>
         </DialogHeader>
+        
+        <div className="p-6">
+          {/* Content for PDF Generation */}
+          <div id="quotation-content" className="bg-white text-black min-h-[297mm] flex flex-col" style={{ fontFamily: 'Arial, sans-serif' }}>
+            {/* Header */}
+            <div className="flex justify-between items-start mb-8">
+              {/* Logo */}
+              <div className="flex-shrink-0">
+                {companySettings?.logo_url ? (
+                  <img 
+                    src={companySettings.logo_url} 
+                    alt="Logo da empresa" 
+                    className="h-16 w-auto object-contain"
+                  />
+                ) : (
+                  <div className="h-16 w-32 bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                    Logo
+                  </div>
+                )}
+              </div>
+              
+              {/* Quotation Title */}
+              <div className="text-right">
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">COTAÇÃO</h1>
+                <p className="text-lg text-gray-600">Nº {quotation.id.split('-')[0]}</p>
+              </div>
+            </div>
 
-        <div id="quotation-content" className="relative bg-white p-6 min-h-[297mm] flex flex-col" style={{ color: '#000', fontFamily: 'Arial, sans-serif', fontSize: '12px', position: 'relative' }}>
-          {/* Watermark - visible in PDF */}
-          <div style={{ 
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%) rotate(45deg)',
-            fontSize: '80px',
-            fontWeight: 'bold',
-            color: 'rgba(200, 200, 200, 0.2)',
-            fontFamily: 'Arial, sans-serif',
-            zIndex: 1,
-            pointerEvents: 'none',
-            userSelect: 'none',
-            width: '100%',
-            textAlign: 'center'
-          }}>
-            COTAÇÃO
-          </div>
-          
-          {/* Content with higher z-index */}
-          <div style={{ position: 'relative', zIndex: 10 }}>
-             {/* Header */}
-             <div className="bg-slate-700 text-white text-center py-4">
-               {companySettings?.logo_url && (
-                 <img 
-                   src={companySettings.logo_url} 
-                   alt="Company Logo" 
-                   className="h-12 w-12 object-contain mx-auto mb-2"
-                 />
-               )}
-               <h1 className="text-xl font-bold mb-1">{companySettings?.company_name || 'SISTEMA DE STOCK'}</h1>
-               <p className="text-sm">COTAÇÃO</p>
-             </div>
-
-            {/* Company, Invoice Details and Customer Info in 3 columns */}
-            <div className="grid grid-cols-3 gap-4 mt-4">
+            {/* Company and Customer Info */}
+            <div className="grid grid-cols-2 gap-8 mb-8">
               {/* Company Info */}
               <div>
-                <h3 className="font-bold text-slate-700 mb-2 text-sm">EMPRESA:</h3>
-                <div className="space-y-0.5 text-xs text-black">
-                  <p className="font-bold">{companySettings?.company_name || 'Sistema de Gestão de Stock Lda.'}</p>
-                  <p>{companySettings?.address || 'Maputo, Moçambique'}</p>
-                  <p>Tel: {companySettings?.phone || '+258 84 123 4567'}</p>
-                  <p>Email: {companySettings?.email || 'info@stocksystem.co.mz'}</p>
-                  <p>NUIT: {companySettings?.nuit || '123456789'}</p>
-                </div>
-              </div>
-
-              {/* Quotation Details */}
-              <div>
-                <h3 className="font-bold text-slate-700 mb-2 text-sm">DETALHES DA COTAÇÃO:</h3>
-                <div className="space-y-0.5 text-xs text-black">
-                  <p><span className="font-semibold">Cotação Nº:</span> #{quotation.id.slice(-8)}</p>
-                  <p><span className="font-semibold">Data:</span> {formatDateTime(quotation.created_at)}</p>
-                  <p><span className="font-semibold">Válida até:</span> {new Date(quotation.valid_until).toLocaleDateString()}</p>
-                  <p className={`font-semibold ${getStatusColor(quotation.status)}`}>
-                    <span className="font-semibold">Status:</span> {getStatusLabel(quotation.status)}
-                  </p>
+                <h3 className="font-semibold text-gray-800 mb-3">Dados da Empresa:</h3>
+                <div className="space-y-1 text-sm">
+                  <p className="font-medium">{companySettings?.company_name}</p>
+                  {companySettings?.address && <p>{companySettings.address}</p>}
+                  {companySettings?.phone && <p>Tel: {companySettings.phone}</p>}
+                  {companySettings?.email && <p>Email: {companySettings.email}</p>}
+                  {companySettings?.nuit && <p>NUIT: {companySettings.nuit}</p>}
                 </div>
               </div>
 
               {/* Customer Info */}
               <div>
-                <h3 className="font-bold text-slate-700 mb-2 text-sm">CLIENTE:</h3>
-                {customer ? (
-                  <div className="space-y-0.5 text-xs text-black">
-                    <p><span className="font-semibold">Nome:</span> {customer.name}</p>
-                    <p><span className="font-semibold">Email:</span> {customer.email || 'N/A'}</p>
-                    <p><span className="font-semibold">Telefone:</span> {customer.phone || 'N/A'}</p>
-                    <p><span className="font-semibold">Endereço:</span> {customer.address || 'N/A'}</p>
-                    {customer.nuit && (
-                      <p><span className="font-semibold">NUIT:</span> {customer.nuit}</p>
-                    )}
-                  </div>
-                 ) : (
-                   <div className="text-black text-xs">
-                     <p><span className="font-semibold">Nome:</span> Anônimo</p>
-                   </div>
-                 )}
+                <h3 className="font-semibold text-gray-800 mb-3">Cliente:</h3>
+                <div className="space-y-1 text-sm">
+                  {customer ? (
+                    <>
+                      <p className="font-medium">{customer.name}</p>
+                      {customer.email && <p>Email: {customer.email}</p>}
+                      {customer.phone && <p>Tel: {customer.phone}</p>}
+                      {customer.address && <p>{customer.address}</p>}
+                      {customer.nuit && <p>NUIT: {customer.nuit}</p>}
+                    </>
+                  ) : (
+                    <p>Cliente não especificado</p>
+                  )}
+                </div>
+                
+                <div className="mt-4 space-y-1 text-sm">
+                  <p><strong>Data:</strong> {new Date(quotation.created_at).toLocaleDateString('pt-PT')}</p>
+                  {quotation.valid_until && (
+                    <p><strong>Válida até:</strong> {new Date(quotation.valid_until).toLocaleDateString('pt-PT')}</p>
+                  )}
+                  <p><strong>Método de Pagamento:</strong> {getPaymentLabel(quotation.payment_method)}</p>
+                  <p><strong>Estado:</strong> <span className={getStatusColor(quotation.status)}>{getStatusLabel(quotation.status)}</span></p>
+                </div>
               </div>
             </div>
 
             {/* Products Table */}
-            <div className="mt-4">
-              <table className="w-full border-collapse border border-slate-400">
+            <div className="flex-grow">
+              <table className="w-full border-collapse border border-gray-300 mb-6">
                 <thead>
-                  <tr className="bg-slate-700 text-white">
-                    <th className="border border-slate-400 p-2 text-left font-bold text-xs">PRODUTO</th>
-                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">QTD</th>
-                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">PREÇO UNIT.</th>
-                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">IVA</th>
-                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">SUBTOTAL</th>
-                    <th className="border border-slate-400 p-2 text-center font-bold text-xs">TOTAL</th>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Nº</th>
+                    <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold">Produto & Descrição</th>
+                    <th className="border border-gray-300 px-3 py-2 text-center text-sm font-semibold">Qtd</th>
+                    <th className="border border-gray-300 px-3 py-2 text-right text-sm font-semibold">Taxa</th>
+                    <th className="border border-gray-300 px-3 py-2 text-right text-sm font-semibold">Montante</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan={6} className="border border-slate-400 p-4 text-center text-black text-xs">
-                        Carregando itens da cotação...
+                  {quotationItems.map((item, index) => (
+                    <tr key={item.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 px-3 py-2 text-sm">{index + 1}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-sm">
+                        <div>
+                          <p className="font-medium">{item.product?.name}</p>
+                          {item.product?.description && (
+                            <p className="text-gray-600 text-xs">{item.product.description}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
+                      <td className="border border-gray-300 px-3 py-2 text-right text-sm">
+                        {formatCurrency(item.unit_price)}
+                      </td>
+                      <td className="border border-gray-300 px-3 py-2 text-right text-sm font-medium">
+                        {formatCurrency(item.total)}
                       </td>
                     </tr>
-                  ) : quotationItems.length > 0 ? (
-                    quotationItems.map((item, index) => {
-                      const product = products.find(p => p.id === item.product_id);
-                      return (
-                        <tr key={index} className="text-black">
-                          <td className="border border-slate-400 p-2">
-                            <div>
-                              <p className="font-semibold text-xs">{item.product_name || product?.name || "Produto não encontrado"}</p>
-                              {product?.description && (
-                                <p className="text-xs text-gray-600">{product.description}</p>
-                              )}
-                            </div>
-                          </td>
-                          <td className="border border-slate-400 p-2 text-center font-semibold text-xs">{item.quantity}</td>
-                          <td className="border border-slate-400 p-2 text-center text-xs">{formatCurrency(item.unit_price)}</td>
-                          <td className="border border-slate-400 p-2 text-center text-xs">
-                            {item.vat_amount > 0 ? 'SIM' : 'NÃO'}
-                          </td>
-                          <td className="border border-slate-400 p-2 text-center text-xs">{formatCurrency(item.subtotal)}</td>
-                          <td className="border border-slate-400 p-2 text-center font-semibold text-xs">{formatCurrency(item.total)}</td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="border border-slate-400 p-4 text-center text-black text-xs">
-                        Nenhum item encontrado para esta cotação.
-                      </td>
-                    </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
-            </div>
 
-            {/* Spacer to push totals and footer to bottom */}
-            <div className="flex-grow"></div>
-
-            {/* Totals, Payment method, Notes and Footer - Fixed at bottom */}
-            <div className="mt-auto">
               {/* Totals */}
-              <div className="flex justify-end mb-6">
-                <div className="w-64">
-                  {quotation.total_vat_amount > 0 && (
-                    <div className="flex justify-between py-1 text-black text-sm">
-                      <span className="font-semibold">SUBTOTAL:</span>
-                      <span className="font-semibold">{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
-                    </div>
-                  )}
-                  
-                  {quotation.total_vat_amount > 0 && (
-                    <div className="flex justify-between py-1 text-black text-sm">
-                      <span className="font-semibold">IVA TOTAL:</span>
-                      <span className="font-semibold">{formatCurrency(quotation.total_vat_amount)}</span>
-                    </div>
-                  )}
-                  
-                  <div className="bg-slate-700 text-white p-3 mt-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold">TOTAL:</span>
-                      <span className="text-lg font-bold">{formatCurrency(quotation.total_amount)}</span>
-                    </div>
+              <div className="flex justify-end">
+                <div className="w-64 space-y-2">
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span className="text-sm">Subtotal:</span>
+                    <span className="text-sm font-medium">{formatCurrency(quotation.total_amount - quotation.total_vat_amount)}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span className="text-sm">IVA (16%):</span>
+                    <span className="text-sm font-medium">{formatCurrency(quotation.total_vat_amount)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-t-2 border-gray-800">
+                    <span className="text-base font-bold">Total:</span>
+                    <span className="text-base font-bold">{formatCurrency(quotation.total_amount)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Payment method and Notes */}
-              <div className="mb-6 grid grid-cols-2 gap-6 text-black text-sm">
-                <div>
-                  <h4 className="font-bold text-slate-700 mb-2">MÉTODO DE PAGAMENTO:</h4>
-                  <p>{quotation.payment_method ? getPaymentLabel(quotation.payment_method) : "Não especificado"}</p>
+              {quotation.notes && (
+                <div className="mt-6">
+                  <h4 className="font-semibold text-gray-800 mb-2">Observações:</h4>
+                  <p className="text-sm text-gray-600">{quotation.notes}</p>
                 </div>
-                <div>
-                  <h4 className="font-bold text-slate-700 mb-2">OBSERVAÇÕES:</h4>
-                  <p>{quotation.notes || "N/A"}</p>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="text-center text-black">
-                <p className="font-semibold mb-1 text-sm">Esta cotação é válida até {new Date(quotation.valid_until).toLocaleDateString()}</p>
-                <p className="text-xs text-gray-600">Gerado em: {new Date().toLocaleString("pt-MZ")}</p>
-              </div>
+              )}
             </div>
-          </div>
-        </div>
 
-        <div className="flex justify-between pt-4">
-          <Button variant="outline" onClick={onClose}>
-            Fechar
-          </Button>
-          <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700">
-            Gerar PDF
-          </Button>
+            {/* Banking Info Footer */}
+            {(companySettings?.bank_name || companySettings?.account_number || companySettings?.iban) && (
+              <div className="mt-auto pt-6 border-t border-gray-300">
+                <h4 className="font-semibold text-gray-800 mb-2">Dados Bancários:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {companySettings.bank_name && (
+                    <p><strong>Banco:</strong> {companySettings.bank_name}</p>
+                  )}
+                  {companySettings.account_holder && (
+                    <p><strong>Titular:</strong> {companySettings.account_holder}</p>
+                  )}
+                  {companySettings.account_number && (
+                    <p><strong>Conta:</strong> {companySettings.account_number}</p>
+                  )}
+                  {companySettings.iban && (
+                    <p><strong>IBAN:</strong> {companySettings.iban}</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+            <Button variant="outline" onClick={onClose}>
+              Fechar
+            </Button>
+            <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700">
+              Gerar PDF
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
