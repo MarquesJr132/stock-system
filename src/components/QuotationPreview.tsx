@@ -135,11 +135,6 @@ export function QuotationPreview({
                     className="h-16 w-auto object-contain"
                   />
                 )}
-                <div>
-                  <h1 className="text-3xl font-bold text-black">
-                    {companySettings?.company_name || 'Empresa'}
-                  </h1>
-                </div>
               </div>
               <div className="text-right">
                 <h1 className="text-4xl font-bold text-black">COTAÇÃO</h1>

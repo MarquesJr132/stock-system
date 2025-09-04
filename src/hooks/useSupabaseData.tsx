@@ -941,16 +941,30 @@ export const useSupabaseData = () => {
 
   const getQuotationItems = async (quotationId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: quotationItems, error } = await supabase
         .from('quotation_items')
-        .select(`
-          *,
-          products (*)
-        `)
+        .select('*')
         .eq('quotation_id', quotationId);
 
       if (error) throw error;
-      return data || [];
+
+      // Fetch products separately and attach to items
+      const itemsWithProducts = await Promise.all(
+        (quotationItems || []).map(async (item) => {
+          const { data: product } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', item.product_id)
+            .single();
+          
+          return {
+            ...item,
+            products: product
+          };
+        })
+      );
+
+      return itemsWithProducts;
     } catch (error) {
       console.error('Error fetching quotation items:', error);
       throw error;
