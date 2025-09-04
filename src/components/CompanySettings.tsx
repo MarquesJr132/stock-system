@@ -13,7 +13,7 @@ import { Building2, MapPin, Image, CreditCard, Upload, X } from 'lucide-react';
 interface CompanySettingsComponentProps {}
 
 const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
   const { companySettings, updateCompanySettings } = useSupabaseData();
   
   const [formData, setFormData] = useState({
@@ -117,6 +117,25 @@ const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => 
       toast.error('Erro ao atualizar configurações');
     }
   };
+
+  // Debug logging
+  console.log('CompanySettings Debug:', {
+    profile: profile,
+    profileRole: profile?.role,
+    isLoading: loading
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-muted-foreground mb-2">
+            Carregando...
+          </h2>
+        </div>
+      </div>
+    );
+  }
 
   if (!profile || profile.role !== 'administrator') {
     return (

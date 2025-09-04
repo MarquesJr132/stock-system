@@ -71,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setProfile(data);
+      console.log('AuthContext: Profile loaded successfully:', data);
       setLoading(false);
     } catch (error) {
       console.error('AuthContext: Error fetching profile:', error);
@@ -108,11 +109,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('AuthContext: Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Always set loading to false after initial session check
-      if (!session) {
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
         setLoading(false);
       }
     }).catch((error) => {
