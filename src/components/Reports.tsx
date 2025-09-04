@@ -35,6 +35,7 @@ import { formatCurrency } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import * as XLSX from "xlsx";
+import { AuditLogs } from "@/components/AuditLogs";
 
 const Reports = () => {
   const { products, customers, sales, getTotalValue, getDailyProfit } = useSupabaseData();
@@ -395,36 +396,8 @@ const Reports = () => {
         </TabsContent>
 
         <TabsContent value="audit" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Auditoria do Sistema
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {auditData.slice(0, 10).map((log, index) => (
-                  <div key={index} className="flex items-start justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline">{log.action}</Badge>
-                        <span className="text-sm text-muted-foreground">por {log.user}</span>
-                      </div>
-                      <p className="text-sm">{log.details}</p>
-                    </div>
-                    <div className="text-right text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {log.date.toLocaleDateString('pt-PT')}
-                      </div>
-                      <div>{log.date.toLocaleTimeString('pt-PT')}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Import and use the real AuditLogs component */}
+          <AuditLogs />
         </TabsContent>
       </Tabs>
     </div>
