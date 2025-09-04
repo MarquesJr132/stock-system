@@ -18,6 +18,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { formatCurrency, formatNumber } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SecurityNotifications } from './SecurityNotifications';
+import { MobileDashboardCard } from "./mobile/MobileDashboardCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
   const { 
@@ -35,6 +37,7 @@ const Dashboard = () => {
     getPercentageChanges
   } = useSupabaseData();
   const { isAdministrator } = useAuth();
+  const isMobile = useIsMobile();
 
   const [percentages, setPercentages] = useState({
     stockChange: 'N/A',
@@ -112,7 +115,7 @@ const Dashboard = () => {
   const salesData = getSalesData();
 
   // Helper function to determine change type
-  const getChangeType = (change: string) => {
+  const getChangeType = (change: string): 'positive' | 'negative' | 'neutral' => {
     if (change === 'N/A') return 'neutral';
     const numericChange = parseFloat(change.replace('%', ''));
     return numericChange >= 0 ? 'positive' : 'negative';
@@ -145,7 +148,7 @@ const Dashboard = () => {
       value: formatCurrency(dailyProfit),
       icon: Target,
       change: percentages.profitChange,
-      changeType: getChangeType(percentages.profitChange) as 'positive' | 'negative' | 'neutral'
+      changeType: getChangeType(percentages.profitChange)
     }] : [])
   ];
 
@@ -180,45 +183,56 @@ const Dashboard = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
       </div>
 
-      {/* Premium Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-        {stats.map((stat, index) => (
-          <Card key={index} className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider leading-tight">
-                {stat.title}
-              </CardTitle>
-              <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <stat.icon className="h-4 w-4 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent className="relative z-10">
-              <div className="text-xl sm:text-2xl font-bold text-foreground mb-2 break-words">
-                {stat.value}
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
-                  stat.changeType === "positive" 
-                    ? "bg-green-500/10 text-green-500" 
-                    : stat.changeType === "negative"
-                    ? "bg-red-500/10 text-red-500"
-                    : "bg-gray-500/10 text-gray-500"
-                }`}>
-                  {stat.changeType === "positive" ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : stat.changeType === "negative" ? (
-                    <TrendingDown className="h-3 w-3" />
-                  ) : (
-                    <Target className="h-3 w-3" />
-                  )}
-                  <span>{stat.change}</span>
+      {/* Premium Stats Cards - Mobile Optimized */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-fade-in">
+        {stats.map((stat, index) => 
+          isMobile ? (
+            <MobileDashboardCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              change={stat.change}
+              changeType={stat.changeType}
+            />
+          ) : (
+            <Card key={index} className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 hover:scale-105">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
+                <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider leading-tight">
+                  {stat.title}
+                </CardTitle>
+                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                  <stat.icon className="h-4 w-4 text-primary" />
                 </div>
-                <span className="text-xs text-muted-foreground">vs último mês</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent className="relative z-10">
+                <div className="text-xl sm:text-2xl font-bold text-foreground mb-2 break-words">
+                  {stat.value}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                    stat.changeType === "positive" 
+                      ? "bg-green-500/10 text-green-500" 
+                      : stat.changeType === "negative"
+                      ? "bg-red-500/10 text-red-500"
+                      : "bg-gray-500/10 text-gray-500"
+                  }`}>
+                    {stat.changeType === "positive" ? (
+                      <TrendingUp className="h-3 w-3" />
+                    ) : stat.changeType === "negative" ? (
+                      <TrendingDown className="h-3 w-3" />
+                    ) : (
+                      <Target className="h-3 w-3" />
+                    )}
+                    <span>{stat.change}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">vs último mês</span>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -237,8 +251,8 @@ const Dashboard = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-6">
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="px-2 sm:px-6">
+            <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
               <LineChart data={salesData}>
                 <defs>
                   <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
@@ -250,28 +264,31 @@ const Dashboard = () => {
                 <XAxis 
                   dataKey="date" 
                   stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
+                  fontSize={isMobile ? 10 : 12}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
+                  fontSize={isMobile ? 10 : 12}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
                 />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '12px',
-                    boxShadow: 'var(--shadow-card)'
+                    boxShadow: 'var(--shadow-card)',
+                    fontSize: isMobile ? '12px' : '14px'
                   }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="amount" 
                   stroke="hsl(262 83% 58%)" 
-                  strokeWidth={3}
+                  strokeWidth={isMobile ? 2 : 3}
                   fill="url(#salesGradient)"
-                  dot={{ fill: 'hsl(262 83% 58%)', strokeWidth: 2, r: 6 }}
-                  activeDot={{ r: 8, stroke: 'hsl(262 83% 58%)', strokeWidth: 2, fill: 'white' }}
+                  dot={{ fill: 'hsl(262 83% 58%)', strokeWidth: 2, r: isMobile ? 4 : 6 }}
+                  activeDot={{ r: isMobile ? 6 : 8, stroke: 'hsl(262 83% 58%)', strokeWidth: 2, fill: 'white' }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -293,21 +310,21 @@ const Dashboard = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-6">
+          <CardContent className="px-2 sm:px-6">
             {topProducts.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/10 flex items-center justify-center">
-                  <ShoppingCart className="h-8 w-8 text-muted-foreground" />
+              <div className="text-center py-8 sm:py-16">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-muted/10 flex items-center justify-center">
+                  <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
                 </div>
-                <p className="text-foreground font-medium mb-1">
+                <p className="text-foreground font-medium mb-1 text-sm sm:text-base">
                   Nenhuma venda registada
                 </p>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-xs sm:text-sm">
                   Os produtos mais vendidos aparecerão aqui quando houver vendas
                 </p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
                 <BarChart data={topProducts}>
                   <defs>
                     <linearGradient id="productGradient" x1="0" y1="0" x2="0" y2="1">
@@ -319,18 +336,24 @@ const Dashboard = () => {
                   <XAxis 
                     dataKey="name" 
                     stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
+                    fontSize={isMobile ? 10 : 12}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    angle={isMobile ? -45 : 0}
+                    textAnchor={isMobile ? "end" : "middle"}
+                    height={isMobile ? 60 : 30}
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
+                    fontSize={isMobile ? 10 : 12}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
                   />
                   <Tooltip 
                     contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '12px',
-                      boxShadow: 'var(--shadow-card)'
+                      boxShadow: 'var(--shadow-card)',
+                      fontSize: isMobile ? '12px' : '14px'
                     }}
                   />
                   <Bar 

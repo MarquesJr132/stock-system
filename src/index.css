@@ -196,6 +196,44 @@ All colors MUST be HSL.
     box-shadow: var(--shadow-elegant);
   }
 
+  /* Mobile-first utilities */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .mobile-spacing {
+    padding: 1rem;
+  }
+  
+  .mobile-text {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .mobile-card {
+    @apply p-4 rounded-xl border bg-card shadow-sm;
+  }
+  
+  .mobile-input {
+    @apply h-12 px-4 text-base rounded-lg border bg-input;
+  }
+  
+  .mobile-button {
+    @apply h-12 px-6 text-base font-medium rounded-lg touch-target;
+  }
+  
+  .swipe-action {
+    transition: transform 0.2s ease-out;
+  }
+  
+  .swipe-left {
+    transform: translateX(-100px);
+  }
+  
+  .mobile-nav-bottom {
+    @apply fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-sm;
+  }
+
   /* Ensure sidebar tokens always apply (prevents theme mismatch) */
   [data-sidebar="sidebar"] {
     @apply bg-sidebar text-sidebar-foreground;
