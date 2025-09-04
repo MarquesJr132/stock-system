@@ -61,7 +61,8 @@ export const IntelligentAlerts = () => {
       const newAlerts: Alert[] = [];
 
       // 1. Low stock alerts
-      const lowStockProducts = getLowStockProducts();
+      try {
+        const lowStockProducts = getLowStockProducts();
       if (lowStockProducts.length > 0) {
         newAlerts.push({
           id: 'low-stock',
@@ -177,10 +178,13 @@ export const IntelligentAlerts = () => {
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         return priorityOrder[b.priority] - priorityOrder[a.priority];
       }));
+      } catch (error) {
+        console.error('Error generating alerts:', error);
+      }
     };
 
     generateAlerts();
-  }, [products, sales, businessGoals, topCustomers, getLowStockProducts]);
+  }, [products, sales, businessGoals, topCustomers]);
 
   const displayedAlerts = showAll ? alerts : alerts.slice(0, isMobile ? 3 : 4);
 

@@ -16,7 +16,9 @@ const API_CACHE_PATTERNS = [
   /\/api\/products/,
   /\/api\/customers/,
   /\/api\/sales/,
-  /supabase\.co.*\/rest\/v1\/(products|customers|sales)/
+  /supabase\.co.*\/rest\/v1\/(products|customers|sales|sale_items|quotations|quotation_items|company_settings|tenant_limits|data_usage_log|monthly_statistics)/,
+  /supabase\.co.*\/rest\/v1\/rpc/,
+  /supabase\.co.*\/auth/
 ];
 
 // Install event - cache critical resources

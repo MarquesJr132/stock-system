@@ -133,6 +133,17 @@ export const useSupabaseData = () => {
     }
   }, [user, profile, isInitialized]);
 
+  // Re-fetch data when coming back online
+  useEffect(() => {
+    if (syncStatus.isOnline && user && profile && isInitialized) {
+      const timer = setTimeout(() => {
+        fetchAllData();
+      }, 1000); // Small delay to ensure stability
+      
+      return () => clearTimeout(timer);
+    }
+  }, [syncStatus.isOnline, user, profile, isInitialized]);
+
   const fetchAllData = async () => {
     try {
       setLoading(true);
@@ -195,50 +206,103 @@ export const useSupabaseData = () => {
   const fetchCustomers = async () => {
     if (!profile) return;
     
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('tenant_id', profile.tenant_id || profile.id)
-      .order('created_at', { ascending: false });
+    try {
+      if (syncStatus.isOnline) {
+        const { data, error } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('tenant_id', profile.tenant_id || profile.id)
+          .order('created_at', { ascending: false });
 
-    if (error) {
+        if (error) throw error;
+        
+        const customers = data || [];
+        setCustomers(customers);
+        await saveData('customers', customers);
+      } else {
+        const offlineCustomers = await getData('customers');
+        setCustomers(offlineCustomers);
+      }
+    } catch (error) {
       console.error('Error fetching customers:', error);
-      return;
+      
+      try {
+        const offlineCustomers = await getData('customers');
+        setCustomers(offlineCustomers);
+        if (offlineCustomers.length > 0) {
+          toast({ title: "Offline", description: "Carregando clientes offline" });
+        }
+      } catch (offlineError) {
+        console.error('Offline customers fetch failed:', offlineError);
+      }
     }
-    
-    setCustomers(data || []);
   };
 
   const fetchSales = async () => {
     if (!profile) return;
     
-    const { data, error } = await supabase
-      .from('sales')
-      .select('*')
-      .eq('tenant_id', profile.tenant_id || profile.id)
-      .order('created_at', { ascending: false });
+    try {
+      if (syncStatus.isOnline) {
+        const { data, error } = await supabase
+          .from('sales')
+          .select('*')
+          .eq('tenant_id', profile.tenant_id || profile.id)
+          .order('created_at', { ascending: false });
 
-    if (error) {
+        if (error) throw error;
+        
+        const sales = data || [];
+        setSales(sales);
+        await saveData('sales', sales);
+      } else {
+        const offlineSales = await getData('sales');
+        setSales(offlineSales);
+      }
+    } catch (error) {
       console.error('Error fetching sales:', error);
-      throw error;
+      
+      try {
+        const offlineSales = await getData('sales');
+        setSales(offlineSales);
+        if (offlineSales.length > 0) {
+          toast({ title: "Offline", description: "Carregando vendas offline" });
+        }
+      } catch (offlineError) {
+        console.error('Offline sales fetch failed:', offlineError);
+      }
     }
-    setSales(data || []);
   };
 
   const fetchSaleItems = async () => {
     if (!profile) return;
     
-    const { data, error } = await supabase
-      .from('sale_items')
-      .select('*')
-      .eq('tenant_id', profile.tenant_id || profile.id)
-      .order('created_at', { ascending: false });
+    try {
+      if (syncStatus.isOnline) {
+        const { data, error } = await supabase
+          .from('sale_items')
+          .select('*')
+          .eq('tenant_id', profile.tenant_id || profile.id)
+          .order('created_at', { ascending: false });
 
-    if (error) {
+        if (error) throw error;
+        
+        const saleItems = data || [];
+        setSaleItems(saleItems);
+        await saveData('sale_items', saleItems);
+      } else {
+        const offlineSaleItems = await getData('sale_items');
+        setSaleItems(offlineSaleItems);
+      }
+    } catch (error) {
       console.error('Error fetching sale items:', error);
-      throw error;
+      
+      try {
+        const offlineSaleItems = await getData('sale_items');
+        setSaleItems(offlineSaleItems);
+      } catch (offlineError) {
+        console.error('Offline sale items fetch failed:', offlineError);
+      }
     }
-    setSaleItems(data || []);
   };
 
   const fetchSaleItemsBySaleId = async (saleId: string) => {
@@ -257,19 +321,33 @@ export const useSupabaseData = () => {
   const fetchCompanySettings = async () => {
     if (!profile) return;
     
-    const { data, error } = await supabase
-      .from('company_settings')
-      .select('*')
-      .eq('tenant_id', profile.tenant_id || profile.id)
-      .single();
+    try {
+      if (syncStatus.isOnline) {
+        const { data, error } = await supabase
+          .from('company_settings')
+          .select('*')
+          .eq('tenant_id', profile.tenant_id || profile.id)
+          .single();
 
-    if (error) {
-      if (error.code !== 'PGRST116') { // Not found error
-        console.error('Error fetching company settings:', error);
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        const settings = data || null;
+        setCompanySettings(settings);
+        await saveData('company_settings', settings ? [settings] : []);
+      } else {
+        const offlineSettings = await getData('company_settings');
+        setCompanySettings(offlineSettings.length > 0 ? offlineSettings[0] : null);
       }
-      return;
+    } catch (error) {
+      console.error('Error fetching company settings:', error);
+      
+      try {
+        const offlineSettings = await getData('company_settings');
+        setCompanySettings(offlineSettings.length > 0 ? offlineSettings[0] : null);
+      } catch (offlineError) {
+        console.error('Offline company settings fetch failed:', offlineError);
+      }
     }
-    setCompanySettings(data);
   };
 
   const fetchTenantLimits = async () => {
@@ -330,13 +408,44 @@ export const useSupabaseData = () => {
       tenant_id: tenantId,
     };
 
-    const { data, error } = await supabase
-      .from('products')
-      .insert([newProduct])
-      .select()
-      .single();
+    try {
+      if (syncStatus.isOnline) {
+        const { data, error } = await supabase
+          .from('products')
+          .insert([newProduct])
+          .select()
+          .single();
 
-    if (error) {
+        if (error) throw error;
+
+        setProducts(prev => [data, ...prev]);
+        await saveData('products', [data, ...products]);
+        toast({
+          title: "Sucesso",
+          description: "Produto criado com sucesso",
+        });
+        return { data };
+      } else {
+        // Offline mode
+        const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const tempProduct = { ...newProduct, id: tempId, created_at: new Date().toISOString() };
+        
+        setProducts(prev => [tempProduct, ...prev]);
+        await saveData('products', [tempProduct, ...products]);
+        await addPendingOperation({
+          type: 'create',
+          table: 'products',
+          data: newProduct,
+          tenant_id: tenantId
+        });
+        
+        toast({
+          title: "Offline",
+          description: "Produto salvo offline. Será sincronizado quando voltar online.",
+        });
+        return { data: tempProduct };
+      }
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Erro ao criar produto",
@@ -344,24 +453,46 @@ export const useSupabaseData = () => {
       });
       return { error: error.message };
     }
-
-    setProducts(prev => [data, ...prev]);
-    toast({
-      title: "Sucesso",
-      description: "Produto criado com sucesso",
-    });
-    return { data };
   };
 
   const updateProduct = async (id: string, productData: Partial<Product>) => {
-    const { data, error } = await supabase
-      .from('products')
-      .update(productData)
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      if (syncStatus.isOnline) {
+        const { data, error } = await supabase
+          .from('products')
+          .update(productData)
+          .eq('id', id)
+          .select()
+          .single();
 
-    if (error) {
+        if (error) throw error;
+
+        setProducts(prev => prev.map(p => p.id === id ? data : p));
+        await saveData('products', products.map(p => p.id === id ? data : p));
+        toast({
+          title: "Sucesso",
+          description: "Produto atualizado com sucesso",
+        });
+        return { data };
+      } else {
+        // Offline mode
+        const updatedProduct = { ...products.find(p => p.id === id), ...productData } as Product;
+        setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
+        await saveData('products', products.map(p => p.id === id ? updatedProduct : p));
+        await addPendingOperation({
+          type: 'update',
+          table: 'products',
+          data: { id, ...productData },
+          tenant_id: profile?.tenant_id || profile?.id || ''
+        });
+        
+        toast({
+          title: "Offline",
+          description: "Produto atualizado offline. Será sincronizado quando voltar online.",
+        });
+        return { data: updatedProduct };
+      }
+    } catch (error: any) {
       toast({
         title: "Erro",
         description: "Erro ao atualizar produto",
@@ -369,13 +500,6 @@ export const useSupabaseData = () => {
       });
       return { error: error.message };
     }
-
-    setProducts(prev => prev.map(p => p.id === id ? data : p));
-    toast({
-      title: "Sucesso",
-      description: "Produto atualizado com sucesso",
-    });
-    return { data };
   };
 
   const deleteProduct = async (id: string) => {
@@ -424,13 +548,44 @@ export const useSupabaseData = () => {
       tenant_id: tenantId,
     };
 
-    const { data, error } = await supabase
-      .from('customers')
-      .insert([newCustomer])
-      .select()
-      .single();
+    try {
+      if (syncStatus.isOnline) {
+        const { data, error } = await supabase
+          .from('customers')
+          .insert([newCustomer])
+          .select()
+          .single();
 
-    if (error) {
+        if (error) throw error;
+
+        setCustomers(prev => [data, ...prev]);
+        await saveData('customers', [data, ...customers]);
+        toast({
+          title: "Sucesso",
+          description: "Cliente criado com sucesso",
+        });
+        return { data };
+      } else {
+        // Offline mode
+        const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const tempCustomer = { ...newCustomer, id: tempId, created_at: new Date().toISOString() };
+        
+        setCustomers(prev => [tempCustomer, ...prev]);
+        await saveData('customers', [tempCustomer, ...customers]);
+        await addPendingOperation({
+          type: 'create',
+          table: 'customers',
+          data: newCustomer,
+          tenant_id: tenantId
+        });
+        
+        toast({
+          title: "Offline",
+          description: "Cliente salvo offline. Será sincronizado quando voltar online.",
+        });
+        return { data: tempCustomer };
+      }
+    } catch (error: any) {
       toast({
         title: "Erro",
         description: "Erro ao criar cliente",
@@ -438,13 +593,6 @@ export const useSupabaseData = () => {
       });
       return { error: error.message };
     }
-
-    setCustomers(prev => [data, ...prev]);
-    toast({
-      title: "Sucesso",
-      description: "Cliente criado com sucesso",
-    });
-    return { data };
   };
 
   const updateCustomer = async (id: string, customerData: Partial<Customer>) => {
@@ -520,27 +668,50 @@ export const useSupabaseData = () => {
     }
 
     try {
-      // Usar a nova função atômica para validar e atualizar stock
-      for (const item of saleData.items) {
-        const { data: stockValid, error: stockError } = await supabase
-          .rpc('atomic_stock_update', {
-            p_product_id: item.product_id,
-            p_quantity_change: -item.quantity, // Negativo para reduzir stock
-            p_tenant_id: tenantId
-          });
+      if (syncStatus.isOnline) {
+        // Online mode: Use atomic stock update
+        for (const item of saleData.items) {
+          const { data: stockValid, error: stockError } = await supabase
+            .rpc('atomic_stock_update', {
+              p_product_id: item.product_id,
+              p_quantity_change: -item.quantity,
+              p_tenant_id: tenantId
+            });
 
-        if (stockError) {
-          console.error('Stock validation error:', stockError);
-          toast({
-            title: "Erro de Stock",
-            description: stockError.message,
-            variant: "destructive",
-          });
-          return { error: stockError.message };
+          if (stockError) {
+            console.error('Stock validation error:', stockError);
+            toast({
+              title: "Erro de Stock",
+              description: stockError.message,
+              variant: "destructive",
+            });
+            return { error: stockError.message };
+          }
+        }
+      } else {
+        // Offline mode: Local stock validation
+        for (const item of saleData.items) {
+          const product = products.find(p => p.id === item.product_id);
+          if (!product) {
+            toast({
+              title: "Produto não encontrado",
+              description: `Produto ${item.product_id} não encontrado`,
+              variant: "destructive",
+            });
+            return { error: 'Product not found' };
+          }
+          if (product.quantity < item.quantity) {
+            toast({
+              title: "Stock insuficiente",
+              description: `Stock insuficiente para ${product.name}. Disponível: ${product.quantity}`,
+              variant: "destructive",
+            });
+            return { error: 'Insufficient stock' };
+          }
         }
       }
 
-      // Criar a venda
+      // Create sale
       const newSale = {
         customer_id: saleData.customer_id,
         payment_method: saleData.payment_method,
@@ -551,68 +722,103 @@ export const useSupabaseData = () => {
         tenant_id: tenantId,
       };
 
-      const { data: sale, error: saleError } = await supabase
-        .from('sales')
-        .insert([newSale])
-        .select()
-        .single();
+      if (syncStatus.isOnline) {
+        // Online mode: Create in database
+        const { data: sale, error: saleError } = await supabase
+          .from('sales')
+          .insert([newSale])
+          .select()
+          .single();
 
-      if (saleError) {
-        console.error('Error creating sale:', saleError);
-        
-        // Reverter alterações de stock se a venda falhou
-        for (const item of saleData.items) {
-          await supabase.rpc('atomic_stock_update', {
-            p_product_id: item.product_id,
-            p_quantity_change: item.quantity, // Positivo para restaurar stock
-            p_tenant_id: tenantId
-          });
+        if (saleError) {
+          console.error('Error creating sale:', saleError);
+          
+          // Revert stock changes if sale failed
+          for (const item of saleData.items) {
+            await supabase.rpc('atomic_stock_update', {
+              p_product_id: item.product_id,
+              p_quantity_change: item.quantity,
+              p_tenant_id: tenantId
+            });
+          }
+          
+          throw saleError;
         }
-        
-        throw saleError;
-      }
 
-      // Criar os itens da venda
-      const saleItems = saleData.items.map(item => ({
-        sale_id: sale.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        subtotal: item.subtotal,
-        total: item.total,
-        vat_amount: item.vat_amount || 0,
-        includes_vat: item.includes_vat || false,
-        tenant_id: profile.tenant_id || profile.id,
-      }));
+        // Create sale items
+        const saleItems = saleData.items.map(item => ({
+          sale_id: sale.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal,
+          total: item.total,
+          vat_amount: item.vat_amount || 0,
+          includes_vat: item.includes_vat || false,
+          tenant_id: profile.tenant_id || profile.id,
+        }));
 
-      const { error: itemsError } = await supabase
-        .from('sale_items')
-        .insert(saleItems);
+        const { error: itemsError } = await supabase
+          .from('sale_items')
+          .insert(saleItems);
 
-      if (itemsError) {
-        console.error('Error creating sale items:', itemsError);
-        
-        // Reverter a venda e o stock se os itens falharam
-        await supabase.from('sales').delete().eq('id', sale.id);
-        for (const item of saleData.items) {
-          await supabase.rpc('atomic_stock_update', {
-            p_product_id: item.product_id,
-            p_quantity_change: item.quantity, // Positivo para restaurar stock
-            p_tenant_id: tenantId
-          });
+        if (itemsError) {
+          console.error('Error creating sale items:', itemsError);
+          
+          // Revert sale and stock if items failed
+          await supabase.from('sales').delete().eq('id', sale.id);
+          for (const item of saleData.items) {
+            await supabase.rpc('atomic_stock_update', {
+              p_product_id: item.product_id,
+              p_quantity_change: item.quantity,
+              p_tenant_id: tenantId
+            });
+          }
+          
+          throw itemsError;
         }
+
+        await fetchAllData();
+
+        toast({
+          title: "Sucesso",
+          description: "Venda registrada com sucesso",
+        });
+        return { data: sale };
+      } else {
+        // Offline mode: Create temporary sale and update local stock
+        const tempSaleId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const tempSale = { ...newSale, id: tempSaleId, created_at: new Date().toISOString() };
         
-        throw itemsError;
+        // Update local stock
+        const updatedProducts = products.map(product => {
+          const item = saleData.items.find(i => i.product_id === product.id);
+          if (item) {
+            return { ...product, quantity: product.quantity - item.quantity };
+          }
+          return product;
+        });
+        
+        setProducts(updatedProducts);
+        setSales(prev => [tempSale, ...prev]);
+        
+        await saveData('products', updatedProducts);
+        await saveData('sales', [tempSale, ...sales]);
+        
+        // Queue for sync
+        await addPendingOperation({
+          type: 'create',
+          table: 'sales',
+          data: { ...newSale, sale_items: saleData.items },
+          tenant_id: tenantId
+        });
+        
+        toast({
+          title: "Offline",
+          description: "Venda salva offline. Será sincronizada quando voltar online.",
+        });
+        return { data: tempSale };
       }
-
-      // Refresh data
-      await fetchAllData();
-
-      toast({
-        title: "Sucesso",
-        description: "Venda registrada com sucesso",
-      });
-      return { data: sale };
     } catch (error: any) {
       toast({
         title: "Erro",
