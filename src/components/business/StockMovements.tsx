@@ -13,13 +13,13 @@ import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileTable, SimpleMobileCard } from '@/components/mobile/MobileTable';
+
 
 export const StockMovements = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     product_id: '',
-    movement_type: 'in' as const,
+    movement_type: 'in' as 'in' | 'out' | 'transfer' | 'adjustment' | 'reservation',
     quantity: '',
     unit_cost: '',
     from_location: '',
@@ -48,104 +48,97 @@ export const StockMovements = () => {
       toast({
         title: "Acesso negado",
         description: "Apenas administradores podem registar movimentações.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
 
-    const movementData = {
-      product_id: formData.product_id,
-      movement_type: formData.movement_type,
-      quantity: parseInt(formData.quantity),
-      unit_cost: formData.unit_cost ? parseFloat(formData.unit_cost) : undefined,
-      from_location: formData.from_location || undefined,
-      to_location: formData.to_location || undefined,
-      notes: formData.notes || undefined,
-      reference_type: 'adjustment' // Manual adjustments
-    };
-
-    const result = await createStockMovement(movementData);
-    
-    if (result) {
-      toast({
-        title: "Movimentação registada",
-        description: "Movimentação de stock foi registada com sucesso.",
+    try {
+      await createStockMovement({
+        product_id: formData.product_id,
+        movement_type: formData.movement_type,
+        quantity: parseInt(formData.quantity),
+        unit_cost: formData.unit_cost ? parseFloat(formData.unit_cost) : null,
+        from_location: formData.from_location || null,
+        to_location: formData.to_location || null,
+        notes: formData.notes || null
       });
-      
-      setDialogOpen(false);
+
+      toast({
+        title: "Movimento registado",
+        description: "Movimentação de stock criada com sucesso."
+      });
+
       setFormData({
         product_id: '',
-        movement_type: 'in',
+        movement_type: 'in' as 'in' | 'out' | 'transfer' | 'adjustment' | 'reservation',
         quantity: '',
         unit_cost: '',
         from_location: '',
         to_location: '',
         notes: ''
       });
-      refreshData();
-    } else {
+      setDialogOpen(false);
+      await refreshData();
+    } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível registar a movimentação.",
-        variant: "destructive",
+        description: "Falha ao registar movimento.",
+        variant: "destructive"
       });
     }
   };
 
   const getMovementTypeInfo = (type: string) => {
-    return movementTypes.find(mt => mt.value === type) || movementTypes[0];
+    return movementTypes.find(t => t.value === type) || movementTypes[0];
   };
 
-  const getMovementDirection = (type: string) => {
-    switch (type) {
-      case 'in':
-      case 'adjustment':
-        return '+';
-      case 'out':
-      case 'reservation':
-        return '-';
-      case 'transfer':
-        return '→';
-      default:
-        return '';
-    }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-PT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Movimentações de Stock</h3>
-          <p className="text-sm text-muted-foreground">
-            Histórico detalhado de entradas, saídas e transferências
-          </p>
-        </div>
-        
-        {isAdministrator && (
+  const getProductName = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    return product?.name || 'Produto não encontrado';
+  };
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-xl font-bold">Movimentações de Stock</h2>
+            <p className="text-sm text-muted-foreground">
+              Controlo de entradas, saídas e transferências
+            </p>
+          </div>
+
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                {!isMobile && "Nova Movimentação"}
+              <Button className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Movimentação
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="w-[95vw] max-w-md mx-auto">
               <DialogHeader>
-                <DialogTitle>Registar Movimentação</DialogTitle>
+                <DialogTitle>Nova Movimentação</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="product_id">Produto *</Label>
-                  <Select 
-                    value={formData.product_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, product_id: value }))}
-                  >
+                  <Label htmlFor="product_id">Produto</Label>
+                  <Select value={formData.product_id} onValueChange={(value) => setFormData(prev => ({ ...prev, product_id: value }))}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um produto" />
+                      <SelectValue placeholder="Selecionar produto" />
                     </SelectTrigger>
                     <SelectContent>
-                      {products.map((product) => (
+                      {products.map(product => (
                         <SelectItem key={product.id} value={product.id}>
                           {product.name}
                         </SelectItem>
@@ -154,28 +147,28 @@ export const StockMovements = () => {
                   </Select>
                 </div>
 
+                <div>
+                  <Label htmlFor="movement_type">Tipo de Movimento</Label>
+                  <Select value={formData.movement_type} onValueChange={(value) => setFormData(prev => ({ ...prev, movement_type: value as any }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {movementTypes.map(type => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <div className="flex items-center gap-2">
+                            <type.icon className={`h-4 w-4 ${type.color}`} />
+                            {type.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="movement_type">Tipo de Movimento *</Label>
-                    <Select 
-                      value={formData.movement_type} 
-                      onValueChange={(value: any) => setFormData(prev => ({ ...prev, movement_type: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {movementTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="quantity">Quantidade *</Label>
+                    <Label htmlFor="quantity">Quantidade</Label>
                     <Input
                       id="quantity"
                       type="number"
@@ -185,9 +178,6 @@ export const StockMovements = () => {
                       required
                     />
                   </div>
-                </div>
-
-                {(formData.movement_type === 'in') && (
                   <div>
                     <Label htmlFor="unit_cost">Custo Unitário</Label>
                     <Input
@@ -199,8 +189,9 @@ export const StockMovements = () => {
                       placeholder="0.00"
                     />
                   </div>
-                )}
+                </div>
 
+                {formData.movement_type === 'transfer' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="from_location">De (Local)</Label>
@@ -249,148 +240,261 @@ export const StockMovements = () => {
               </form>
             </DialogContent>
           </Dialog>
-        )}
-      </div>
+        </div>
 
-      {/* Movements List */}
-      {stockMovements.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <Package className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-              Nenhuma movimentação registada
-            </h3>
-            <p className="text-sm text-muted-foreground text-center mb-4">
-              Todas as entradas, saídas e transferências aparecerão aqui
-            </p>
-            {isAdministrator && (
-              <Button onClick={() => setDialogOpen(true)} size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Primeira Movimentação
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : isMobile ? (
-        <MobileTable
-          items={stockMovements}
-          renderCard={(movement) => {
-            const typeInfo = getMovementTypeInfo(movement.movement_type);
-            const Icon = typeInfo.icon;
-            
-            return (
-              <SimpleMobileCard
-                title={movement.products?.name || 'Produto Desconhecido'}
-                subtitle={typeInfo.label}
-                badge={`${getMovementDirection(movement.movement_type)}${movement.quantity}`}
-                badgeVariant={movement.movement_type === 'in' ? 'default' : movement.movement_type === 'out' ? 'destructive' : 'secondary'}
-                content={
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Icon className={`h-4 w-4 ${typeInfo.color}`} />
-                      <span>{new Date(movement.created_at).toLocaleString('pt-PT')}</span>
-                    </div>
-                    {movement.reference_type && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Referência:</span>
-                        <span className="font-medium capitalize">{movement.reference_type}</span>
-                      </div>
-                    )}
-                    {movement.from_location && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">De:</span>
-                        <span className="font-medium">{movement.from_location}</span>
-                      </div>
-                    )}
-                    {movement.to_location && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Para:</span>
-                        <span className="font-medium">{movement.to_location}</span>
-                      </div>
-                    )}
-                    {movement.notes && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {movement.notes}
-                      </p>
-                    )}
-                  </div>
-                }
-              />
-            );
-          }}
-          emptyMessage="Nenhuma movimentação encontrada"
-        />
-      ) : (
-        <div className="space-y-4">
-          {stockMovements.map((movement) => {
-            const typeInfo = getMovementTypeInfo(movement.movement_type);
-            const Icon = typeInfo.icon;
-            
-            return (
-              <Card key={movement.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className={`p-3 rounded-lg bg-gray-100 ${typeInfo.color}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold truncate">
-                          {movement.products?.name || 'Produto Desconhecido'}
-                        </h4>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{typeInfo.label}</span>
-                          <span>•</span>
-                          <span>{new Date(movement.created_at).toLocaleString('pt-PT')}</span>
-                          {movement.reference_type && (
-                            <>
-                              <span>•</span>
-                              <span className="capitalize">{movement.reference_type}</span>
-                            </>
+          <CardContent className="p-4">
+            {stockMovements.length === 0 ? (
+              <div className="text-center py-8">
+                <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Nenhuma movimentação registada</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stockMovements.map((movement) => {
+                  const typeInfo = getMovementTypeInfo(movement.movement_type);
+                  const TypeIcon = typeInfo.icon;
+
+                  return (
+                    <div key={movement.id} className="p-3 border rounded-lg bg-background">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className="p-2 rounded-lg bg-accent/10 flex-shrink-0">
+                            <TypeIcon className={`h-4 w-4 ${typeInfo.color}`} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm truncate">{getProductName(movement.product_id)}</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(movement.created_at)}</p>
+                            {movement.notes && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {movement.notes}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-3">
+                          <Badge variant="outline" className={`text-xs ${typeInfo.color}`}>
+                            {typeInfo.label}
+                          </Badge>
+                          <p className="text-sm font-medium mt-1">
+                            {movement.quantity} un.
+                          </p>
+                          {movement.unit_cost && (
+                            <p className="text-xs text-muted-foreground">
+                              €{(movement.quantity * movement.unit_cost).toFixed(2)}
+                            </p>
                           )}
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="text-right">
-                      <div className={`text-lg font-bold ${
-                        movement.movement_type === 'in' ? 'text-green-600' : 
-                        movement.movement_type === 'out' ? 'text-red-600' : 
-                        'text-blue-600'
-                      }`}>
-                        {getMovementDirection(movement.movement_type)}{movement.quantity}
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Movimentações de Stock</h2>
+          <p className="text-muted-foreground">
+            Controlo de entradas, saídas e transferências
+          </p>
+        </div>
+
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Movimentação
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Nova Movimentação</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="product_id">Produto</Label>
+                  <Select value={formData.product_id} onValueChange={(value) => setFormData(prev => ({ ...prev, product_id: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar produto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map(product => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="movement_type">Tipo de Movimento</Label>
+                  <Select value={formData.movement_type} onValueChange={(value) => setFormData(prev => ({ ...prev, movement_type: value as any }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {movementTypes.map(type => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <div className="flex items-center gap-2">
+                            <type.icon className={`h-4 w-4 ${type.color}`} />
+                            {type.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="quantity">Quantidade</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                    placeholder="0"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="unit_cost">Custo Unitário</Label>
+                  <Input
+                    id="unit_cost"
+                    type="number"
+                    step="0.01"
+                    value={formData.unit_cost}
+                    onChange={(e) => setFormData(prev => ({ ...prev, unit_cost: e.target.value }))}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              {formData.movement_type === 'transfer' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="from_location">De (Local)</Label>
+                    <Input
+                      id="from_location"
+                      value={formData.from_location}
+                      onChange={(e) => setFormData(prev => ({ ...prev, from_location: e.target.value }))}
+                      placeholder="Armazém A"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="to_location">Para (Local)</Label>
+                    <Input
+                      id="to_location"
+                      value={formData.to_location}
+                      onChange={(e) => setFormData(prev => ({ ...prev, to_location: e.target.value }))}
+                      placeholder="Loja Central"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="notes">Observações</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Motivo da movimentação..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button type="submit" className="flex-1">
+                  Registar Movimento
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Histórico de Movimentações
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stockMovements.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Nenhuma movimentação registada</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {stockMovements.map((movement) => {
+                const typeInfo = getMovementTypeInfo(movement.movement_type);
+                const TypeIcon = typeInfo.icon;
+
+                return (
+                  <div key={movement.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-2 rounded-lg bg-accent/10`}>
+                        <TypeIcon className={`h-4 w-4 ${typeInfo.color}`} />
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        unidades
+                      <div>
+                        <p className="font-medium">{getProductName(movement.product_id)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(movement.created_at)}
+                        </p>
+                        {movement.notes && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {movement.notes}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  </div>
-                  
-                  {(movement.from_location || movement.to_location || movement.notes) && (
-                    <div className="mt-4 pt-4 border-t border-border space-y-2">
-                      {movement.from_location && movement.to_location && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">
-                            De <span className="font-medium">{movement.from_location}</span> 
-                            {' '}para <span className="font-medium">{movement.to_location}</span>
-                          </span>
-                        </div>
+                    <div className="text-right">
+                      <Badge className={typeInfo.color}>
+                        {typeInfo.label}
+                      </Badge>
+                      <p className="text-sm font-medium mt-1">
+                        {movement.quantity} unidades
+                      </p>
+                      {movement.unit_cost && (
+                        <p className="text-xs text-muted-foreground">
+                          €{(movement.quantity * movement.unit_cost).toFixed(2)}
+                        </p>
                       )}
-                      {movement.notes && (
-                        <p className="text-sm text-muted-foreground">
-                          {movement.notes}
+                      {movement.from_location && movement.to_location && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          {movement.from_location} → {movement.to_location}
                         </p>
                       )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

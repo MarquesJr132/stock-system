@@ -21,8 +21,8 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        {/* Sidebar - Hidden on mobile */}
-        {!isMobile && <AppSidebar activeTab={activeTab} onTabChange={onTabChange} />}
+        {/* Sidebar - Always visible, responsive */}
+        <AppSidebar activeTab={activeTab} onTabChange={onTabChange} />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
@@ -30,8 +30,8 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
           <header className="sticky top-0 z-40 w-full border-b border-border glass-effect animate-fade-in">
             <div className="flex h-16 items-center px-4 lg:px-6">
               <div className="flex items-center gap-4 flex-1">
-                {/* Sidebar trigger for mobile - hidden since we use bottom nav */}
-                {!isMobile && <SidebarTrigger className="md:hidden" />}
+                {/* Sidebar trigger */}
+                <SidebarTrigger />
                 
                 {/* Title - responsive */}
                 <div className="flex-1">
@@ -72,16 +72,11 @@ export const AppLayout = ({ children, activeTab, onTabChange }: AppLayoutProps) 
 
           {/* Page content */}
           <main className="flex-1 overflow-auto">
-            <div className={`container mx-auto p-4 lg:p-8 space-y-8 animate-slide-up ${isMobile ? 'pb-20' : ''}`}>
+            <div className="container mx-auto p-4 lg:p-8 space-y-8 animate-slide-up">
               {children}
             </div>
           </main>
         </div>
-
-        {/* Mobile Bottom Navigation */}
-        {isMobile && (
-          <MobileBottomNav activeTab={activeTab} onTabChange={onTabChange} />
-        )}
       </div>
     </SidebarProvider>
   );
