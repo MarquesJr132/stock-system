@@ -43,6 +43,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('AuthProvider: Initializing...');
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -81,13 +82,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    console.log('AuthProvider: useEffect starting...');
     // Safety: prevent infinite loading if something stalls
     const safety = setTimeout(() => {
       console.warn('AuthContext: safety timeout hit, forcing loading=false');
       setLoading(false);
     }, 5000);
 
-    // Set up auth state listener
+    console.log('AuthProvider: setting up auth state listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         // Prevent unnecessary state updates if nothing changed
@@ -114,14 +116,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
+    console.log('AuthProvider: checking for existing session...');
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('AuthContext: Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('AuthProvider: found user, fetching profile...');
         fetchProfile(session.user.id);
       } else {
+        console.log('AuthProvider: no user found, setting loading=false');
         setLoading(false);
       }
     }).catch((error) => {
@@ -349,6 +354,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdministrator: isAdminCheck,
     isGerente: isGerenteCheck
   };
+
+  console.log('AuthProvider: rendering with loading =', loading, 'user =', !!user, 'profile =', !!profile);
 
   return (
     <AuthContext.Provider value={value}>

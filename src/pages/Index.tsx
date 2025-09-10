@@ -28,7 +28,10 @@ const Index = () => {
   const { user, loading, isSuperuser } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
 
+  console.log('Index: rendering with loading =', loading, 'user =', !!user, 'isSuperuser =', isSuperuser);
+
   if (loading) {
+    console.log('Index: showing loading spinner');
     return <LoadingSpinner />;
   }
 
