@@ -1729,16 +1729,16 @@ export const useSupabaseData = () => {
 
   const syncTenantData = async (tenantId: string, countAllData: boolean = false) => {
     try {
-      const { error } = await supabase.rpc('sync_tenant_data_usage', {
-        tenant_uuid: tenantId,
-        count_all_data: countAllData
+      // Use the new optimized space-focused sync function
+      const { error } = await supabase.rpc('sync_tenant_space_usage', {
+        tenant_uuid: tenantId
       });
 
       if (error) throw error;
 
       const message = countAllData ? 
-        "Dados totais do tenant sincronizados com sucesso" : 
-        "Dados mensais do tenant sincronizados com sucesso";
+        "Espaço total do tenant sincronizado com sucesso" : 
+        "Uso de espaço do tenant sincronizado com sucesso";
 
       toast({
         title: "Sucesso",
@@ -1749,10 +1749,10 @@ export const useSupabaseData = () => {
       await fetchTenantLimits();
 
     } catch (error: any) {
-      console.error('Error syncing tenant data:', error);
+      console.error('Error syncing tenant space usage:', error);
       toast({
         title: "Erro",
-        description: "Erro ao sincronizar dados do tenant",
+        description: "Erro ao sincronizar uso de espaço do tenant",
         variant: "destructive",
       });
     }

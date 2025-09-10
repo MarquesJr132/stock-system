@@ -392,7 +392,10 @@ const TenantLimitsManagement = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Espaço Estimado:</span>
                       <span className="font-semibold">
-                        {(limit.current_month_space_usage_mb || 0).toFixed(1)}MB / {limit.monthly_space_limit_mb || 500}MB
+                        {(limit.current_month_space_usage_mb || 0) < 1 
+                          ? `${(limit.current_month_space_usage_mb || 0).toFixed(3)}MB` 
+                          : `${(limit.current_month_space_usage_mb || 0).toFixed(1)}MB`
+                        } / {limit.monthly_space_limit_mb || 500}MB
                       </span>
                     </div>
                     
@@ -430,7 +433,10 @@ const TenantLimitsManagement = () => {
                       <div className="text-center">
                         <span className="text-muted-foreground block">Espaço restante:</span>
                         <span className="font-medium">
-                          {Math.max(0, (limit.monthly_space_limit_mb || 500) - (limit.current_month_space_usage_mb || 0)).toFixed(1)}MB
+                          {(() => {
+                            const remaining = Math.max(0, (limit.monthly_space_limit_mb || 500) - (limit.current_month_space_usage_mb || 0));
+                            return remaining < 1 ? `${remaining.toFixed(3)}MB` : `${remaining.toFixed(1)}MB`;
+                          })()}
                         </span>
                       </div>
                     </div>
