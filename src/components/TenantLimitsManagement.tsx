@@ -363,28 +363,6 @@ const TenantLimitsManagement = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
-                  {/* Uso de Dados */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Dados Mensais:</span>
-                      <span className="font-semibold">
-                        {limit.current_month_usage} / {limit.monthly_data_limit}
-                      </span>
-                    </div>
-                    
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${getUsageColor(usagePercentage)}`}
-                        style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-                      />
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <Badge variant={usagePercentage >= 90 ? "destructive" : usagePercentage >= 70 ? "secondary" : "default"}>
-                        {usagePercentage}% usado
-                      </Badge>
-                    </div>
-                  </div>
 
                   {/* Uso de Usuários */}
                   <div className="space-y-2">
