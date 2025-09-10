@@ -23,12 +23,10 @@ const TenantLimitsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     selected_admin: "",
-    monthly_data_limit: 1000,
     monthly_user_limit: 10,
     monthly_space_limit_mb: 500
   });
   const [editFormData, setEditFormData] = useState({
-    monthly_data_limit: 1000,
     monthly_user_limit: 10,
     monthly_space_limit_mb: 500
   });
@@ -92,7 +90,6 @@ const TenantLimitsManagement = () => {
     
     
     const result = await updateTenantLimits(selectedAdmin.tenant_id || selectedAdmin.id, {
-      monthly_data_limit: formData.monthly_data_limit,
       monthly_user_limit: formData.monthly_user_limit,
       monthly_space_limit_mb: formData.monthly_space_limit_mb
     });
@@ -100,7 +97,7 @@ const TenantLimitsManagement = () => {
     
     if (result.data) {
       setDialogOpen(false);
-      setFormData({ selected_admin: "", monthly_data_limit: 1000, monthly_user_limit: 10, monthly_space_limit_mb: 500 });
+      setFormData({ selected_admin: "", monthly_user_limit: 10, monthly_space_limit_mb: 500 });
       toast.success("Limite definido com sucesso!");
       setTimeout(() => {
         loadTenantLimits();
@@ -129,7 +126,6 @@ const TenantLimitsManagement = () => {
   const openEditDialog = (limit: any) => {
     setEditingLimit(limit);
     setEditFormData({
-      monthly_data_limit: limit.monthly_data_limit,
       monthly_user_limit: limit.monthly_user_limit || 10,
       monthly_space_limit_mb: limit.monthly_space_limit_mb || 500
     });
@@ -195,7 +191,7 @@ const TenantLimitsManagement = () => {
             Gestão de Limites
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            Controle os limites de dados e usuários para cada administrador
+            Controle os limites de espaço e usuários para cada administrador
           </p>
         </div>
         
@@ -258,22 +254,7 @@ const TenantLimitsManagement = () => {
               </div>
 
               <div>
-                <Label htmlFor="monthly_data_limit">Limite Mensal de Dados</Label>
-                <Input
-                  id="monthly_data_limit"
-                  type="number"
-                  value={formData.monthly_data_limit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, monthly_data_limit: parseInt(e.target.value) }))}
-                  min={1}
-                  required
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Número máximo de registros que podem ser criados por mês
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="monthly_user_limit">Limite Mensal de Usuários</Label>
+                <Label htmlFor="monthly_user_limit">Limite de Usuários</Label>
                 <Input
                   id="monthly_user_limit"
                   type="number"
@@ -283,12 +264,12 @@ const TenantLimitsManagement = () => {
                   required
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Número máximo de usuários que podem ser criados por mês
+                  Número máximo de usuários do sistema
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="monthly_space_limit_mb">Limite Mensal de Espaço (MB)</Label>
+                <Label htmlFor="monthly_space_limit_mb">Limite de Espaço (MB)</Label>
                 <Input
                   id="monthly_space_limit_mb"
                   type="number"
@@ -298,7 +279,7 @@ const TenantLimitsManagement = () => {
                   required
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Espaço máximo estimado em megabytes (baseado em tamanhos médios de registros)
+                  Espaço máximo total em megabytes (baseado em tamanhos médios de registros)
                 </p>
               </div>
 
@@ -341,10 +322,9 @@ const TenantLimitsManagement = () => {
           </Card>
         ) : (
           tenantLimits.map((limit) => {
-            const usagePercentage = getUsagePercentage(limit.current_month_usage, limit.monthly_data_limit);
             const userUsagePercentage = getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10);
             const spaceUsagePercentage = getUsagePercentage(limit.current_month_space_usage_mb || 0, limit.monthly_space_limit_mb || 500);
-            const isNearLimit = usagePercentage >= 80 || userUsagePercentage >= 80 || spaceUsagePercentage >= 80;
+            const isNearLimit = userUsagePercentage >= 80 || spaceUsagePercentage >= 80;
             
             return (
               <Card key={limit.id} className={`hover:shadow-lg transition-shadow min-h-[400px] flex flex-col ${isNearLimit ? 'border-yellow-300' : ''}`}>
@@ -492,22 +472,7 @@ const TenantLimitsManagement = () => {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="edit_monthly_data_limit">Limite Mensal de Dados</Label>
-              <Input
-                id="edit_monthly_data_limit"
-                type="number"
-                value={editFormData.monthly_data_limit}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, monthly_data_limit: parseInt(e.target.value) }))}
-                min={1}
-                required
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Número máximo de registros que podem ser criados por mês
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="edit_monthly_user_limit">Limite Mensal de Usuários</Label>
+              <Label htmlFor="edit_monthly_user_limit">Limite de Usuários</Label>
               <Input
                 id="edit_monthly_user_limit"
                 type="number"
@@ -517,12 +482,12 @@ const TenantLimitsManagement = () => {
                 required
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Número máximo de usuários que podem ser criados por mês
+                Número máximo de usuários do sistema
               </p>
             </div>
 
             <div>
-              <Label htmlFor="edit_monthly_space_limit_mb">Limite Mensal de Espaço (MB)</Label>
+              <Label htmlFor="edit_monthly_space_limit_mb">Limite de Espaço (MB)</Label>
               <Input
                 id="edit_monthly_space_limit_mb"
                 type="number"
@@ -532,7 +497,7 @@ const TenantLimitsManagement = () => {
                 required
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Espaço máximo estimado em megabytes (baseado em tamanhos médios de registros)
+                Espaço máximo total em megabytes (baseado em tamanhos médios de registros)
               </p>
             </div>
 
