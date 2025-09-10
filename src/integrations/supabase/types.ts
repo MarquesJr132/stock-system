@@ -1249,14 +1249,14 @@ export type Database = {
           created_by: string
           current_month_space_usage_mb: number | null
           current_month_usage: number
-          current_month_users: number
+          current_total_users: number
           id: string
           limit_period_start: string
           monthly_data_limit: number
           monthly_space_limit_mb: number | null
-          monthly_user_limit: number
           space_estimation_config: Json | null
           tenant_id: string
+          total_user_limit: number
           updated_at: string
         }
         Insert: {
@@ -1264,14 +1264,14 @@ export type Database = {
           created_by: string
           current_month_space_usage_mb?: number | null
           current_month_usage?: number
-          current_month_users?: number
+          current_total_users?: number
           id?: string
           limit_period_start?: string
           monthly_data_limit?: number
           monthly_space_limit_mb?: number | null
-          monthly_user_limit?: number
           space_estimation_config?: Json | null
           tenant_id: string
+          total_user_limit?: number
           updated_at?: string
         }
         Update: {
@@ -1279,14 +1279,14 @@ export type Database = {
           created_by?: string
           current_month_space_usage_mb?: number | null
           current_month_usage?: number
-          current_month_users?: number
+          current_total_users?: number
           id?: string
           limit_period_start?: string
           monthly_data_limit?: number
           monthly_space_limit_mb?: number | null
-          monthly_user_limit?: number
           space_estimation_config?: Json | null
           tenant_id?: string
+          total_user_limit?: number
           updated_at?: string
         }
         Relationships: []
@@ -1407,13 +1407,13 @@ export type Database = {
           created_at: string
           current_month_space_usage_mb: number
           current_month_usage: number
-          current_month_users: number
+          current_total_users: number
           id: string
           limit_period_start: string
           monthly_data_limit: number
           monthly_space_limit_mb: number
-          monthly_user_limit: number
           tenant_id: string
+          total_user_limit: number
           updated_at: string
         }[]
       }

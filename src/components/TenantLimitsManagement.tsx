@@ -90,7 +90,7 @@ const TenantLimitsManagement = () => {
     
     
     const result = await updateTenantLimits(selectedAdmin.tenant_id || selectedAdmin.id, {
-      monthly_user_limit: formData.monthly_user_limit,
+      total_user_limit: formData.monthly_user_limit,
       monthly_space_limit_mb: formData.monthly_space_limit_mb
     });
 
@@ -126,7 +126,7 @@ const TenantLimitsManagement = () => {
   const openEditDialog = (limit: any) => {
     setEditingLimit(limit);
     setEditFormData({
-      monthly_user_limit: limit.monthly_user_limit || 10,
+      monthly_user_limit: limit.total_user_limit || 10,
       monthly_space_limit_mb: limit.monthly_space_limit_mb || 500
     });
     setEditDialogOpen(true);
@@ -191,7 +191,7 @@ const TenantLimitsManagement = () => {
             Gestão de Limites
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            Controle os limites de espaço e usuários para cada administrador
+            Controle os limites de espaço e total de usuários para cada administrador
           </p>
         </div>
         
@@ -254,7 +254,7 @@ const TenantLimitsManagement = () => {
               </div>
 
               <div>
-                <Label htmlFor="monthly_user_limit">Limite de Usuários</Label>
+                <Label htmlFor="monthly_user_limit">Limite Total de Usuários</Label>
                 <Input
                   id="monthly_user_limit"
                   type="number"
@@ -264,7 +264,7 @@ const TenantLimitsManagement = () => {
                   required
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Número máximo de usuários do sistema
+                  Total de usuários permitidos na conta
                 </p>
               </div>
 
@@ -322,7 +322,7 @@ const TenantLimitsManagement = () => {
           </Card>
         ) : (
           tenantLimits.map((limit) => {
-            const userUsagePercentage = getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10);
+            const userUsagePercentage = getUsagePercentage(limit.current_total_users || 0, limit.total_user_limit || 10);
             const spaceUsagePercentage = getUsagePercentage(limit.current_month_space_usage_mb || 0, limit.monthly_space_limit_mb || 500);
             const isNearLimit = userUsagePercentage >= 80 || spaceUsagePercentage >= 80;
             
@@ -367,9 +367,9 @@ const TenantLimitsManagement = () => {
                   {/* Uso de Usuários */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Usuários Mensais:</span>
+                      <span className="text-sm text-muted-foreground">Total de Usuários:</span>
                       <span className="font-semibold">
-                        {limit.current_month_users || 0} / {limit.monthly_user_limit || 10}
+                        {limit.current_total_users || 0} / {limit.total_user_limit || 10}
                       </span>
                     </div>
                     
@@ -417,25 +417,19 @@ const TenantLimitsManagement = () => {
                   </div>
 
                   <div className="pt-2 border-t">
-                    <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="text-center">
-                        <span className="text-muted-foreground block">Dados restantes:</span>
+                        <span className="text-muted-foreground block">Total de usuários usados:</span>
                         <span className="font-medium">
-                          {Math.max(0, limit.monthly_data_limit - limit.current_month_usage)}
+                          {limit.current_total_users || 0}
                         </span>
                       </div>
                       <div className="text-center">
-                        <span className="text-muted-foreground block">Usuários restantes:</span>
-                        <span className="font-medium">
-                          {Math.max(0, (limit.monthly_user_limit || 10) - (limit.current_month_users || 0))}
-                        </span>
-                      </div>
-                      <div className="text-center">
-                        <span className="text-muted-foreground block">Espaço restante:</span>
+                        <span className="text-muted-foreground block">Espaço usado:</span>
                         <span className="font-medium">
                           {(() => {
-                            const remaining = Math.max(0, (limit.monthly_space_limit_mb || 500) - (limit.current_month_space_usage_mb || 0));
-                            return remaining < 1 ? `${remaining.toFixed(3)}MB` : `${remaining.toFixed(1)}MB`;
+                            const used = limit.current_month_space_usage_mb || 0;
+                            return used < 1 ? `${used.toFixed(3)}MB` : `${used.toFixed(1)}MB`;
                           })()}
                         </span>
                       </div>

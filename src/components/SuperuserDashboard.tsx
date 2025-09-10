@@ -146,8 +146,8 @@ export const SuperuserDashboard: React.FC = () => {
 
         const currentUsage = limits?.current_month_usage || 0;
         const dataLimit = limits?.monthly_data_limit || 1000;
-        const currentUsers = limits?.current_month_users || 0;
-        const userLimit = limits?.monthly_user_limit || 10;
+        const currentUsers = limits?.current_total_users || 0;
+        const userLimit = limits?.total_user_limit || 10;
 
         return {
           tenant_id: tenantId,

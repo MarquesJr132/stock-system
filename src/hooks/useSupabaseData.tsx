@@ -68,8 +68,8 @@ export interface TenantLimits {
   tenant_id: string;
   monthly_data_limit: number;
   current_month_usage: number;
-  monthly_user_limit: number;
-  current_month_users: number;
+  total_user_limit: number;
+  current_total_users: number;
   monthly_space_limit_mb?: number;
   current_month_space_usage_mb?: number;
   limit_period_start: string;
