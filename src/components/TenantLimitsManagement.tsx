@@ -24,11 +24,13 @@ const TenantLimitsManagement = () => {
   const [formData, setFormData] = useState({
     selected_admin: "",
     monthly_data_limit: 1000,
-    monthly_user_limit: 10
+    monthly_user_limit: 10,
+    monthly_space_limit_mb: 500
   });
   const [editFormData, setEditFormData] = useState({
     monthly_data_limit: 1000,
-    monthly_user_limit: 10
+    monthly_user_limit: 10,
+    monthly_space_limit_mb: 500
   });
   const [isGlobalSyncing, setIsGlobalSyncing] = useState(false);
 
@@ -91,13 +93,14 @@ const TenantLimitsManagement = () => {
     
     const result = await updateTenantLimits(selectedAdmin.tenant_id || selectedAdmin.id, {
       monthly_data_limit: formData.monthly_data_limit,
-      monthly_user_limit: formData.monthly_user_limit
+      monthly_user_limit: formData.monthly_user_limit,
+      monthly_space_limit_mb: formData.monthly_space_limit_mb
     });
 
     
     if (result.data) {
       setDialogOpen(false);
-      setFormData({ selected_admin: "", monthly_data_limit: 1000, monthly_user_limit: 10 });
+      setFormData({ selected_admin: "", monthly_data_limit: 1000, monthly_user_limit: 10, monthly_space_limit_mb: 500 });
       toast.success("Limite definido com sucesso!");
       setTimeout(() => {
         loadTenantLimits();
@@ -127,7 +130,8 @@ const TenantLimitsManagement = () => {
     setEditingLimit(limit);
     setEditFormData({
       monthly_data_limit: limit.monthly_data_limit,
-      monthly_user_limit: limit.monthly_user_limit || 10
+      monthly_user_limit: limit.monthly_user_limit || 10,
+      monthly_space_limit_mb: limit.monthly_space_limit_mb || 500
     });
     setEditDialogOpen(true);
   };
@@ -283,6 +287,21 @@ const TenantLimitsManagement = () => {
                 </p>
               </div>
 
+              <div>
+                <Label htmlFor="monthly_space_limit_mb">Limite Mensal de Espaço (MB)</Label>
+                <Input
+                  id="monthly_space_limit_mb"
+                  type="number"
+                  value={formData.monthly_space_limit_mb}
+                  onChange={(e) => setFormData(prev => ({ ...prev, monthly_space_limit_mb: parseInt(e.target.value) }))}
+                  min={1}
+                  required
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Espaço máximo estimado em megabytes (baseado em tamanhos médios de registros)
+                </p>
+              </div>
+
               <div className="flex gap-2 pt-4">
                 <Button type="submit" className="flex-1">
                   Salvar Limites
@@ -324,7 +343,8 @@ const TenantLimitsManagement = () => {
           tenantLimits.map((limit) => {
             const usagePercentage = getUsagePercentage(limit.current_month_usage, limit.monthly_data_limit);
             const userUsagePercentage = getUsagePercentage(limit.current_month_users || 0, limit.monthly_user_limit || 10);
-            const isNearLimit = usagePercentage >= 80 || userUsagePercentage >= 80;
+            const spaceUsagePercentage = getUsagePercentage(limit.current_month_space_usage_mb || 0, limit.monthly_space_limit_mb || 500);
+            const isNearLimit = usagePercentage >= 80 || userUsagePercentage >= 80 || spaceUsagePercentage >= 80;
             
             return (
               <Card key={limit.id} className={`hover:shadow-lg transition-shadow min-h-[400px] flex flex-col ${isNearLimit ? 'border-yellow-300' : ''}`}>
@@ -406,6 +426,29 @@ const TenantLimitsManagement = () => {
                       <Badge variant={userUsagePercentage >= 90 ? "destructive" : userUsagePercentage >= 70 ? "secondary" : "default"}>
                         {userUsagePercentage}% usado
                       </Badge>
+                    </div>
+                  </div>
+
+                  {/* Uso de Espaço */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Espaço Estimado:</span>
+                      <span className="font-semibold">
+                        {(limit.current_month_space_usage_mb || 0).toFixed(1)}MB / {limit.monthly_space_limit_mb || 500}MB
+                      </span>
+                    </div>
+                    
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${getUsageColor(spaceUsagePercentage)}`}
+                        style={{ width: `${Math.min(spaceUsagePercentage, 100)}%` }}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <Badge variant={spaceUsagePercentage >= 90 ? "destructive" : spaceUsagePercentage >= 70 ? "secondary" : "default"}>
+                        {spaceUsagePercentage}% usado
+                      </Badge>
                       <span className="text-xs text-muted-foreground">
                         Período: {new Date(limit.limit_period_start).toLocaleDateString('pt-PT')}
                       </span>
@@ -413,17 +456,23 @@ const TenantLimitsManagement = () => {
                   </div>
 
                   <div className="pt-2 border-t">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Dados restantes:</span>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="text-center">
+                        <span className="text-muted-foreground block">Dados restantes:</span>
                         <span className="font-medium">
                           {Math.max(0, limit.monthly_data_limit - limit.current_month_usage)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Usuários restantes:</span>
+                      <div className="text-center">
+                        <span className="text-muted-foreground block">Usuários restantes:</span>
                         <span className="font-medium">
                           {Math.max(0, (limit.monthly_user_limit || 10) - (limit.current_month_users || 0))}
+                        </span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-muted-foreground block">Espaço restante:</span>
+                        <span className="font-medium">
+                          {Math.max(0, (limit.monthly_space_limit_mb || 500) - (limit.current_month_space_usage_mb || 0)).toFixed(1)}MB
                         </span>
                       </div>
                     </div>
@@ -469,6 +518,21 @@ const TenantLimitsManagement = () => {
               />
               <p className="text-sm text-muted-foreground mt-1">
                 Número máximo de usuários que podem ser criados por mês
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="edit_monthly_space_limit_mb">Limite Mensal de Espaço (MB)</Label>
+              <Input
+                id="edit_monthly_space_limit_mb"
+                type="number"
+                value={editFormData.monthly_space_limit_mb}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, monthly_space_limit_mb: parseInt(e.target.value) }))}
+                min={1}
+                required
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Espaço máximo estimado em megabytes (baseado em tamanhos médios de registros)
               </p>
             </div>
 

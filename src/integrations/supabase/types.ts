@@ -1247,36 +1247,45 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          current_month_space_usage_mb: number | null
           current_month_usage: number
           current_month_users: number
           id: string
           limit_period_start: string
           monthly_data_limit: number
+          monthly_space_limit_mb: number | null
           monthly_user_limit: number
+          space_estimation_config: Json | null
           tenant_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           created_by: string
+          current_month_space_usage_mb?: number | null
           current_month_usage?: number
           current_month_users?: number
           id?: string
           limit_period_start?: string
           monthly_data_limit?: number
+          monthly_space_limit_mb?: number | null
           monthly_user_limit?: number
+          space_estimation_config?: Json | null
           tenant_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           created_by?: string
+          current_month_space_usage_mb?: number | null
           current_month_usage?: number
           current_month_users?: number
           id?: string
           limit_period_start?: string
           monthly_data_limit?: number
+          monthly_space_limit_mb?: number | null
           monthly_user_limit?: number
+          space_estimation_config?: Json | null
           tenant_id?: string
           updated_at?: string
         }
@@ -1329,6 +1338,10 @@ export type Database = {
         Args: { data_type_param: string; tenant_uuid: string }
         Returns: boolean
       }
+      check_space_limit: {
+        Args: { tenant_uuid: string }
+        Returns: boolean
+      }
       check_user_limit: {
         Args: { tenant_uuid: string }
         Returns: boolean
@@ -1340,6 +1353,10 @@ export type Database = {
       cleanup_tenant_data: {
         Args: { tenant_uuid: string }
         Returns: undefined
+      }
+      estimate_tenant_space_usage: {
+        Args: { tenant_uuid: string }
+        Returns: number
       }
       generate_quotation_number: {
         Args: { tenant_uuid: string }
@@ -1388,11 +1405,13 @@ export type Database = {
           admin_email: string
           admin_full_name: string
           created_at: string
+          current_month_space_usage_mb: number
           current_month_usage: number
           current_month_users: number
           id: string
           limit_period_start: string
           monthly_data_limit: number
+          monthly_space_limit_mb: number
           monthly_user_limit: number
           tenant_id: string
           updated_at: string
