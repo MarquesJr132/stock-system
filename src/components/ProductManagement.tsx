@@ -95,12 +95,35 @@ const ProductManagement = () => {
     // Prevent double submission
     if (loading) return;
 
+    // Validar preços negativos
+    const purchasePrice = parseFloat(formData.purchase_price);
+    const salePrice = parseFloat(formData.sale_price);
+    const quantity = parseInt(formData.quantity);
+
+    if (purchasePrice < 0 || salePrice < 0) {
+      toast({
+        title: "Erro de validação",
+        description: "Preços não podem ser negativos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (quantity < 0) {
+      toast({
+        title: "Erro de validação",
+        description: "Quantidade não pode ser negativa.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const productData = {
       name: formData.name,
       category: formData.category || null,
-      purchase_price: parseFloat(formData.purchase_price),
-      sale_price: parseFloat(formData.sale_price),
-      quantity: parseInt(formData.quantity),
+      purchase_price: purchasePrice,
+      sale_price: salePrice,
+      quantity: quantity,
       min_stock: parseInt(formData.min_stock) || 5,
       description: formData.description || null,
       supplier: formData.supplier || null,

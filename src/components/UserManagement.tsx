@@ -110,6 +110,17 @@ const UserManagement = () => {
       }
     }
 
+    // Validar email antes de criar usuário
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUser.email)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um endereço de email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check user limit before creating (only for regular users, not administrators)
     if (newUser.role === 'user') {
       try {
@@ -121,8 +132,8 @@ const UserManagement = () => {
 
         if (limitError || !canCreate) {
           toast({
-            title: "Limite de Usuários Atingido",
-            description: "Você atingiu o limite mensal de usuários. Entre em contato com o seu administrador para aumentar o limite.",
+            title: "Limite Total de Usuários Atingido",
+            description: "Você atingiu o limite total de usuários. Entre em contato com o seu administrador para aumentar o limite.",
             variant: "destructive",
           });
           return;

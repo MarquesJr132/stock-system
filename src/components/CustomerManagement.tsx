@@ -61,6 +61,15 @@ const CustomerManagement = () => {
       return;
     }
 
+    // Validar email se fornecido
+    if (formData.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        toast.error("Por favor, insira um endereço de email válido");
+        return;
+      }
+    }
+
     const customerData = {
       name: formData.name,
       email: formData.email || null,

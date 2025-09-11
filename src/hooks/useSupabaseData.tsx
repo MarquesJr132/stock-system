@@ -447,31 +447,45 @@ export const useSupabaseData = () => {
   const addProduct = async (productData: Omit<Product, 'id' | 'created_at' | 'created_by' | 'tenant_id'>) => {
     if (!profile) return { error: 'User not authenticated' };
 
-    // Check data limit before creating
+    // Validar preços negativos
+    if (productData.purchase_price < 0 || productData.sale_price < 0) {
+      toast({
+        title: "Erro de validação",
+        description: "Preços não podem ser negativos.",
+        variant: "destructive",
+      });
+      return { error: 'Invalid price values' };
+    }
+
+    // Validar quantidade negativa
+    if (productData.quantity < 0) {
+      toast({
+        title: "Erro de validação",
+        description: "Quantidade não pode ser negativa.",
+        variant: "destructive",
+      });
+      return { error: 'Invalid quantity value' };
+    }
+
+    // Check space limit before creating (instead of data limit)
     const tenantId = profile.tenant_id || profile.id;
-    const limitCheck = await checkDataLimit(tenantId);
-    
-    if (!limitCheck.canCreate) {
-      // Handle offline mode differently
-      if (limitCheck.isOffline) {
-        toast({
-          title: "Modo Offline",
-          description: limitCheck.warning || "Verificação de limite pausada - modo offline",
+    try {
+      const { data: canCreate } = await supabase
+        .rpc('check_space_limit', {
+          tenant_uuid: tenantId
         });
-      } else {
+      
+      if (!canCreate) {
         toast({
-          title: "Limite Atingido",
-          description: "Você atingiu o limite mensal de dados. Entre em contato com o seu administrador para aumentar o limite.",
+          title: "Limite de espaço atingido",
+          description: "Você atingiu o limite de espaço disponível. Entre em contato com o seu administrador.",
           variant: "destructive",
         });
-        return { error: 'Data limit exceeded' };
+        return { error: 'Space limit exceeded' };
       }
-    } else if (limitCheck.warning) {
-      // Show offline warning
-      toast({
-        title: "Modo Offline",
-        description: limitCheck.warning,
-      });
+    } catch (error) {
+      // Se falhou a verificação, permitir em modo offline
+      console.warn('Failed to check space limit, proceeding in offline mode:', error);
     }
 
     const newProduct = {
@@ -601,18 +615,21 @@ export const useSupabaseData = () => {
   const addCustomer = async (customerData: Omit<Customer, 'id' | 'created_at' | 'created_by' | 'tenant_id'>) => {
     if (!profile) return { error: 'User not authenticated' };
 
-    // Check data limit before creating
-    const tenantId = profile.tenant_id || profile.id;
-    const limitCheck = await checkDataLimit(tenantId);
-    
-    if (!limitCheck.canCreate) {
-      toast({
-        title: "Limite Atingido",
-        description: "Você atingiu o limite mensal de dados. Entre em contato com o seu administrador para aumentar o limite.",
-        variant: "destructive",
-      });
-      return { error: 'Data limit exceeded' };
+    // Validar email se fornecido
+    if (customerData.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!customerData.email.match(emailRegex)) {
+        toast({
+          title: "Email inválido",
+          description: "Por favor, insira um endereço de email válido.",
+          variant: "destructive",
+        });
+        return { error: 'Invalid email format' };
+      }
     }
+
+    // Não verificar limites de dados para clientes - apenas manter verificação de espaço implícita
+    const tenantId = profile.tenant_id || profile.id;
 
     const newCustomer = {
       ...customerData,
