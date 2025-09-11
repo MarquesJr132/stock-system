@@ -20,7 +20,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter basename={(typeof window !== 'undefined' && window.location.pathname.startsWith('/stock-system')) ? '/stock-system' : ''}>
+          <BrowserRouter>
             <AuthProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
