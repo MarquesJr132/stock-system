@@ -221,14 +221,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const createUser = async (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user') => {
     try {
+      console.log('AuthContext: Creating user with role:', role);
+      
       // Get the current session token
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.access_token) {
-        return { error: 'Não autenticado' };
+        console.error('AuthContext: No session token available');
+        return { error: 'Não autenticado. Por favor, faça login novamente.' };
       }
 
-      // Call the Edge Function to create user without auto-login
+      console.log('AuthContext: Calling admin-create-user function...');
+      
+      // Call the Edge Function to create user
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
         body: {
           email,
@@ -239,25 +244,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error('Edge function error:', error);
-        return { error: error.message || 'Erro ao criar usuário' };
+        console.error('AuthContext: Edge function invoke error:', error);
+        
+        // Handle specific function errors
+        if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
+          return { error: 'Não autorizado. Verifique suas permissões.' };
+        }
+        if (error.message?.includes('403') || error.message?.includes('forbidden')) {
+          return { error: 'Acesso negado. Apenas administradores podem criar usuários.' };
+        }
+        
+        return { error: error.message || 'Erro ao comunicar com o servidor' };
       }
 
+      console.log('AuthContext: Function response:', data);
+
       if (data?.error) {
-        console.error('User creation error:', data.error);
+        console.error('AuthContext: User creation error from function:', data.error);
         return { error: data.error };
       }
 
       if (!data?.success) {
-        console.error('Unexpected response:', data);
+        console.error('AuthContext: Unexpected response format:', data);
         return { error: 'Resposta inesperada do servidor' };
       }
 
+      console.log('AuthContext: User created successfully');
       return { error: null };
       
     } catch (error) {
-      console.error('Unexpected error creating user:', error);
-      return { error: 'Erro inesperado ao criar usuário' };
+      console.error('AuthContext: Unexpected error creating user:', error);
+      return { error: 'Erro inesperado. Tente novamente.' };
     }
   };
 

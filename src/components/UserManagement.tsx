@@ -152,6 +152,7 @@ const UserManagement = () => {
       );
 
       if (error) {
+        console.error('UserManagement: Error creating user:', error);
         toast({
           title: "Erro ao criar utilizador",
           description: error,
@@ -160,14 +161,18 @@ const UserManagement = () => {
         return;
       }
 
+      console.log('UserManagement: User created successfully:', newUser.fullName);
       toast({
         title: "Utilizador criado com sucesso!",
         description: `${newUser.fullName} foi adicionado ao sistema.`,
       });
 
-      // Just reset form and close dialog - don't log in the user
+      // Reset form and close dialog
       setNewUser({ fullName: '', email: '', password: '', role: 'user' });
       setIsCreateDialogOpen(false);
+      
+      // Refresh users list to show the new user
+      fetchUsers();
       // Refresh users list
       fetchUsers();
     } catch (error) {

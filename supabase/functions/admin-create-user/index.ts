@@ -14,6 +14,9 @@ serve(async (req) => {
 
   try {
     console.log('Starting admin-create-user function...')
+    console.log('Environment check - SUPABASE_URL:', !!Deno.env.get('SUPABASE_URL'))
+    console.log('Environment check - SUPABASE_SERVICE_ROLE_KEY:', !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))
+    console.log('Environment check - SUPABASE_ANON_KEY:', !!Deno.env.get('SUPABASE_ANON_KEY'))
     
     // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
@@ -111,22 +114,44 @@ serve(async (req) => {
 
     console.log('Creating new user in auth...')
     
-    // Create the user using standard signUp (which works in edge functions)
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.signUp({
+    // Validate that we have the service role key
+    if (!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY not configured')
+      return new Response(
+        JSON.stringify({ error: 'Configuração do servidor incorreta' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    // Create the user using admin API (proper method for admin user creation)
+    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-          role: role
-        }
-      }
+      user_metadata: {
+        full_name: fullName,
+        role: role
+      },
+      email_confirm: true // Auto-confirm email for admin-created users
     })
 
     if (createError) {
       console.error('Error creating user:', createError)
+      
+      // Provide more specific error messages
+      let errorMessage = createError.message;
+      if (createError.message?.includes('already registered')) {
+        errorMessage = 'Este email já está registrado no sistema';
+      } else if (createError.message?.includes('invalid email')) {
+        errorMessage = 'Email inválido fornecido';
+      } else if (createError.message?.includes('password')) {
+        errorMessage = 'Senha não atende aos critérios mínimos';
+      }
+      
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ error: errorMessage }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
