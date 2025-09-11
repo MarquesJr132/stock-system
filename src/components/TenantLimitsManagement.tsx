@@ -23,11 +23,11 @@ const TenantLimitsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     selected_admin: "",
-    monthly_user_limit: 10,
+    total_user_limit: 10,
     monthly_space_limit_mb: 500
   });
   const [editFormData, setEditFormData] = useState({
-    monthly_user_limit: 10,
+    total_user_limit: 10,
     monthly_space_limit_mb: 500
   });
   const [isGlobalSyncing, setIsGlobalSyncing] = useState(false);
@@ -62,10 +62,14 @@ const TenantLimitsManagement = () => {
       
       if (result.data) {
         setTenantLimits(result.data);
-        
+        console.log('Tenant limits loaded successfully:', result.data.length, 'records');
       } else if (result.error) {
         console.error('Error loading tenant limits:', result.error);
-        toast.error(result.error);
+        // Show a more user-friendly error message
+        const errorMessage = result.error.includes('column') && result.error.includes('does not exist')
+          ? 'Erro de configuração da base de dados. Contacte o administrador do sistema.'
+          : result.error;
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error('Error loading tenant limits:', error);
@@ -90,18 +94,21 @@ const TenantLimitsManagement = () => {
     
     
     const result = await updateTenantLimits(selectedAdmin.tenant_id || selectedAdmin.id, {
-      total_user_limit: formData.monthly_user_limit,
+      total_user_limit: formData.total_user_limit,
       monthly_space_limit_mb: formData.monthly_space_limit_mb
     });
 
     
     if (result.data) {
       setDialogOpen(false);
-      setFormData({ selected_admin: "", monthly_user_limit: 10, monthly_space_limit_mb: 500 });
+      setFormData({ selected_admin: "", total_user_limit: 10, monthly_space_limit_mb: 500 });
       toast.success("Limite definido com sucesso!");
       setTimeout(() => {
         loadTenantLimits();
       }, 500);
+    } else if (result.error) {
+      console.error('Failed to update tenant limits:', result.error);
+      toast.error(`Erro ao definir limite: ${result.error}`);
     }
   };
 
@@ -120,13 +127,16 @@ const TenantLimitsManagement = () => {
       setTimeout(() => {
         loadTenantLimits();
       }, 500);
+    } else if (result.error) {
+      console.error('Failed to update tenant limits:', result.error);
+      toast.error(`Erro ao atualizar limite: ${result.error}`);
     }
   };
 
   const openEditDialog = (limit: any) => {
     setEditingLimit(limit);
     setEditFormData({
-      monthly_user_limit: limit.total_user_limit || 10,
+      total_user_limit: limit.total_user_limit || 10,
       monthly_space_limit_mb: limit.monthly_space_limit_mb || 500
     });
     setEditDialogOpen(true);
@@ -254,12 +264,12 @@ const TenantLimitsManagement = () => {
               </div>
 
               <div>
-                <Label htmlFor="monthly_user_limit">Limite Total de Usuários</Label>
+                <Label htmlFor="total_user_limit">Limite Total de Usuários</Label>
                 <Input
-                  id="monthly_user_limit"
+                  id="total_user_limit"
                   type="number"
-                  value={formData.monthly_user_limit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, monthly_user_limit: parseInt(e.target.value) }))}
+                  value={formData.total_user_limit}
+                  onChange={(e) => setFormData(prev => ({ ...prev, total_user_limit: parseInt(e.target.value) }))}
                   min={1}
                   required
                 />
@@ -450,12 +460,12 @@ const TenantLimitsManagement = () => {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="edit_monthly_user_limit">Limite de Usuários</Label>
+              <Label htmlFor="edit_total_user_limit">Limite de Usuários</Label>
               <Input
-                id="edit_monthly_user_limit"
+                id="edit_total_user_limit"
                 type="number"
-                value={editFormData.monthly_user_limit}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, monthly_user_limit: parseInt(e.target.value) }))}
+                value={editFormData.total_user_limit}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, total_user_limit: parseInt(e.target.value) }))}
                 min={1}
                 required
               />

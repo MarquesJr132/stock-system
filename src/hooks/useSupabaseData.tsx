@@ -1216,33 +1216,70 @@ export const useSupabaseData = () => {
     }
 
     try {
+      // Validate input data
+      const validatedData: any = {};
       
+      // Map common field name variations to correct schema
+      if ('monthly_user_limit' in limitsData) {
+        validatedData.total_user_limit = limitsData.monthly_user_limit;
+      }
+      if ('total_user_limit' in limitsData) {
+        validatedData.total_user_limit = limitsData.total_user_limit;
+      }
+      if ('monthly_space_limit_mb' in limitsData) {
+        validatedData.monthly_space_limit_mb = limitsData.monthly_space_limit_mb;
+      }
+      
+      // Validate values
+      if (validatedData.total_user_limit && validatedData.total_user_limit < 1) {
+        toast({
+          title: "Erro de validação",
+          description: "Limite de usuários deve ser pelo menos 1",
+          variant: "destructive",
+        });
+        return { error: 'Invalid user limit' };
+      }
+      
+      if (validatedData.monthly_space_limit_mb && validatedData.monthly_space_limit_mb < 1) {
+        toast({
+          title: "Erro de validação", 
+          description: "Limite de espaço deve ser pelo menos 1MB",
+          variant: "destructive",
+        });
+        return { error: 'Invalid space limit' };
+      }
+      
+      console.log('updateTenantLimits: Updating with data:', validatedData);
       
       // Use a direct update with ON CONFLICT to avoid race conditions
       const { data, error } = await supabase
         .from('tenant_limits')
-        .update(limitsData)
+        .update(validatedData)
         .eq('tenant_id', tenantId)
         .select()
         .maybeSingle();
 
       if (error) {
         console.error('Error updating tenant limits:', error);
+        const errorMessage = error.message.includes('column') && error.message.includes('does not exist') 
+          ? 'Erro de esquema da base de dados. Contacte o administrador do sistema.'
+          : error.message;
+        
         toast({
           title: "Erro",
-          description: "Erro ao atualizar limites do tenant: " + error.message,
+          description: "Erro ao atualizar limites do tenant: " + errorMessage,
           variant: "destructive",
         });
-        return { error: error.message };
+        return { error: errorMessage };
       }
 
       if (!data) {
         // No record was updated, this means it doesn't exist - create it
-        const { data: insertData, error: insertError } = await supabase
+          const { data: insertData, error: insertError } = await supabase
           .from('tenant_limits')
           .insert({
             tenant_id: tenantId,
-            ...limitsData,
+            ...validatedData,
             created_by: profile.id
           })
           .select()
