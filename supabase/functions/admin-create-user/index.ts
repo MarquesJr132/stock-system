@@ -57,9 +57,9 @@ serve(async (req) => {
     if (userError || !user) {
       console.error('Authentication failed:', userError)
       return new Response(
-        JSON.stringify({ error: 'Usuário não autenticado' }),
+        JSON.stringify({ success: false, error: 'Usuário não autenticado' }),
         { 
-          status: 401, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
@@ -77,9 +77,9 @@ serve(async (req) => {
     if (profileError || !profile) {
       console.error('Profile fetch failed:', profileError)
       return new Response(
-        JSON.stringify({ error: 'Perfil não encontrado' }),
+        JSON.stringify({ success: false, error: 'Perfil não encontrado' }),
         { 
-          status: 403, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
@@ -90,9 +90,9 @@ serve(async (req) => {
     // Check if user is administrator or superuser
     if (!['administrator', 'superuser'].includes(profile.role)) {
       return new Response(
-        JSON.stringify({ error: 'Apenas administradores podem criar usuários' }),
+        JSON.stringify({ success: false, error: 'Apenas administradores podem criar usuários' }),
         { 
-          status: 403, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
@@ -104,9 +104,9 @@ serve(async (req) => {
 
     if (!email || !password || !fullName || !role) {
       return new Response(
-        JSON.stringify({ error: 'Todos os campos são obrigatórios' }),
+        JSON.stringify({ success: false, error: 'Todos os campos são obrigatórios' }),
         { 
-          status: 400, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
@@ -118,9 +118,9 @@ serve(async (req) => {
     if (!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
       console.error('SUPABASE_SERVICE_ROLE_KEY not configured')
       return new Response(
-        JSON.stringify({ error: 'Configuração do servidor incorreta' }),
+        JSON.stringify({ success: false, error: 'Configuração do servidor incorreta' }),
         { 
-          status: 500, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
@@ -170,9 +170,9 @@ serve(async (req) => {
     if (!newUser.user) {
       console.error('User creation returned no user data')
       return new Response(
-        JSON.stringify({ error: 'Falha ao criar usuário' }),
+        JSON.stringify({ success: false, error: 'Falha ao criar usuário' }),
         { 
-          status: 500, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
@@ -217,9 +217,9 @@ serve(async (req) => {
         console.error('Error creating profile manually:', manualProfileError)
         
         return new Response(
-          JSON.stringify({ error: 'Erro ao criar perfil do usuário' }),
+          JSON.stringify({ success: false, error: 'Erro ao criar perfil do usuário' }),
           { 
-            status: 500, 
+            status: 200, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         )
@@ -257,9 +257,9 @@ serve(async (req) => {
         console.error('Error updating profile:', updateError)
         
         return new Response(
-          JSON.stringify({ error: 'Erro ao atualizar perfil do usuário' }),
+          JSON.stringify({ success: false, error: 'Erro ao atualizar perfil do usuário' }),
           { 
-            status: 500, 
+            status: 200, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         )
@@ -290,9 +290,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Unexpected error in admin-create-user:', error)
     return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }),
+      JSON.stringify({ success: false, error: 'Erro interno do servidor', details: (error as any).message }),
       { 
-        status: 500, 
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )

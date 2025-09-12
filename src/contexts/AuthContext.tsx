@@ -247,14 +247,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('AuthContext: Edge function invoke error:', error);
         
         // Handle specific function errors
-        if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
+        if (error.message?.toLowerCase().includes('401') || error.message?.toLowerCase().includes('unauthorized')) {
           return { error: 'Não autorizado. Verifique suas permissões.' };
         }
-        if (error.message?.includes('403') || error.message?.includes('forbidden')) {
+        if (error.message?.toLowerCase().includes('403') || error.message?.toLowerCase().includes('forbidden')) {
           return { error: 'Acesso negado. Apenas administradores podem criar usuários.' };
         }
         
-        return { error: error.message || 'Erro ao comunicar com o servidor' };
+        // Generic friendly fallback
+        return { error: 'Falha ao criar utilizador. Verifique os dados e tente novamente.' };
       }
 
       console.log('AuthContext: Function response:', data);
