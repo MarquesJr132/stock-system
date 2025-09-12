@@ -19,6 +19,7 @@ const UserManagement = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [userToDelete, setUserToDelete] = useState<Profile | null>(null);
   const [newUser, setNewUser] = useState({
@@ -69,6 +70,8 @@ const UserManagement = () => {
   };
 
   const handleCreateUser = async () => {
+    if (isSubmitting) return; // Prevent double submission
+    
     if (!newUser.fullName || !newUser.email || !newUser.password) {
       toast({
         title: "Erro",
@@ -76,6 +79,26 @@ const UserManagement = () => {
         variant: "destructive"
       });
       return;
+    }
+    
+    // Pre-check if email already exists
+    try {
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', newUser.email)
+        .maybeSingle();
+      
+      if (existingUser) {
+        toast({
+          title: "Email já existente",
+          description: "Este email já está registrado no sistema.",
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking existing email:', error);
     }
 
     if (newUser.password.length < 6) {
@@ -143,6 +166,8 @@ const UserManagement = () => {
       }
     }
 
+    setIsSubmitting(true);
+    
     try {
       const { error } = await createUser(
         newUser.email,
@@ -173,14 +198,15 @@ const UserManagement = () => {
       
       // Refresh users list to show the new user
       fetchUsers();
-      // Refresh users list
-      fetchUsers();
     } catch (error) {
+      console.error('UserManagement: Unexpected error:', error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao criar o utilizador.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -501,8 +527,8 @@ const UserManagement = () => {
                       </Select>
                     )}
                   </div>
-                  <Button onClick={handleCreateUser} className="w-full">
-                    Criar {isSuperuser ? (newUser.role === 'administrator' ? 'Administrador' : newUser.role === 'gerente' ? 'Gerente' : 'Utilizador') : (newUser.role === 'gerente' ? 'Gerente' : 'Utilizador')}
+                  <Button onClick={handleCreateUser} className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Criando...' : `Criar ${isSuperuser ? (newUser.role === 'administrator' ? 'Administrador' : newUser.role === 'gerente' ? 'Gerente' : 'Utilizador') : (newUser.role === 'gerente' ? 'Gerente' : 'Utilizador')}`}
                   </Button>
                 </div>
               </DialogContent>

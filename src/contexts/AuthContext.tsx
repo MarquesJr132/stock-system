@@ -259,6 +259,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log('AuthContext: Function response:', data);
 
+      // Handle business logic errors (returned as 200 with success: false)
+      if (data?.success === false && data?.error) {
+        console.error('AuthContext: User creation business error:', data.error);
+        return { error: data.error };
+      }
+
       if (data?.error) {
         console.error('AuthContext: User creation error from function:', data.error);
         return { error: data.error };

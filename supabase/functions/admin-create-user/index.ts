@@ -140,10 +140,18 @@ serve(async (req) => {
     if (createError) {
       console.error('Error creating user:', createError)
       
-      // Provide more specific error messages
+      // Provide more specific error messages and return 200 with success: false for business errors
       let errorMessage = createError.message;
       if (createError.message?.includes('already registered')) {
         errorMessage = 'Este email já está registrado no sistema';
+        // Return 200 with success: false for business logic errors
+        return new Response(
+          JSON.stringify({ success: false, error: errorMessage }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
       } else if (createError.message?.includes('invalid email')) {
         errorMessage = 'Email inválido fornecido';
       } else if (createError.message?.includes('password')) {
@@ -151,7 +159,7 @@ serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ error: errorMessage }),
+        JSON.stringify({ success: false, error: errorMessage }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
