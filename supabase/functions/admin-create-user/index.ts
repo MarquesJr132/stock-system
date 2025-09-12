@@ -159,9 +159,13 @@ serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ success: false, error: errorMessage }),
+        JSON.stringify({ 
+          success: false, 
+          code: createError.code || 'user_creation_failed',
+          error: errorMessage 
+        }),
         { 
-          status: 400, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
@@ -182,7 +186,7 @@ serve(async (req) => {
     
     // Wait a bit longer for trigger to complete
     console.log('Waiting for trigger to complete...')
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
     // Try to get the profile created by trigger
     const { data: createdProfile, error: profileFetchError } = await supabaseAdmin

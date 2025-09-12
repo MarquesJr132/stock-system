@@ -246,15 +246,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('AuthContext: Edge function invoke error:', error);
         
-        // Handle specific function errors
-        if (error.message?.toLowerCase().includes('401') || error.message?.toLowerCase().includes('unauthorized')) {
+        // Map specific known errors to friendly messages
+        const errorMsg = error.message?.toLowerCase() || '';
+        
+        if (errorMsg.includes('email_exists') || errorMsg.includes('already been registered')) {
+          return { error: 'Este email já está registrado no sistema' };
+        }
+        if (errorMsg.includes('invalid email')) {
+          return { error: 'Email inválido fornecido' };
+        }
+        if (errorMsg.includes('password')) {
+          return { error: 'Senha não atende aos critérios mínimos' };
+        }
+        if (errorMsg.includes('401') || errorMsg.includes('unauthorized')) {
           return { error: 'Não autorizado. Verifique suas permissões.' };
         }
-        if (error.message?.toLowerCase().includes('403') || error.message?.toLowerCase().includes('forbidden')) {
+        if (errorMsg.includes('403') || errorMsg.includes('forbidden')) {
           return { error: 'Acesso negado. Apenas administradores podem criar usuários.' };
         }
         
-        // Generic friendly fallback
+        // Generic friendly fallback for network/function errors
         return { error: 'Falha ao criar utilizador. Verifique os dados e tente novamente.' };
       }
 
