@@ -1249,6 +1249,7 @@ export type Database = {
           created_by: string
           current_month_space_usage_mb: number | null
           current_month_usage: number
+          current_month_users: number
           current_total_users: number
           id: string
           limit_period_start: string
@@ -1264,6 +1265,7 @@ export type Database = {
           created_by: string
           current_month_space_usage_mb?: number | null
           current_month_usage?: number
+          current_month_users?: number
           current_total_users?: number
           id?: string
           limit_period_start?: string
@@ -1279,6 +1281,7 @@ export type Database = {
           created_by?: string
           current_month_space_usage_mb?: number | null
           current_month_usage?: number
+          current_month_users?: number
           current_total_users?: number
           id?: string
           limit_period_start?: string
