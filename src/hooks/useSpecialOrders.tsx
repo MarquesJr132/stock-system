@@ -420,7 +420,7 @@ export const useSpecialOrders = () => {
           sale_id: saleData.id,
           product_id: productId,
           quantity: item.quantity,
-          unit_price: item.unit_price,
+          unit_price: item.subtotal / item.quantity,
           subtotal: item.subtotal,
           total: item.subtotal,
           tenant_id: tenantId,
