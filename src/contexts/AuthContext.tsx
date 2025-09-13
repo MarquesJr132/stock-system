@@ -44,6 +44,7 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   console.log('AuthProvider: Initializing...');
+  console.log('AuthProvider: supabase client:', supabase);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -51,7 +52,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
+    console.log('AuthProvider: fetchProfile called for user:', userId);
     try {
+      console.log('AuthProvider: making profiles query...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')

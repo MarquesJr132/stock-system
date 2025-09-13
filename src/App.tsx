@@ -14,6 +14,8 @@ const queryClient = new QueryClient();
 
 const App = () => {
   console.log('App.tsx: App component rendering...');
+  console.log('App.tsx: queryClient:', queryClient);
+  console.log('App.tsx: Starting app render');
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>

@@ -29,6 +29,8 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   console.log('Index: rendering with loading =', loading, 'user =', !!user, 'isSuperuser =', isSuperuser);
+  console.log('Index: user details:', user);
+  console.log('Index: current time:', new Date().toISOString());
 
   if (loading) {
     console.log('Index: showing loading spinner');

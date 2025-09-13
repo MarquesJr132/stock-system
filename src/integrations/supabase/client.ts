@@ -15,3 +15,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+console.log('Supabase client created successfully:', supabase);
+console.log('Supabase URL:', SUPABASE_URL);
+console.log('Supabase client auth:', supabase.auth);
