@@ -110,14 +110,13 @@ const CustomerManagement = () => {
           </p>
         </div>
         
-        {isAdministrator && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm} className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Novo Cliente
-              </Button>
-            </DialogTrigger>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={resetForm} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Novo Cliente
+            </Button>
+          </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
@@ -189,8 +188,7 @@ const CustomerManagement = () => {
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
-        )}
+        </Dialog>
       </div>
 
       {/* Search */}

@@ -121,6 +121,11 @@ const SalesManagement = () => {
       return;
     }
 
+    if (!currentSale.payment_method) {
+      toast.error("Selecione um método de pagamento");
+      return;
+    }
+
     // Prevent double submission
     const button = document.querySelector('[data-saving]') as HTMLButtonElement;
     if (button?.disabled) return;

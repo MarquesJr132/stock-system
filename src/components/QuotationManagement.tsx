@@ -281,12 +281,10 @@ export default function QuotationManagement() {
             Gerencie as cotações de produtos e serviços
           </p>
         </div>
-        {(isAdministrator || isGerente) && (
-          <Button onClick={handleNewQuotation} size="sm" className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Cotação
-          </Button>
-        )}
+        <Button onClick={handleNewQuotation} size="sm" className="w-full sm:w-auto">
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Cotação
+        </Button>
       </div>
 
       <div className="flex items-center space-x-2">
