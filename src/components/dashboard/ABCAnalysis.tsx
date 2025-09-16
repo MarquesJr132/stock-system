@@ -216,7 +216,7 @@ export const ABCAnalysis = () => {
                               {index + 1}. {product.product_name}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {product.revenue_percentage.toFixed(1)}% da receita total
+                              {Number(product.revenue_percentage ?? 0).toFixed(1)}% da receita total
                             </p>
                           </div>
                           <div className="text-right ml-4">
@@ -224,7 +224,7 @@ export const ABCAnalysis = () => {
                               {formatCurrency(product.total_revenue)}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {product.cumulative_percentage.toFixed(1)}% acumulado
+                              {Number(product.cumulative_percentage ?? 0).toFixed(1)}% acumulado
                             </p>
                           </div>
                         </div>
