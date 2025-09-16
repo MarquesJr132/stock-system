@@ -207,14 +207,13 @@ const SalesManagement = () => {
           </p>
         </div>
         
-        {isAdministrator && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleNewSale} className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Nova Venda
-              </Button>
-            </DialogTrigger>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleNewSale} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Venda
+            </Button>
+          </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingSale ? 'Editar Venda' : 'Nova Venda'}</DialogTitle>
@@ -284,7 +283,6 @@ const SalesManagement = () => {
               </div>
             </DialogContent>
           </Dialog>
-        )}
       </div>
 
       {/* Search */}
