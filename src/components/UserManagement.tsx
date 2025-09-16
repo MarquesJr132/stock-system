@@ -122,11 +122,11 @@ const UserManagement = () => {
         return;
       }
       
-      // Gerentes cannot create any users
-      if (profile?.role === 'gerente') {
+      // Gerentes can create users now
+      if (profile?.role === 'gerente' && newUser.role === 'administrator') {
         toast({
           title: "Erro de permissão", 
-          description: "Gerentes não têm permissão para criar usuários.",
+          description: "Gerentes não podem criar administradores.",
           variant: "destructive",
         });
         return;
@@ -294,11 +294,11 @@ const UserManagement = () => {
         return;
       }
       
-      // Gerentes cannot edit users
-      if (profile?.role === 'gerente') {
+      // Gerentes can edit users now
+      if (profile?.role === 'gerente' && editUser.role === 'administrator') {
         toast({
           title: "Erro de permissão", 
-          description: "Gerentes não têm permissão para editar usuários.",
+          description: "Gerentes não podem promover usuários a administradores.",
           variant: "destructive",
         });
         return;
@@ -404,7 +404,7 @@ const UserManagement = () => {
   };
 
   // Show create button only for users who can create users
-  const canCreateUsers = isSuperuser || (isAdministrator && !isGerente);
+  const canCreateUsers = isSuperuser || isAdministrator || isGerente;
 
   // Filter users - superusers see all, others see only their tenant
   const filteredUsers = users.filter(user => {

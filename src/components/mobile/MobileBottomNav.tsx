@@ -17,7 +17,7 @@ interface MobileBottomNavProps {
 }
 
 export const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
-  const { isAdministrator } = useAuth();
+  const { isAdministrator, isGerente } = useAuth();
 
   const primaryTabs = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -33,7 +33,8 @@ export const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps
     { id: "settings", label: "Configurações", icon: Settings }
   ];
 
-  const tabs = isAdministrator ? [...primaryTabs, ...adminTabs.slice(0, 1)] : primaryTabs;
+  // All users can access basic tabs, administrators and managers get additional tabs
+  const tabs = (isAdministrator || isGerente) ? [...primaryTabs, ...adminTabs.slice(0, 2)] : [...primaryTabs, adminTabs[0]];
 
   return (
     <nav className="mobile-nav-bottom md:hidden">

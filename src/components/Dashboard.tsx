@@ -152,13 +152,13 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
       change: percentages.customerChange,
       changeType: getChangeType(percentages.customerChange)
     },
-    ...(isAdministrator ? [{
+    {
       title: "Lucro Hoje",
       value: formatCurrency(dailyProfit),
       icon: Target,
       change: percentages.profitChange,
       changeType: getChangeType(percentages.profitChange)
-    }] : [])
+    }
   ];
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];

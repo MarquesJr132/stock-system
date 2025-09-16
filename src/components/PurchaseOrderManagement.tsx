@@ -76,10 +76,10 @@ export const PurchaseOrderManagement: React.FC = () => {
     notes: '',
     items: [] as OrderItem[],
   });
-  const { profile, isAdministrator, isSuperuser } = useAuth();
+  const { profile, isAdministrator, isSuperuser, isGerente } = useAuth();
   const { toast } = useToast();
 
-  const canManageOrders = isAdministrator || isSuperuser;
+  const canManageOrders = isAdministrator || isSuperuser || isGerente;
 
   const fetchOrders = async () => {
     try {

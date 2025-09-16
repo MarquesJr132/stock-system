@@ -82,15 +82,6 @@ const ProductManagement = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!isAdministrator) {
-      toast({
-        title: "Acesso negado",
-        description: "Apenas administradores podem gerir produtos.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     // Prevent double submission
     if (loading) return;
@@ -205,14 +196,13 @@ const ProductManagement = () => {
           </p>
         </div>
         
-        {isAdministrator && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm} className="whitespace-nowrap">
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Produto
-              </Button>
-            </DialogTrigger>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={resetForm} className="whitespace-nowrap">
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Produto
+            </Button>
+          </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -328,8 +318,7 @@ const ProductManagement = () => {
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
-        )}
+        </Dialog>
       </div>
 
       {/* Search and Filter - Mobile Optimized */}

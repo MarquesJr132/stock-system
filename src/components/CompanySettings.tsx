@@ -137,7 +137,7 @@ const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => 
     );
   }
 
-  if (!profile || profile.role !== 'administrator') {
+  if (!profile || (profile.role !== 'administrator' && profile.role !== 'gerente')) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -145,7 +145,7 @@ const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => 
             Acesso Restrito
           </h2>
           <p className="text-muted-foreground">
-            Apenas administradores podem acessar as configurações da empresa.
+            Apenas administradores e gerentes podem acessar as configurações da empresa.
           </p>
         </div>
       </div>

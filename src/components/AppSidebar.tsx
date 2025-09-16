@@ -54,12 +54,16 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     { value: "suppliers", icon: Truck, label: "Fornecedores" },
   ];
 
-  // Only administrators (not managers) get access to company, users, and integrations
-  if (userIsAdmin && profile?.role === 'administrator') {
+  // Administrators and managers get access to company settings and users
+  if (userIsAdmin || userIsGerente) {
     adminItems.unshift(
       { value: "company", icon: Building, label: "Empresa" },
       { value: "users", icon: Settings, label: "Usuários" }
     );
+  }
+  
+  // Only administrators get access to integrations
+  if (userIsAdmin && profile?.role === 'administrator') {
     adminItems.push(
       { value: "integrations", icon: Smartphone, label: "Integrações" }
     );
