@@ -1341,6 +1341,13 @@ export type Database = {
         Args: { data_type_param: string; tenant_uuid: string }
         Returns: boolean
       }
+      check_orphaned_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          orphaned_count: number
+          orphaned_emails: string[]
+        }[]
+      }
       check_space_limit: {
         Args: { tenant_uuid: string }
         Returns: boolean
@@ -1360,6 +1367,10 @@ export type Database = {
       estimate_tenant_space_usage: {
         Args: { tenant_uuid: string }
         Returns: number
+      }
+      fix_orphaned_users: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       generate_quotation_number: {
         Args: { tenant_uuid: string }
