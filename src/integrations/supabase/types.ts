@@ -1448,6 +1448,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      fix_tenant_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_quotation_number: {
         Args: { tenant_uuid: string }
         Returns: string
