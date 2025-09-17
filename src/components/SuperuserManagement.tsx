@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UserPlus, Users, Shield, LogOut, Edit, Settings as SettingsIcon } from 'lucide-react';
 import TenantLimitsManagement from './TenantLimitsManagement';
+import { TenantFeaturesManagement } from './TenantFeaturesManagement';
 
 interface Administrator {
   id: string;
@@ -23,7 +24,7 @@ interface Administrator {
 
 const SuperuserManagement = () => {
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
-  const [activeTab, setActiveTab] = useState<'admins' | 'limits'>('admins');
+  const [activeTab, setActiveTab] = useState<'admins' | 'limits' | 'features'>('admins');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Administrator | null>(null);
@@ -274,9 +275,18 @@ const SuperuserManagement = () => {
             <SettingsIcon className="h-4 w-4" />
             Limites de Dados
           </Button>
+          <Button
+            variant={activeTab === 'features' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('features')}
+            className="flex items-center gap-2"
+          >
+            <Shield className="h-4 w-4" />
+            Funcionalidades
+          </Button>
         </div>
 
         {activeTab === 'limits' && <TenantLimitsManagement />}
+        {activeTab === 'features' && <TenantFeaturesManagement />}
 
         {activeTab === 'admins' && (
           <>

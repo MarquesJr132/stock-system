@@ -1,5 +1,6 @@
-import { Package, TrendingUp, Users, BarChart3, History, ShoppingCart, Settings, User as UserIcon, Building, Truck, FileText, Shield, LogOut, PackageCheck, Smartphone } from "lucide-react";
+import { Package, TrendingUp, Users, BarChart3, ShoppingCart, FileText, Shield, Truck, Building2, Zap, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenantFeatures } from "@/hooks/useTenantFeatures";
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { User as UserIcon, LogOut } from "lucide-react";
 
 interface AppSidebarProps {
   activeTab: string;
@@ -21,63 +23,80 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
-  const { isAdministrator: userIsAdmin, isSuperuser: userIsSuperuser, isGerente: userIsGerente, signOut, profile } = useAuth();
-  const { isMobile, setOpenMobile } = useSidebar();
-  const isMobileDevice = useIsMobile();
+  const { user, signOut, profile } = useAuth();
+  const isMobile = useIsMobile();
+  const { hasFeature } = useTenantFeatures();
+
+  // Base navigation items based on features
+  const baseItems = [];
   
-  // Filter menu items based on user role
-  const getMainItems = () => {
-    const baseItems = [
-      { value: "products", icon: Package, label: "Produtos" },
-      { value: "sales", icon: ShoppingCart, label: "Vendas" },
-      { value: "quotations", icon: FileText, label: "Cotações" },
-      { value: "special-orders", icon: PackageCheck, label: "Encomendas" },
-      { value: "customers", icon: Users, label: "Clientes" },
-      { value: "profile", icon: UserIcon, label: "Perfil" }
-    ];
-
-    // Only add dashboard, reports and business for admins and managers, not for regular users
-    if (userIsAdmin || userIsGerente) {
-      baseItems.unshift({ value: "dashboard", icon: BarChart3, label: "Dashboard" });
-      baseItems.splice(-1, 0, // Insert before profile
-        { value: "reports", icon: TrendingUp, label: "Relatórios" },
-        { value: "business", icon: TrendingUp, label: "Business" }
-      );
-    }
-
-    return baseItems;
-  };
-
-  const mainItems = getMainItems();
-
-  const adminItems = [
-    { value: "suppliers", icon: Truck, label: "Fornecedores" },
-  ];
-
-  // Administrators and managers get access to company settings and users
-  if (userIsAdmin || userIsGerente) {
-    adminItems.unshift(
-      { value: "company", icon: Building, label: "Empresa" },
-      { value: "users", icon: Settings, label: "Usuários" }
-    );
+  // Feature-based navigation
+  if (hasFeature('dashboard_full') || hasFeature('dashboard_basic')) {
+    baseItems.push({ icon: BarChart3, label: "Dashboard", id: "dashboard" });
   }
   
-  // Only administrators get access to integrations
-  if (userIsAdmin && profile?.role === 'administrator') {
-    adminItems.push(
-      { value: "integrations", icon: Smartphone, label: "Integrações" }
-    );
+  if (hasFeature('products_management') || hasFeature('products_view_only')) {
+    baseItems.push({ icon: Package, label: "Produtos", id: "products" });
+  }
+  
+  if (hasFeature('customers_management')) {
+    baseItems.push({ icon: Users, label: "Clientes", id: "customers" });
+  }
+  
+  if (hasFeature('sales_management')) {
+    baseItems.push({ icon: ShoppingCart, label: "Vendas", id: "sales" });
+  }
+  
+  if (hasFeature('quotations_management')) {
+    baseItems.push({ icon: FileText, label: "Orçamentos", id: "quotations" });
+  }
+  
+  if (hasFeature('reports_basic') || hasFeature('reports_advanced')) {
+    baseItems.push({ icon: TrendingUp, label: "Relatórios", id: "reports" });
+  }
+  
+  if (hasFeature('business_analytics')) {
+    baseItems.push({ icon: Building2, label: "Business", id: "business" });
   }
 
-  // Managers and Administrators can access Audit Logs
-  if (userIsAdmin || userIsGerente) {
-    adminItems.push({ value: "audit", icon: History, label: "Auditoria" });
+  const mainItems = baseItems;
+
+  // Administration items - feature-based
+  const adminItems = [];
+  
+  if (hasFeature('suppliers_management')) {
+    adminItems.push({ icon: Truck, label: "Fornecedores", id: "suppliers" });
+  }
+  
+  if (hasFeature('company_settings')) {
+    adminItems.push({ icon: Building2, label: "Empresa", id: "company" });
+  }
+  
+  if (hasFeature('user_management')) {
+    adminItems.push({ icon: Users, label: "Utilizadores", id: "users" });
+  }
+  
+  if (hasFeature('integrations')) {
+    adminItems.push({ icon: Zap, label: "Integrações", id: "integrations" });
+  }
+  
+  if (hasFeature('audit_logs')) {
+    adminItems.push({ icon: Shield, label: "Auditoria", id: "audit" });
+  }
+  
+  if (hasFeature('special_orders')) {
+    adminItems.push({ icon: Calendar, label: "Encomendas Especiais", id: "special-orders" });
   }
 
   const isActive = (tab: string) => activeTab === tab;
+  
+  const { setOpenMobile } = useSidebar();
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleTabChange = (tabId: string) => {
+    onTabChange(tabId);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   return (
@@ -90,15 +109,12 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.value}>
+                <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    onClick={() => {
-                      onTabChange(item.value);
-                      if (isMobileDevice) setOpenMobile(false);
-                    }}
-                    isActive={isActive(item.value)}
+                    onClick={() => handleTabChange(item.id)}
+                    isActive={isActive(item.id)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full hover-lift ${
-                      isActive(item.value)
+                      isActive(item.id)
                         ? "bg-primary text-primary-foreground shadow-card"
                         : "hover:bg-primary/10 text-foreground hover:text-primary"
                     }`}
@@ -112,7 +128,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {(userIsAdmin || userIsGerente) && !userIsSuperuser && (
+        {adminItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-muted-foreground font-semibold text-sm tracking-wide">
               Administração
@@ -120,15 +136,12 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminItems.map((item) => (
-                  <SidebarMenuItem key={item.value}>
+                  <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
-                      onClick={() => {
-                        onTabChange(item.value);
-                        if (isMobileDevice) setOpenMobile(false);
-                      }}
-                      isActive={isActive(item.value)}
+                      onClick={() => handleTabChange(item.id)}
+                      isActive={isActive(item.id)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-smooth w-full hover-lift ${
-                        isActive(item.value)
+                        isActive(item.id)
                           ? "bg-primary text-primary-foreground shadow-card"
                           : "hover:bg-primary/10 text-foreground hover:text-primary"
                       }`}
@@ -145,18 +158,28 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
       </SidebarContent>
       
       <SidebarFooter className="border-t border-sidebar-border bg-sidebar p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <UserIcon className="h-4 w-4" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <UserIcon className="h-4 w-4" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-medium text-foreground truncate">
+                {profile?.full_name}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {profile?.email}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-medium text-foreground truncate">
-              {profile?.full_name}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {profile?.email}
-            </p>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={signOut}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>

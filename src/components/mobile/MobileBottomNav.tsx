@@ -4,12 +4,11 @@ import {
   ShoppingCart, 
   Users, 
   FileText,
-  Building2,
-  Settings,
   BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenantFeatures } from "@/hooks/useTenantFeatures";
 
 interface MobileBottomNavProps {
   activeTab: string;
@@ -17,29 +16,35 @@ interface MobileBottomNavProps {
 }
 
 export const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
-  const { isAdministrator, isGerente } = useAuth();
+  const { hasFeature } = useTenantFeatures();
 
-  const primaryTabs = [
-    { id: "products", label: "Produtos", icon: Package },
-    { id: "sales", label: "Vendas", icon: ShoppingCart },
-    { id: "customers", label: "Clientes", icon: Users }
-  ];
-
-  const adminTabs = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "quotations", label: "Cotações", icon: FileText },
-    { id: "suppliers", label: "Fornecedores", icon: Building2 },
-    { id: "reports", label: "Relatórios", icon: BarChart3 },
-    { id: "settings", label: "Configurações", icon: Settings }
-  ];
-
-  // All users can access basic tabs, administrators and managers get additional tabs
-  const tabs = (isAdministrator || isGerente) ? [adminTabs[0], ...primaryTabs, ...adminTabs.slice(1, 3)] : [...primaryTabs, adminTabs[1]];
+  const allTabs = [];
+  
+  // Feature-based navigation
+  if (hasFeature('dashboard_full') || hasFeature('dashboard_basic')) {
+    allTabs.push({ icon: LayoutDashboard, label: "Dashboard", id: "dashboard" });
+  }
+  
+  if (hasFeature('products_management') || hasFeature('products_view_only')) {
+    allTabs.push({ icon: Package, label: "Produtos", id: "products" });
+  }
+  
+  if (hasFeature('customers_management')) {
+    allTabs.push({ icon: Users, label: "Clientes", id: "customers" });
+  }
+  
+  if (hasFeature('sales_management')) {
+    allTabs.push({ icon: ShoppingCart, label: "Vendas", id: "sales" });
+  }
+  
+  if (hasFeature('quotations_management')) {
+    allTabs.push({ icon: FileText, label: "Orçamentos", id: "quotations" });
+  }
 
   return (
     <nav className="mobile-nav-bottom md:hidden">
       <div className="flex justify-around items-center h-16 px-2">
-        {tabs.map((tab) => (
+        {allTabs.slice(0, 4).map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}

@@ -56,6 +56,44 @@ export type Database = {
         }
         Relationships: []
       }
+      available_features: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          description: string | null
+          name: string
+          parent_feature: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          code: string
+          created_at?: string
+          description?: string | null
+          name: string
+          parent_feature?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          name?: string
+          parent_feature?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "available_features_parent_feature_fkey"
+            columns: ["parent_feature"]
+            isOneToOne: false
+            referencedRelation: "available_features"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       business_goals: {
         Row: {
           created_at: string
@@ -1243,6 +1281,44 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_features: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          expires_at: string | null
+          feature_code: string
+          id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          expires_at?: string | null
+          feature_code: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          expires_at?: string | null
+          feature_code?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_features_feature_code_fkey"
+            columns: ["feature_code"]
+            isOneToOne: false
+            referencedRelation: "available_features"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       tenant_limits: {
         Row: {
           created_at: string
@@ -1445,6 +1521,14 @@ export type Database = {
           user_id: string
         }
       }
+      get_user_tenant_features: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          feature_code: string
+          name: string
+        }[]
+      }
       get_user_tenant_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1510,6 +1594,10 @@ export type Database = {
       sync_tenant_space_usage: {
         Args: { tenant_uuid: string }
         Returns: undefined
+      }
+      tenant_has_feature: {
+        Args: { feature_code_param: string; tenant_uuid: string }
+        Returns: boolean
       }
     }
     Enums: {

@@ -20,6 +20,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SecurityNotifications } from './SecurityNotifications';
 import { MobileDashboardCard } from "./mobile/MobileDashboardCard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTenantFeatures } from "@/hooks/useTenantFeatures";
+import { FeatureGuard } from "@/components/FeatureGuard";
 import { InteractiveChart } from "./dashboard/InteractiveChart";
 import { PaymentMethodChart } from "./dashboard/PaymentMethodChart";
 import { ABCAnalysis } from "./dashboard/ABCAnalysis";
@@ -47,6 +49,7 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
   } = useSupabaseData();
   const { isAdministrator } = useAuth();
   const isMobile = useIsMobile();
+  const { hasFeature } = useTenantFeatures();
 
   const [percentages, setPercentages] = useState({
     stockChange: 'N/A',
