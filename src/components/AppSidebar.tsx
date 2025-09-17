@@ -31,7 +31,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   const baseItems = [];
   
   // Feature-based navigation with role checks
-  if ((isAdministrator || isGerente) || (hasFeature('dashboard_full') || hasFeature('dashboard_basic'))) {
+  if ((isAdministrator || isGerente) || hasFeature('dashboard_basic')) {
     baseItems.push({ icon: BarChart3, label: "Dashboard", id: "dashboard" });
   }
   

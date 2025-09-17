@@ -9,13 +9,12 @@ import {
   Users, 
   Banknote, 
   AlertTriangle,
-  ShoppingCart,
   Target
 } from "lucide-react";
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from "@/contexts/AuthContext";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { formatCurrency, formatNumber } from "@/lib/currency";
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { formatCurrency } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SecurityNotifications } from './SecurityNotifications';
 import { MobileDashboardCard } from "./mobile/MobileDashboardCard";
@@ -45,7 +44,7 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
     getTopSellingProducts,
     getSalesData,
     calculateCurrentMonthStatistics,
-    getPercentageChanges
+    getPercentageChanges,
   } = useSupabaseData();
   const { isAdministrator, isGerente } = useAuth();
   const isMobile = useIsMobile();
@@ -63,10 +62,7 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
     const calculatePercentages = async () => {
       if (!loading && calculateCurrentMonthStatistics && getPercentageChanges) {
         try {
-          // Calculate current month statistics first
           await calculateCurrentMonthStatistics();
-          
-          // Then get percentage changes
           const changes = await getPercentageChanges();
           if (changes && typeof changes === 'object') {
             setPercentages({
@@ -102,19 +98,18 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
             </Card>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-4 w-32" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-64 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      </div>
+    );
+  }
+
+  // Check if user should see dashboard
+  if (!hasFeature('dashboard_basic') && !isAdministrator && !isGerente) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-semibold mb-4">Dashboard Indisponível</h2>
+        <p className="text-muted-foreground">
+          Você não tem acesso ao dashboard. Entre em contato com o administrador.
+        </p>
       </div>
     );
   }
@@ -164,212 +159,147 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
     }
   ];
 
+  // Category data for pie chart
+  const categoryData = products.reduce((acc: any[], product) => {
+    const category = product.category || 'Sem categoria';
+    const existingCategory = acc.find(item => item.name === category);
+    
+    if (existingCategory) {
+      existingCategory.value += product.quantity;
+    } else {
+      acc.push({ name: category, value: product.quantity });
+    }
+    
+    return acc;
+  }, []);
+
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
-  // Check if user has dashboard_basic and render basic version
-  if ((hasFeature('dashboard_basic') || isAdministrator || isGerente) && !(hasFeature('dashboard_full') || isAdministrator || isGerente)) {
-    return (
-      <div className="space-y-6 lg:space-y-8">
-        {/* Basic Hero Section */}
-        <div className="relative overflow-hidden rounded-xl lg:rounded-2xl bg-gradient-subtle border border-border/20 p-4 sm:p-6 lg:p-8 text-foreground shadow-elegant">
-          <div className="relative z-10">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
-              Bem-vindo ao Soluweb
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg opacity-90 mb-4">
-              Dashboard básico • Visão geral do seu negócio
-            </p>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm opacity-80">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                Sistema ativo
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                {customers.length} clientes ativos
-              </div>
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                {products.length} produtos cadastrados
-              </div>
+  // Dashboard Base (hero + 4 cards básicos) - sempre disponível se tem dashboard_basic ou é admin/gerente
+  const renderBaseDashboard = () => (
+    <div className="space-y-6 lg:space-y-8">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-xl lg:rounded-2xl bg-gradient-subtle border border-border/20 p-4 sm:p-6 lg:p-8 text-foreground shadow-elegant">
+        <div className="relative z-10">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
+            Bem-vindo ao Soluweb
+          </h2>
+          <p className="text-sm sm:text-base lg:text-lg opacity-90 mb-4">
+            Dashboard • Visão geral do seu negócio
+          </p>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm opacity-80">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              Sistema ativo
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              {customers.length} clientes ativos
+            </div>
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              {products.length} produtos cadastrados
             </div>
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
         </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+      </div>
 
-        {/* Basic Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-fade-in">
-          {stats.map((stat, index) => 
-            isMobile ? (
-              <MobileDashboardCard
-                key={index}
-                title={stat.title}
-                value={stat.value}
-                icon={stat.icon}
-                change={stat.change}
-                changeType={stat.changeType}
-              />
-            ) : (
-              <Card key={index} className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider leading-tight">
-                    {stat.title}
-                  </CardTitle>
-                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <stat.icon className="h-4 w-4 text-primary" />
+      {/* Basic Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-fade-in">
+        {stats.map((stat, index) => 
+          isMobile ? (
+            <MobileDashboardCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              change={stat.change}
+              changeType={stat.changeType}
+            />
+          ) : (
+            <Card key={index} className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 hover:scale-105">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
+                <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider leading-tight">
+                  {stat.title}
+                </CardTitle>
+                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                  <stat.icon className="h-4 w-4 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent className="relative z-10">
+                <div className="text-xl sm:text-2xl font-bold text-foreground mb-2 break-words">
+                  {stat.value}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
+                    stat.changeType === "positive" 
+                      ? "bg-green-500/10 text-green-500" 
+                      : stat.changeType === "negative"
+                      ? "bg-red-500/10 text-red-500"
+                      : "bg-gray-500/10 text-gray-500"
+                  }`}>
+                    {stat.changeType === "positive" ? (
+                      <TrendingUp className="h-3 w-3" />
+                    ) : stat.changeType === "negative" ? (
+                      <TrendingDown className="h-3 w-3" />
+                    ) : (
+                      <Target className="h-3 w-3" />
+                    )}
+                    <span>{stat.change}</span>
                   </div>
-                </CardHeader>
-                <CardContent className="relative z-10">
-                  <div className="text-xl sm:text-2xl font-bold text-foreground mb-2 break-words">
-                    {stat.value}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
-                      stat.changeType === "positive" 
-                        ? "bg-green-500/10 text-green-500" 
-                        : stat.changeType === "negative"
-                        ? "bg-red-500/10 text-red-500"
-                        : "bg-gray-500/10 text-gray-500"
-                    }`}>
-                      {stat.changeType === "positive" ? (
-                        <TrendingUp className="h-3 w-3" />
-                      ) : stat.changeType === "negative" ? (
-                        <TrendingDown className="h-3 w-3" />
-                      ) : (
-                        <Target className="h-3 w-3" />
-                      )}
-                      <span>{stat.change}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">vs último mês</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          )}
-        </div>
-
-        {/* Business Goals Section */}
-        <BusinessGoals />
-
-        {/* Notificações de Segurança - apenas para administradores */}
-        {isAdministrator && (
-          <div className="mt-8">
-            <SecurityNotifications />
-          </div>
+                  <span className="text-xs text-muted-foreground">vs último mês</span>
+                </div>
+              </CardContent>
+            </Card>
+          )
         )}
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Full dashboard for dashboard_full feature
+  // Main dashboard return with granular features
   return (
-    <FeatureGuard 
-      feature="dashboard_full"
-      showMessage={true}
-    >
-      <div className="space-y-6 lg:space-y-8">
-        {/* Premium Hero Section */}
-        <div className="relative overflow-hidden rounded-xl lg:rounded-2xl bg-gradient-subtle border border-border/20 p-4 sm:p-6 lg:p-8 text-foreground shadow-elegant">
-          <div className="relative z-10">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
-              Bem-vindo ao Soluweb
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg opacity-90 mb-4">
-              Dashboard executivo • Gestão avançada de inventário
-            </p>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm opacity-80">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                Sistema ativo
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                {customers.length} clientes ativos
-              </div>
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                {products.length} produtos cadastrados
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
-        </div>
+    <div className="space-y-6 lg:space-y-8">
+      {/* Base Dashboard (sempre disponível com dashboard_basic) */}
+      {renderBaseDashboard()}
 
-        {/* Premium Stats Cards - Mobile Optimized */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-fade-in">
-          {stats.map((stat, index) => 
-            isMobile ? (
-              <MobileDashboardCard
-                key={index}
-                title={stat.title}
-                value={stat.value}
-                icon={stat.icon}
-                change={stat.change}
-                changeType={stat.changeType}
-              />
-            ) : (
-              <Card key={index} className="group relative overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider leading-tight">
-                    {stat.title}
-                  </CardTitle>
-                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <stat.icon className="h-4 w-4 text-primary" />
-                  </div>
-                </CardHeader>
-                <CardContent className="relative z-10">
-                  <div className="text-xl sm:text-2xl font-bold text-foreground mb-2 break-words">
-                    {stat.value}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
-                      stat.changeType === "positive" 
-                        ? "bg-green-500/10 text-green-500" 
-                        : stat.changeType === "negative"
-                        ? "bg-red-500/10 text-red-500"
-                        : "bg-gray-500/10 text-gray-500"
-                    }`}>
-                      {stat.changeType === "positive" ? (
-                        <TrendingUp className="h-3 w-3" />
-                      ) : stat.changeType === "negative" ? (
-                        <TrendingDown className="h-3 w-3" />
-                      ) : (
-                        <Target className="h-3 w-3" />
-                      )}
-                      <span>{stat.change}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">vs último mês</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          )}
-        </div>
-
-        {/* Business Goals Section */}
+      {/* Business Goals - Feature específica */}
+      <FeatureGuard feature="dashboard_goals">
         <BusinessGoals />
+      </FeatureGuard>
 
-        {/* Premium Features - Only for dashboard_full */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          {/* Interactive Sales Chart */}
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Sales Analytics */}
+        <FeatureGuard feature="dashboard_analytics">
           <InteractiveChart />
-
-          {/* Intelligent Alerts */}
+        </FeatureGuard>
+        
+        {/* Intelligent Alerts */}
+        <FeatureGuard feature="dashboard_intelligent_alerts">
           <IntelligentAlerts onTabChange={onTabChange} />
-        </div>
+        </FeatureGuard>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          {/* Payment Method Analytics */}
+      {/* Payment Analysis and ABC Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Payment Methods */}
+        <FeatureGuard feature="dashboard_payment_methods">
           <PaymentMethodChart />
-
-          {/* ABC Analysis */}
+        </FeatureGuard>
+        
+        {/* ABC Analysis */}
+        <FeatureGuard feature="dashboard_abc_analysis">
           <ABCAnalysis />
-        </div>
+        </FeatureGuard>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          {/* Premium Low Stock Alert */}
+      {/* Low Stock and Stock Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Low Stock Alert */}
+        <FeatureGuard feature="dashboard_stock_alerts">
           <Card className="border-0 shadow-elegant">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3">
@@ -399,7 +329,7 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
                     </p>
                   </div>
                 ) : (
-                  lowStockProducts.map((product) => (
+                  lowStockProducts.slice(0, 3).map((product) => (
                     <div key={product.id} className="group p-4 rounded-xl border bg-gradient-to-r from-orange-50/50 to-red-50/50 hover:from-orange-50 hover:to-red-50 transition-all">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
@@ -421,7 +351,7 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
                             />
                             <div className="flex justify-between text-xs text-muted-foreground mt-1">
                               <span>Atual: {product.quantity}</span>
-                              <span>Mín: {product.min_stock || 0}</span>
+                              <span>Min: {product.min_stock}</span>
                             </div>
                           </div>
                         </div>
@@ -432,160 +362,54 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
               </div>
             </CardContent>
           </Card>
+        </FeatureGuard>
 
-          {/* Premium Stock Distribution */}
+        {/* Stock Distribution by Category */}
+        <FeatureGuard feature="dashboard_distribution">
           <Card className="border-0 shadow-elegant">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg gradient-accent">
-                  <Target className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold">Distribuição</CardTitle>
-                  <CardDescription className="text-sm">
-                    Valor por categoria de produto
-                  </CardDescription>
-                </div>
-              </div>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Distribuição por Categoria</CardTitle>
+              <CardDescription>
+                Stock por categoria de produtos
+              </CardDescription>
             </CardHeader>
-            <CardContent className="px-6">
-              {products.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/10 flex items-center justify-center">
-                    <Package className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <p className="text-foreground font-medium mb-1">
-                    Nenhum produto cadastrado
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    A distribuição por categoria aparecerá quando houver produtos
-                  </p>
-                </div>
+            <CardContent>
+              {categoryData.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  Nenhum dado de categoria disponível
+                </p>
               ) : (
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <defs>
-                      <linearGradient id="categoryGradient1" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" />
-                        <stop offset="100%" stopColor="hsl(262 83% 68%)" />
-                      </linearGradient>
-                      <linearGradient id="categoryGradient2" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--accent))" />
-                        <stop offset="100%" stopColor="hsl(38 92% 60%)" />
-                      </linearGradient>
-                      <linearGradient id="categoryGradient3" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="hsl(142 76% 46%)" />
-                        <stop offset="100%" stopColor="hsl(172 76% 55%)" />
-                      </linearGradient>
-                      <linearGradient id="categoryGradient4" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="hsl(315 100% 70%)" />
-                        <stop offset="100%" stopColor="hsl(280 100% 75%)" />
-                      </linearGradient>
-                      <linearGradient id="categoryGradient5" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="hsl(45 100% 65%)" />
-                        <stop offset="100%" stopColor="hsl(25 100% 70%)" />
-                      </linearGradient>
-                      <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="rgba(0,0,0,0.1)" />
-                      </filter>
-                    </defs>
-                    <Pie
-                      data={products.reduce((acc, product) => {
-                        const category = product.category || 'Sem categoria';
-                        const value = isAdministrator ? 
-                          product.quantity * product.purchase_price :
-                          product.quantity * product.sale_price;
-                        
-                        const existing = acc.find(item => item.name === category);
-                        if (existing) {
-                          existing.value += value;
-                        } else {
-                          acc.push({ name: category, value });
-                        }
-                        return acc;
-                      }, [] as any[])}
-                      cx="50%"
-                      cy="45%"
-                      labelLine={false}
-                      label={({ name, percent, value, index, cx, cy, midAngle, innerRadius, outerRadius }) => {
-                        const radius = innerRadius + (outerRadius - innerRadius) * 1.3;
-                        const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
-                        const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
-                        
-                        if (percent < 0.05) return null; // Hide labels for slices < 5%
-                        
-                        return (
-                          <text 
-                            x={x} 
-                            y={y} 
-                            fill="hsl(var(--foreground))" 
-                            textAnchor={x > cx ? 'start' : 'end'} 
-                            dominantBaseline="central"
-                            className="text-xs font-medium"
-                          >
-                            {`${name} (${(percent * 100).toFixed(0)}%)`}
-                          </text>
-                        );
-                      }}
-                      outerRadius={120}
-                      innerRadius={60}
-                      paddingAngle={2}
-                      dataKey="value"
-                      filter="url(#shadow)"
-                    >
-                      {products.reduce((acc, product) => {
-                        const category = product.category || 'Sem categoria';
-                        const value = isAdministrator ? 
-                          product.quantity * product.purchase_price :
-                          product.quantity * product.sale_price;
-                        
-                        const existing = acc.find(item => item.name === category);
-                        if (existing) {
-                          existing.value += value;
-                        } else {
-                          acc.push({ name: category, value });
-                        }
-                        return acc;
-                      }, [] as any[]).map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={`url(#categoryGradient${(index % 5) + 1})`}
-                          stroke="hsl(var(--background))"
-                          strokeWidth={2}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0];
-                          return (
-                            <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg">
-                              <p className="font-semibold text-foreground">{data.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {formatCurrency(data.value as number)}
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${value}`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               )}
             </CardContent>
           </Card>
-        </div>
-
-        {/* Notificações de Segurança - apenas para administradores */}
-        {isAdministrator && (
-          <div className="mt-8">
-            <SecurityNotifications />
-          </div>
-        )}
+        </FeatureGuard>
       </div>
-    </FeatureGuard>
+
+      {/* Security Notifications for Administrators */}
+      <FeatureGuard feature="dashboard_security_notifications">
+        <SecurityNotifications />
+      </FeatureGuard>
+    </div>
   );
 };
 
