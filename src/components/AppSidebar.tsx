@@ -23,15 +23,15 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
-  const { user, signOut, profile } = useAuth();
+  const { user, signOut, profile, isAdministrator, isGerente } = useAuth();
   const isMobile = useIsMobile();
   const { hasFeature } = useTenantFeatures();
 
   // Base navigation items based on features
   const baseItems = [];
   
-  // Feature-based navigation
-  if (hasFeature('dashboard_full') || hasFeature('dashboard_basic')) {
+  // Feature-based navigation with role checks
+  if ((isAdministrator || isGerente) && (hasFeature('dashboard_full') || hasFeature('dashboard_basic'))) {
     baseItems.push({ icon: BarChart3, label: "Dashboard", id: "dashboard" });
   }
   

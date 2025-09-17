@@ -50,6 +50,11 @@ const Index = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "dashboard":
+        // Only administrators and managers can access dashboard
+        if (!isAdministrator && !isGerente) {
+          setActiveTab('products');
+          return <ProductManagement />;
+        }
         return <Dashboard onTabChange={setActiveTab} />;
       case "products":
         return <ProductManagement />;

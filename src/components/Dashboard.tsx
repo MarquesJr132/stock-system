@@ -47,7 +47,7 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
     calculateCurrentMonthStatistics,
     getPercentageChanges
   } = useSupabaseData();
-  const { isAdministrator } = useAuth();
+  const { isAdministrator, isGerente } = useAuth();
   const isMobile = useIsMobile();
   const { hasFeature } = useTenantFeatures();
 
@@ -167,9 +167,20 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   return (
-    <div className="space-y-6 lg:space-y-8">
-      {/* Premium Hero Section */}
-      <div className="relative overflow-hidden rounded-xl lg:rounded-2xl bg-gradient-subtle border border-border/20 p-4 sm:p-6 lg:p-8 text-foreground shadow-elegant">
+    <FeatureGuard 
+      feature="dashboard_full"
+      fallback={
+        <FeatureGuard 
+          feature="dashboard_basic"
+          showMessage={true}
+        >
+          <div />
+        </FeatureGuard>
+      }
+    >
+      <div className="space-y-6 lg:space-y-8">
+        {/* Premium Hero Section */}
+        <div className="relative overflow-hidden rounded-xl lg:rounded-2xl bg-gradient-subtle border border-border/20 p-4 sm:p-6 lg:p-8 text-foreground shadow-elegant">
         <div className="relative z-10">
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
             Bem-vindo ao Soluweb
@@ -480,13 +491,14 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
         </Card>
       </div>
 
-      {/* Notificações de Segurança - apenas para administradores */}
-      {isAdministrator && (
-        <div className="mt-8">
-          <SecurityNotifications />
-        </div>
-      )}
-    </div>
+        {/* Notificações de Segurança - apenas para administradores */}
+        {isAdministrator && (
+          <div className="mt-8">
+            <SecurityNotifications />
+          </div>
+        )}
+      </div>
+    </FeatureGuard>
   );
 };
 
