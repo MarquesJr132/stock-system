@@ -35,6 +35,8 @@ export const TenantFeaturesManagement = () => {
   const [tenantsWithFeatures, setTenantsWithFeatures] = useState<TenantWithFeatures[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<string | null>(null);
+  const [pendingChanges, setPendingChanges] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,6 +85,120 @@ export const TenantFeaturesManagement = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startEditing = (tenantId: string) => {
+    setEditingTenant(tenantId);
+    
+    // Initialize pending changes with current state
+    const tenant = tenantsWithFeatures.find(t => t.tenant_id === tenantId);
+    if (tenant) {
+      const currentState: Record<string, boolean> = {};
+      availableFeatures.forEach(feature => {
+        const isEnabled = tenant.features.some(
+          f => f.feature_code === feature.code && f.enabled
+        );
+        currentState[feature.code] = isEnabled;
+      });
+      setPendingChanges(currentState);
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingTenant(null);
+    setPendingChanges({});
+  };
+
+  const handlePendingChange = (featureCode: string, enabled: boolean) => {
+    setPendingChanges(prev => ({
+      ...prev,
+      [featureCode]: enabled
+    }));
+  };
+
+  const resetChanges = () => {
+    const tenant = tenantsWithFeatures.find(t => t.tenant_id === editingTenant);
+    if (tenant) {
+      const currentState: Record<string, boolean> = {};
+      availableFeatures.forEach(feature => {
+        const isEnabled = tenant.features.some(
+          f => f.feature_code === feature.code && f.enabled
+        );
+        currentState[feature.code] = isEnabled;
+      });
+      setPendingChanges(currentState);
+    }
+  };
+
+  const saveChanges = async () => {
+    if (!editingTenant) return;
+    
+    setSaving(true);
+    try {
+      // Get current features for this tenant
+      const tenant = tenantsWithFeatures.find(t => t.tenant_id === editingTenant);
+      if (!tenant) return;
+
+      const currentFeatures = tenant.features.reduce((acc, f) => {
+        acc[f.feature_code] = f.enabled;
+        return acc;
+      }, {} as Record<string, boolean>);
+
+      // Find changes to apply
+      const featuresToUpdate = [];
+      const featuresToDelete = [];
+
+      for (const [featureCode, enabled] of Object.entries(pendingChanges)) {
+        const currentEnabled = currentFeatures[featureCode] || false;
+        
+        if (enabled !== currentEnabled) {
+          if (enabled) {
+            featuresToUpdate.push({
+              tenant_id: editingTenant,
+              feature_code: featureCode,
+              enabled: true
+            });
+          } else {
+            featuresToDelete.push(featureCode);
+          }
+        }
+      }
+
+      // Apply updates
+      if (featuresToUpdate.length > 0) {
+        const { error } = await supabase
+          .from('tenant_features')
+          .upsert(featuresToUpdate);
+        if (error) throw error;
+      }
+
+      if (featuresToDelete.length > 0) {
+        const { error } = await supabase
+          .from('tenant_features')
+          .delete()
+          .eq('tenant_id', editingTenant)
+          .in('feature_code', featuresToDelete);
+        if (error) throw error;
+      }
+
+      await fetchData();
+      setEditingTenant(null);
+      setPendingChanges({});
+      
+      toast({
+        title: "Sucesso",
+        description: "Funcionalidades atualizadas com sucesso",
+      });
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar alterações",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -200,22 +316,59 @@ export const TenantFeaturesManagement = () => {
                 <p className="text-sm text-muted-foreground">{tenant.admin_email}</p>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyPackage(tenant.tenant_id, 'basic')}
-                  disabled={saving}
-                >
-                  Aplicar Básico
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyPackage(tenant.tenant_id, 'premium')}
-                  disabled={saving}
-                >
-                  Aplicar Premium
-                </Button>
+                {editingTenant === tenant.tenant_id ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetChanges}
+                      disabled={saving}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={cancelEditing}
+                      disabled={saving}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={saveChanges}
+                      disabled={saving}
+                    >
+                      Salvar
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyPackage(tenant.tenant_id, 'basic')}
+                      disabled={saving || editingTenant !== null}
+                    >
+                      Básico
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyPackage(tenant.tenant_id, 'premium')}
+                      disabled={saving || editingTenant !== null}
+                    >
+                      Premium
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => startEditing(tenant.tenant_id)}
+                      disabled={saving || editingTenant !== null}
+                    >
+                      Editar
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -227,29 +380,48 @@ export const TenantFeaturesManagement = () => {
                     {category.replace('_', ' ')}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {features.map((feature) => {
-                      const isEnabled = tenant.features.some(
-                        f => f.feature_code === feature.code && f.enabled
-                      );
-                      return (
-                        <div key={feature.code} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`${tenant.tenant_id}-${feature.code}`}
-                            checked={isEnabled}
-                            onCheckedChange={(checked) =>
-                              updateTenantFeature(tenant.tenant_id, feature.code, checked as boolean)
-                            }
-                            disabled={saving}
-                          />
-                          <Label
-                            htmlFor={`${tenant.tenant_id}-${feature.code}`}
-                            className="text-sm"
-                          >
-                            {feature.name}
-                          </Label>
-                        </div>
-                      );
-                    })}
+                     {features.map((feature) => {
+                       const isEditing = editingTenant === tenant.tenant_id;
+                       const isEnabled = isEditing 
+                         ? pendingChanges[feature.code] ?? tenant.features.some(
+                             f => f.feature_code === feature.code && f.enabled
+                           )
+                         : tenant.features.some(
+                             f => f.feature_code === feature.code && f.enabled
+                           );
+                       
+                       return (
+                         <div key={feature.code} className="flex items-center space-x-2">
+                           <Checkbox
+                             id={`${tenant.tenant_id}-${feature.code}`}
+                             checked={isEnabled}
+                             onCheckedChange={(checked) => {
+                               if (isEditing) {
+                                 handlePendingChange(feature.code, checked as boolean);
+                               } else {
+                                 updateTenantFeature(tenant.tenant_id, feature.code, checked as boolean);
+                               }
+                             }}
+                             disabled={saving || (editingTenant !== null && editingTenant !== tenant.tenant_id)}
+                           />
+                           <Label
+                             htmlFor={`${tenant.tenant_id}-${feature.code}`}
+                             className="text-sm"
+                           >
+                             {feature.name}
+                           </Label>
+                           {isEditing && pendingChanges[feature.code] !== undefined && (
+                             pendingChanges[feature.code] !== tenant.features.some(
+                               f => f.feature_code === feature.code && f.enabled
+                             )
+                           ) && (
+                             <Badge variant="outline" className="text-xs">
+                               Alterado
+                             </Badge>
+                           )}
+                         </div>
+                       );
+                     })}
                   </div>
                   {category !== 'system' && <Separator className="mt-2" />}
                 </div>
