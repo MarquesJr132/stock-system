@@ -218,6 +218,23 @@ const TenantLimitsManagement = () => {
             variant="outline" 
             onClick={async () => {
               try {
+                const { error } = await supabase.rpc('fix_tenant_counts');
+                if (error) throw error;
+                toast.success('Contagens corrigidas com sucesso!');
+                setTimeout(() => loadTenantLimits(), 500);
+              } catch (error) {
+                console.error('Error fixing tenant counts:', error);
+                toast.error('Erro ao corrigir contagens');
+              }
+            }}
+            className="text-sm"
+          >
+            Corrigir Contagens
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={async () => {
+              try {
                 await supabase.rpc('cleanup_orphaned_tenant_limits');
                 toast.success('Registros órfãos removidos com sucesso!');
                 setTimeout(() => loadTenantLimits(), 500);
