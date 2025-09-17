@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./contexts/AuthContext";
+import { TenantFeaturesProvider } from "./hooks/useTenantFeatures";
 
 import Index from "./pages/Index";
 import ResetPassword from "./pages/ResetPassword";
@@ -24,13 +25,14 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              
+              <TenantFeaturesProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </TenantFeaturesProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
