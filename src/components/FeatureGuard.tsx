@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useTenantFeatures } from '@/hooks/useTenantFeatures';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FeatureGuardProps {
   children: ReactNode;
@@ -17,9 +18,15 @@ export const FeatureGuard = ({
   showMessage = false 
 }: FeatureGuardProps) => {
   const { hasFeature, loading } = useTenantFeatures();
+  const { isAdministrator, isGerente } = useAuth();
 
   if (loading) {
     return null;
+  }
+
+  // Bypass feature checks for administrators and managers
+  if (isAdministrator || isGerente) {
+    return <>{children}</>;
   }
 
   if (!hasFeature(feature)) {

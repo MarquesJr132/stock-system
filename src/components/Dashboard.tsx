@@ -167,7 +167,7 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   // Check if user has dashboard_basic and render basic version
-  if (hasFeature('dashboard_basic') && !hasFeature('dashboard_full')) {
+  if ((hasFeature('dashboard_basic') || isAdministrator || isGerente) && !(hasFeature('dashboard_full') || isAdministrator || isGerente)) {
     return (
       <div className="space-y-6 lg:space-y-8">
         {/* Basic Hero Section */}
