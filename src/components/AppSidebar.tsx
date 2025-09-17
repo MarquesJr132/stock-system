@@ -28,7 +28,6 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   // Filter menu items based on user role
   const getMainItems = () => {
     const baseItems = [
-      { value: "dashboard", icon: BarChart3, label: "Dashboard" },
       { value: "products", icon: Package, label: "Produtos" },
       { value: "sales", icon: ShoppingCart, label: "Vendas" },
       { value: "quotations", icon: FileText, label: "Cotações" },
@@ -37,8 +36,9 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
       { value: "profile", icon: UserIcon, label: "Perfil" }
     ];
 
-    // Only add reports and business for admins and managers, not for regular users
+    // Only add dashboard, reports and business for admins and managers, not for regular users
     if (userIsAdmin || userIsGerente) {
+      baseItems.unshift({ value: "dashboard", icon: BarChart3, label: "Dashboard" });
       baseItems.splice(-1, 0, // Insert before profile
         { value: "reports", icon: TrendingUp, label: "Relatórios" },
         { value: "business", icon: TrendingUp, label: "Business" }

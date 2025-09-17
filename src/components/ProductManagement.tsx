@@ -19,7 +19,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const ProductManagement = () => {
   const { products, addProduct, updateProduct, deleteProduct, loading } = useSupabaseData();
-  const { profile, isAdministrator } = useAuth();
+  const { profile, isAdministrator, isGerente } = useAuth();
+  
+  // Check if user can manage products (admin or manager only)
+  const canManageProducts = isAdministrator || isGerente;
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
@@ -189,20 +192,24 @@ const ProductManagement = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-            Gestão de Produtos
+            {canManageProducts ? "Gestão de Produtos" : "Catálogo de Produtos"}
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            Gerir inventário e informações dos produtos
+            {canManageProducts 
+              ? "Gerir inventário e informações dos produtos"
+              : "Visualizar catálogo de produtos (somente leitura)"
+            }
           </p>
         </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="whitespace-nowrap">
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Produto
-            </Button>
-          </DialogTrigger>
+        {canManageProducts && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="whitespace-nowrap">
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Produto
+              </Button>
+            </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -318,7 +325,8 @@ const ProductManagement = () => {
                 </div>
               </form>
             </DialogContent>
-        </Dialog>
+          </Dialog>
+        )}
       </div>
 
       {/* Search and Filter - Mobile Optimized */}
@@ -369,7 +377,7 @@ const ProductManagement = () => {
                 : "Comece por criar o seu primeiro produto"
               }
             </p>
-            {isAdministrator && !searchTerm && categoryFilter === "all" && (
+            {canManageProducts && !searchTerm && categoryFilter === "all" && (
               <Button onClick={() => setDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Primeiro Produto
@@ -381,8 +389,8 @@ const ProductManagement = () => {
         isMobile ? (
           <MobileTable
             items={filteredProducts}
-            onEdit={isAdministrator ? handleEdit : undefined}
-            onDelete={isAdministrator ? (product) => handleDelete(product.id) : undefined}
+            onEdit={canManageProducts ? handleEdit : undefined}
+            onDelete={canManageProducts ? (product) => handleDelete(product.id) : undefined}
             renderCard={(product) => (
               <SimpleMobileCard
                 title={product.name}
@@ -464,7 +472,7 @@ const ProductManagement = () => {
                     </p>
                   )}
 
-                  {isAdministrator && (
+                  {canManageProducts && (
                     <div className="flex gap-2 pt-2">
                       <Button
                         variant="outline"

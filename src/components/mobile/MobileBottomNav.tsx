@@ -20,13 +20,13 @@ export const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps
   const { isAdministrator, isGerente } = useAuth();
 
   const primaryTabs = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "products", label: "Produtos", icon: Package },
     { id: "sales", label: "Vendas", icon: ShoppingCart },
     { id: "customers", label: "Clientes", icon: Users }
   ];
 
   const adminTabs = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "quotations", label: "Cotações", icon: FileText },
     { id: "suppliers", label: "Fornecedores", icon: Building2 },
     { id: "reports", label: "Relatórios", icon: BarChart3 },
@@ -34,7 +34,7 @@ export const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps
   ];
 
   // All users can access basic tabs, administrators and managers get additional tabs
-  const tabs = (isAdministrator || isGerente) ? [...primaryTabs, ...adminTabs.slice(0, 2)] : [...primaryTabs, adminTabs[0]];
+  const tabs = (isAdministrator || isGerente) ? [adminTabs[0], ...primaryTabs, ...adminTabs.slice(1, 3)] : [...primaryTabs, adminTabs[1]];
 
   return (
     <nav className="mobile-nav-bottom md:hidden">

@@ -25,8 +25,10 @@ import { StockMovements } from '@/components/business/StockMovements';
 import { IntegrationHub } from '@/components/IntegrationHub';
 
 const Index = () => {
-  const { user, loading, isSuperuser } = useAuth();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const { user, loading, isSuperuser, isAdministrator, isGerente } = useAuth();
+  const [activeTab, setActiveTab] = useState(
+    (isAdministrator || isGerente) ? "dashboard" : "products"
+  );
 
   console.log('Index: rendering with loading =', loading, 'user =', !!user, 'isSuperuser =', isSuperuser);
   console.log('Index: user details:', user);
