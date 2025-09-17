@@ -51,7 +51,8 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     baseItems.push({ icon: FileText, label: "Orçamentos", id: "quotations" });
   }
   
-  if (hasFeature('reports_basic') || hasFeature('reports_advanced')) {
+  // Reports - requires both feature and role
+  if ((hasFeature('reports_basic') || hasFeature('reports_advanced')) && (isAdministrator || isGerente)) {
     baseItems.push({ icon: TrendingUp, label: "Relatórios", id: "reports" });
   }
   
@@ -76,7 +77,8 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     adminItems.push({ icon: Users, label: "Utilizadores", id: "users" });
   }
   
-  if (hasFeature('integrations')) {
+  // Integrations - requires both feature and role  
+  if (hasFeature('integrations') && (isAdministrator || isGerente)) {
     adminItems.push({ icon: Zap, label: "Integrações", id: "integrations" });
   }
   
