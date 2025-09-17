@@ -17,11 +17,12 @@ interface MobileBottomNavProps {
 
 export const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
   const { hasFeature } = useTenantFeatures();
+  const { isAdministrator, isGerente } = useAuth();
 
   const allTabs = [];
   
-  // Feature-based navigation
-  if (hasFeature('dashboard_basic')) {
+  // Feature-based navigation - Dashboard requires both feature and role
+  if (hasFeature('dashboard_basic') && (isAdministrator || isGerente)) {
     allTabs.push({ icon: LayoutDashboard, label: "Dashboard", id: "dashboard" });
   }
   

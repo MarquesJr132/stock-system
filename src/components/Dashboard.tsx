@@ -102,13 +102,16 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
     );
   }
 
-  // Check if user should see dashboard
-  if (!hasFeature('dashboard_basic')) {
+  // Check if user should see dashboard - requires both feature and role
+  if (!hasFeature('dashboard_basic') || (!isAdministrator && !isGerente)) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-semibold mb-4">Dashboard Indisponível</h2>
         <p className="text-muted-foreground">
-          Você não tem acesso ao dashboard. Entre em contato com o administrador.
+          {!hasFeature('dashboard_basic') 
+            ? "Esta funcionalidade não está disponível no seu plano atual."
+            : "Acesso restrito a Administradores e Gerentes."
+          }
         </p>
       </div>
     );

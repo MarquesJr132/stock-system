@@ -30,8 +30,8 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   // Base navigation items based on features
   const baseItems = [];
   
-  // Feature-based navigation
-  if (hasFeature('dashboard_basic')) {
+  // Feature-based navigation - Dashboard requires both feature and role
+  if (hasFeature('dashboard_basic') && (isAdministrator || isGerente)) {
     baseItems.push({ icon: BarChart3, label: "Dashboard", id: "dashboard" });
   }
   
