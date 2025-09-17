@@ -21,7 +21,7 @@ export const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps
   const allTabs = [];
   
   // Feature-based navigation
-  if (hasFeature('dashboard_full') || hasFeature('dashboard_basic')) {
+  if (hasFeature('dashboard_basic')) {
     allTabs.push({ icon: LayoutDashboard, label: "Dashboard", id: "dashboard" });
   }
   

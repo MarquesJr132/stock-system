@@ -203,13 +203,15 @@ export const TenantFeaturesModal = ({
     }
   };
 
-  const groupedFeatures = availableFeatures.reduce((acc, feature) => {
-    if (!acc[feature.category]) {
-      acc[feature.category] = [];
-    }
-    acc[feature.category].push(feature);
-    return acc;
-  }, {} as Record<string, AvailableFeature[]>);
+  const groupedFeatures = availableFeatures
+    .filter(feature => feature.code !== 'dashboard_full') // Hide dashboard_full from UI
+    .reduce((acc, feature) => {
+      if (!acc[feature.category]) {
+        acc[feature.category] = [];
+      }
+      acc[feature.category].push(feature);
+      return acc;
+    }, {} as Record<string, AvailableFeature[]>);
 
   if (!tenant) return null;
 

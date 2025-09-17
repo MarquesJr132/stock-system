@@ -24,10 +24,7 @@ export const FeatureGuard = ({
     return null;
   }
 
-  // Bypass feature checks for administrators and managers
-  if (isAdministrator || isGerente) {
-    return <>{children}</>;
-  }
+  // No bypass - all users must have the specific feature
 
   if (!hasFeature(feature)) {
     if (showMessage) {
