@@ -103,7 +103,7 @@ const Dashboard = ({ onTabChange }: DashboardProps = {}) => {
   }
 
   // Check if user should see dashboard
-  if (!hasFeature('dashboard_basic') && !isAdministrator && !isGerente) {
+  if (!hasFeature('dashboard_basic')) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-semibold mb-4">Dashboard Indisponível</h2>
