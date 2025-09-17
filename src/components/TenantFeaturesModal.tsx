@@ -97,7 +97,7 @@ export const TenantFeaturesModal = ({
 
       // Define package features
       const packageFeatures = packageType === 'basic' 
-        ? ['products_view_only', 'customers_management', 'sales_management', 'user_management']
+        ? ['products_view_only', 'customers_management', 'sales_management', 'user_management', 'backup_system', 'global_search', 'company_settings', 'integrations']
         : availableFeatures.map(f => f.code); // Premium gets all features
 
       // Insert new features
