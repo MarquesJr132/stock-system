@@ -358,10 +358,19 @@ export const useSupabaseData = () => {
           .select('*')
           .eq('sale_id', saleId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('fetchSaleItemsBySaleId: Database error:', error);
+          throw error;
+        }
         
-        console.debug('fetchSaleItemsBySaleId: Online fetch successful:', data?.length || 0, 'items');
-        return data || [];
+        const items = data || [];
+        console.debug('fetchSaleItemsBySaleId: Online fetch successful:', items.length, 'items');
+        
+        if (items.length === 0) {
+          console.warn(`fetchSaleItemsBySaleId: No sale items found for sale ${saleId} - potential orphaned sale`);
+        }
+        
+        return items;
       } catch (error) {
         console.warn('fetchSaleItemsBySaleId: Online fetch failed, trying offline:', error);
         // Fall through to offline fetch
@@ -373,6 +382,11 @@ export const useSupabaseData = () => {
       const offlineSaleItems = await getData('sale_items');
       const filteredItems = offlineSaleItems.filter((item: any) => item.sale_id === saleId);
       console.debug('fetchSaleItemsBySaleId: Offline fetch successful:', filteredItems.length, 'items');
+      
+      if (filteredItems.length === 0) {
+        console.warn(`fetchSaleItemsBySaleId: No offline sale items found for sale ${saleId}`);
+      }
+      
       return filteredItems;
     } catch (offlineError) {
       console.error('fetchSaleItemsBySaleId: Offline fetch failed:', offlineError);
@@ -1836,6 +1850,92 @@ export const useSupabaseData = () => {
     }
   };
 
+  const findOrphanedSales = async () => {
+    if (!profile) return { error: 'User not authenticated' };
+
+    try {
+      console.log('Searching for orphaned sales...');
+      
+      // Get all sales for the tenant
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales')
+        .select('id, total_amount, created_at')
+        .eq('tenant_id', profile.tenant_id || profile.id)
+        .order('created_at', { ascending: false });
+
+      if (salesError) throw salesError;
+
+      const orphanedSales = [];
+      
+      // Check each sale for corresponding sale_items
+      for (const sale of salesData || []) {
+        const { data: items, error: itemsError } = await supabase
+          .from('sale_items')
+          .select('id')
+          .eq('sale_id', sale.id)
+          .limit(1);
+
+        if (itemsError) {
+          console.warn(`Error checking items for sale ${sale.id}:`, itemsError);
+          continue;
+        }
+
+        if (!items || items.length === 0) {
+          orphanedSales.push(sale);
+        }
+      }
+
+      console.log(`Found ${orphanedSales.length} orphaned sales out of ${salesData?.length || 0} total sales`);
+      
+      return { 
+        orphanedSales,
+        totalSales: salesData?.length || 0,
+        error: null 
+      };
+    } catch (error: any) {
+      console.error('Error finding orphaned sales:', error);
+      return { 
+        orphanedSales: [],
+        totalSales: 0,
+        error: error.message 
+      };
+    }
+  };
+
+  const deleteOrphanedSales = async (saleIds: string[]) => {
+    if (!profile) return { error: 'User not authenticated' };
+
+    try {
+      console.log(`Deleting ${saleIds.length} orphaned sales...`);
+      
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .in('id', saleIds)
+        .eq('tenant_id', profile.tenant_id || profile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: `${saleIds.length} vendas órfãs removidas com sucesso`,
+      });
+
+      // Refresh sales data
+      await fetchSales();
+
+      return { success: true, error: null };
+    } catch (error: any) {
+      console.error('Error deleting orphaned sales:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover vendas órfãs",
+        variant: "destructive",
+      });
+      return { success: false, error: error.message };
+    }
+  };
+
 
   return {
     // Data
@@ -1866,6 +1966,8 @@ export const useSupabaseData = () => {
     syncAllTenantsTotal,
     checkDataLimit,
     checkUserLimit,
+    findOrphanedSales,
+    deleteOrphanedSales,
     
     // Quotation functions
     getQuotations,

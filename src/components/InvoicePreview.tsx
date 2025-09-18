@@ -22,6 +22,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   const { fetchSaleItemsBySaleId, companySettings } = useSupabaseData();
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [dataIntegrityIssue, setDataIntegrityIssue] = useState(false);
 
   useEffect(() => {
     if (sale?.id && isOpen) {
@@ -32,11 +33,15 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   const loadSaleItems = async () => {
     if (!sale?.id) return;
     setLoading(true);
+    setDataIntegrityIssue(false);
+    
     try {
+      console.log(`Loading sale items for sale ID: ${sale.id}`);
       let items = await fetchSaleItemsBySaleId(sale.id);
 
       // Fallback: algumas vendas antigas podem ter os itens embutidos no objeto da venda
       if ((!items || items.length === 0) && Array.isArray((sale as any).sale_items) && (sale as any).sale_items.length > 0) {
+        console.log(`Using embedded sale items for sale ${sale.id}`);
         items = (sale as any).sale_items.map((it: any) => ({
           ...it,
           sale_id: sale.id,
@@ -44,10 +49,18 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
         }));
       }
 
+      if (!items || items.length === 0) {
+        console.warn(`No sale items found for sale ${sale.id} - potential data integrity issue`);
+        setDataIntegrityIssue(true);
+      } else {
+        console.log(`Successfully loaded ${items.length} sale items for sale ${sale.id}`);
+      }
+
       setSaleItems(items || []);
     } catch (error) {
       console.error('Error loading sale items:', error);
       setSaleItems([]);
+      setDataIntegrityIssue(true);
     } finally {
       setLoading(false);
     }
@@ -215,43 +228,70 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
 
             {/* Products Table */}
             <div className="mb-8 overflow-x-auto">
-              <table className="w-full border-collapse min-w-[600px]">
-                 <thead>
-                   <tr className="bg-black text-white">
-                     <th className="px-2 sm:px-4 py-2 text-left font-medium text-xs sm:text-sm border-r border-gray-600">Produto</th>
-                     <th className="px-2 sm:px-4 py-2 text-left font-medium text-xs sm:text-sm border-r border-gray-600 hidden sm:table-cell">Descrição</th>
-                     <th className="px-2 sm:px-4 py-2 text-center font-medium text-xs sm:text-sm border-r border-gray-600">Qtd</th>
-                     <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm border-r border-gray-600">Preço Unit.</th>
-                     <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm border-r border-gray-600 hidden sm:table-cell">IVA</th>
-                     <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">Total</th>
-                   </tr>
-                 </thead>
-                <tbody className="bg-white">
-                  {groupedSaleItems.map((item: any, index: number) => {
-                    const product = products.find(p => p.id === item.product_id);
-                    return (
-                       <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                         <td className="px-2 sm:px-4 py-2 border-b border-gray-200">
-                           <div className="font-medium text-xs sm:text-sm text-black">{product?.name || 'Produto'}</div>
-                         </td>
-                         <td className="px-2 sm:px-4 py-2 border-b border-gray-200 hidden sm:table-cell">
-                           <div className="text-xs sm:text-sm text-gray-700">{product?.description || '-'}</div>
-                         </td>
-                         <td className="px-2 sm:px-4 py-2 text-center text-xs sm:text-sm text-black border-b border-gray-200">{item.quantity}</td>
-                         <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm text-black border-b border-gray-200">
-                           {formatCurrency(item.unit_price)}
-                         </td>
-                         <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm text-black border-b border-gray-200 hidden sm:table-cell">
-                           {formatCurrency(item.vat_amount)}
-                         </td>
-                         <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium text-black border-b border-gray-200">
-                           {formatCurrency(item.total)}
-                         </td>
-                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              {loading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-sm text-gray-600">Carregando produtos...</div>
+                </div>
+              ) : dataIntegrityIssue ? (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                  <div className="text-yellow-800 font-medium mb-2">
+                    Problema de Integridade de Dados
+                  </div>
+                  <div className="text-yellow-700 text-sm mb-4">
+                    Esta venda não possui produtos associados na base de dados. 
+                    Isto pode acontecer quando há falhas durante o processo de criação da venda.
+                  </div>
+                  <div className="text-xs text-yellow-600">
+                    ID da Venda: {sale.id}
+                  </div>
+                </div>
+              ) : (
+                <table className="w-full border-collapse min-w-[600px]">
+                   <thead>
+                     <tr className="bg-black text-white">
+                       <th className="px-2 sm:px-4 py-2 text-left font-medium text-xs sm:text-sm border-r border-gray-600">Produto</th>
+                       <th className="px-2 sm:px-4 py-2 text-left font-medium text-xs sm:text-sm border-r border-gray-600 hidden sm:table-cell">Descrição</th>
+                       <th className="px-2 sm:px-4 py-2 text-center font-medium text-xs sm:text-sm border-r border-gray-600">Qtd</th>
+                       <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm border-r border-gray-600">Preço Unit.</th>
+                       <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm border-r border-gray-600 hidden sm:table-cell">IVA</th>
+                       <th className="px-2 sm:px-4 py-2 text-right font-medium text-xs sm:text-sm">Total</th>
+                     </tr>
+                   </thead>
+                  <tbody className="bg-white">
+                    {groupedSaleItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                          Nenhum produto encontrado para esta venda
+                        </td>
+                      </tr>
+                    ) : (
+                      groupedSaleItems.map((item: any, index: number) => {
+                        const product = products.find(p => p.id === item.product_id);
+                        return (
+                           <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                             <td className="px-2 sm:px-4 py-2 border-b border-gray-200">
+                               <div className="font-medium text-xs sm:text-sm text-black">{product?.name || 'Produto'}</div>
+                             </td>
+                             <td className="px-2 sm:px-4 py-2 border-b border-gray-200 hidden sm:table-cell">
+                               <div className="text-xs sm:text-sm text-gray-700">{product?.description || '-'}</div>
+                             </td>
+                             <td className="px-2 sm:px-4 py-2 text-center text-xs sm:text-sm text-black border-b border-gray-200">{item.quantity}</td>
+                             <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm text-black border-b border-gray-200">
+                               {formatCurrency(item.unit_price)}
+                             </td>
+                             <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm text-black border-b border-gray-200 hidden sm:table-cell">
+                               {formatCurrency(item.vat_amount)}
+                             </td>
+                             <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium text-black border-b border-gray-200">
+                               {formatCurrency(item.total)}
+                             </td>
+                           </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             {/* Totals */}
