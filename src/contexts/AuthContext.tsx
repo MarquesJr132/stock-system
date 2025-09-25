@@ -7,7 +7,7 @@ export interface Profile {
   user_id: string;
   email: string;
   full_name: string;
-  role: 'superuser' | 'administrator' | 'gerente' | 'user';
+  role: 'superuser' | 'administrator' | 'staff' | 'gerente' | 'user';
   tenant_id: string | null;
   created_by: string | null;
   created_at: string;
@@ -20,9 +20,9 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, fullName: string, role?: 'administrator' | 'gerente' | 'user') => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, fullName: string, role?: 'administrator' | 'staff' | 'gerente' | 'user') => Promise<{ error: string | null }>;
   signOut: () => Promise<{ error: string | null }>;
-  createUser: (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user') => Promise<{ error: string | null }>;
+  createUser: (email: string, password: string, fullName: string, role: 'administrator' | 'staff' | 'gerente' | 'user') => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   verifyOtp: (email: string, token: string, type: 'recovery') => Promise<{ error: string | null }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
@@ -30,6 +30,7 @@ interface AuthContextType {
   isSuperuser: boolean;
   isAdministrator: boolean;
   isGerente: boolean;
+  isStaff: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -197,7 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user' = 'user') => {
+  const signUp = async (email: string, password: string, fullName: string, role: 'administrator' | 'staff' | 'gerente' | 'user' = 'user') => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -222,7 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const createUser = async (email: string, password: string, fullName: string, role: 'administrator' | 'gerente' | 'user') => {
+  const createUser = async (email: string, password: string, fullName: string, role: 'administrator' | 'staff' | 'gerente' | 'user') => {
     try {
       console.log('AuthContext: Creating user with role:', role);
       
@@ -372,8 +373,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const isSuperuserCheck = profile?.role === 'superuser';
-  const isAdminCheck = profile?.role === 'administrator' || profile?.role === 'superuser' || profile?.role === 'gerente';
+  const isAdminCheck = profile?.role === 'administrator' || profile?.role === 'superuser' || profile?.role === 'gerente' || profile?.role === 'staff';
   const isGerenteCheck = profile?.role === 'gerente';
+  const isStaffCheck = profile?.role === 'staff';
 
   const value = {
     user,
@@ -390,7 +392,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     isSuperuser: isSuperuserCheck,
     isAdministrator: isAdminCheck,
-    isGerente: isGerenteCheck
+    isGerente: isGerenteCheck,
+    isStaff: isStaffCheck
   };
 
   console.log('AuthProvider: rendering with loading =', loading, 'user =', !!user, 'profile =', !!profile);

@@ -1537,6 +1537,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      has_reports_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       has_role: {
         Args: { check_role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
@@ -1554,6 +1558,10 @@ export type Database = {
         Returns: boolean
       }
       is_gerente: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_staff: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
@@ -1605,7 +1613,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_role: "superuser" | "administrator" | "user" | "gerente"
+      user_role: "superuser" | "administrator" | "user" | "gerente" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1733,7 +1741,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["superuser", "administrator", "user", "gerente"],
+      user_role: ["superuser", "administrator", "user", "gerente", "staff"],
     },
   },
 } as const

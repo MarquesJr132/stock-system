@@ -26,12 +26,12 @@ const UserManagement = () => {
     fullName: '',
     email: '',
     password: '',
-    role: 'user' as 'administrator' | 'gerente' | 'user'
+    role: 'staff' as 'administrator' | 'staff' | 'gerente' | 'user'
   });
   const [editUser, setEditUser] = useState({
     fullName: '',
     email: '',
-    role: 'user' as 'administrator' | 'gerente' | 'user'
+    role: 'staff' as 'administrator' | 'staff' | 'gerente' | 'user'
   });
   const { profile, isSuperuser, isAdministrator, isGerente, createUser } = useAuth();
   const { toast } = useToast();
@@ -193,7 +193,7 @@ const UserManagement = () => {
       });
 
       // Reset form and close dialog
-      setNewUser({ fullName: '', email: '', password: '', role: 'user' });
+      setNewUser({ fullName: '', email: '', password: '', role: 'staff' });
       setIsCreateDialogOpen(false);
       
       // Refresh users list to show the new user
@@ -265,7 +265,7 @@ const UserManagement = () => {
     setEditUser({
       fullName: user.full_name,
       email: user.email,
-      role: user.role as 'administrator' | 'gerente' | 'user'
+      role: user.role as 'administrator' | 'staff' | 'gerente' | 'user'
     });
     setIsEditDialogOpen(true);
   };
@@ -377,6 +377,7 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return <Crown className="h-4 w-4" />;
       case 'administrator': return <Shield className="h-4 w-4" />;
+      case 'staff': return <Settings className="h-4 w-4" />;
       case 'gerente': return <Settings className="h-4 w-4" />;
       case 'user': return <User className="h-4 w-4" />;
       default: return <User className="h-4 w-4" />;
@@ -387,6 +388,7 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return 'destructive';
       case 'administrator': return 'default';
+      case 'staff': return 'outline';
       case 'gerente': return 'outline';
       case 'user': return 'secondary';
       default: return 'secondary';
@@ -397,6 +399,7 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return 'Superutilizador';
       case 'administrator': return 'Administrador';
+      case 'staff': return 'Staff';
       case 'gerente': return 'Gerente';
       case 'user': return 'Utilizador';
       default: return role;
@@ -495,41 +498,40 @@ const UserManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="role">Função</Label>
-                    {isSuperuser ? (
-                      <Select 
-                        value={newUser.role} 
-                        onValueChange={(value: 'administrator' | 'gerente' | 'user') => 
-                          setNewUser({ ...newUser, role: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="administrator">Administrador</SelectItem>
-                          <SelectItem value="gerente">Gerente</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Select 
-                        value={newUser.role} 
-                        onValueChange={(value: 'gerente' | 'user') => 
-                          setNewUser({ ...newUser, role: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="gerente">Gerente</SelectItem>
-                          <SelectItem value="user">Utilizador</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
+                     {isSuperuser ? (
+                       <Select 
+                         value={newUser.role} 
+                         onValueChange={(value: 'administrator' | 'staff') => 
+                           setNewUser({ ...newUser, role: value })
+                         }
+                       >
+                         <SelectTrigger>
+                           <SelectValue />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="administrator">Administrador</SelectItem>
+                           <SelectItem value="staff">Staff</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     ) : (
+                       <Select 
+                         value={newUser.role} 
+                         onValueChange={(value: 'staff') => 
+                           setNewUser({ ...newUser, role: value })
+                         }
+                       >
+                         <SelectTrigger>
+                           <SelectValue />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="staff">Staff</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     )}
                   </div>
-                  <Button onClick={handleCreateUser} className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Criando...' : `Criar ${isSuperuser ? (newUser.role === 'administrator' ? 'Administrador' : newUser.role === 'gerente' ? 'Gerente' : 'Utilizador') : (newUser.role === 'gerente' ? 'Gerente' : 'Utilizador')}`}
-                  </Button>
+                   <Button onClick={handleCreateUser} className="w-full" disabled={isSubmitting}>
+                     {isSubmitting ? 'Criando...' : `Criar ${isSuperuser ? (newUser.role === 'administrator' ? 'Administrador' : 'Staff') : 'Staff'}`}
+                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -703,38 +705,38 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="edit-role">Função</Label>
-                  {isSuperuser ? (
-                    <Select 
-                      value={editUser.role} 
-                      onValueChange={(value: 'administrator' | 'gerente' | 'user') => 
-                        setEditUser({ ...editUser, role: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="administrator">Administrador</SelectItem>
-                        <SelectItem value="gerente">Gerente</SelectItem>
-                        <SelectItem value="user">Utilizador</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Select 
-                      value={editUser.role} 
-                      onValueChange={(value: 'gerente' | 'user') => 
-                        setEditUser({ ...editUser, role: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gerente">Gerente</SelectItem>
-                        <SelectItem value="user">Utilizador</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                   {isSuperuser ? (
+                     <Select 
+                       value={editUser.role} 
+                       onValueChange={(value: 'administrator' | 'staff' | 'gerente' | 'user') => 
+                         setEditUser({ ...editUser, role: value })
+                       }
+                     >
+                       <SelectTrigger>
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="administrator">Administrador</SelectItem>
+                         <SelectItem value="staff">Staff</SelectItem>
+                         <SelectItem value="gerente">Gerente</SelectItem>
+                         <SelectItem value="user">Utilizador</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   ) : (
+                     <Select 
+                       value={editUser.role} 
+                       onValueChange={(value: 'staff') => 
+                         setEditUser({ ...editUser, role: value })
+                       }
+                     >
+                       <SelectTrigger>
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="staff">Staff</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   )}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button onClick={handleUpdateUser} className="flex-1">

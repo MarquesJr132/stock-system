@@ -23,7 +23,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
-  const { user, signOut, profile, isAdministrator, isGerente } = useAuth();
+  const { user, signOut, profile, isAdministrator, isGerente, isStaff } = useAuth();
   const isMobile = useIsMobile();
   const { hasFeature } = useTenantFeatures();
 
@@ -31,7 +31,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   const baseItems = [];
   
   // Feature-based navigation - Dashboard requires both feature and role
-  if (hasFeature('dashboard_basic') && (isAdministrator || isGerente)) {
+  if (hasFeature('dashboard_basic') && (isAdministrator || isGerente || isStaff)) {
     baseItems.push({ icon: BarChart3, label: "Dashboard", id: "dashboard" });
   }
   
@@ -51,7 +51,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
     baseItems.push({ icon: FileText, label: "Orçamentos", id: "quotations" });
   }
   
-  // Reports - requires both feature and role
+  // Reports - requires both feature and role (staff does NOT have access)
   if ((hasFeature('reports_basic') || hasFeature('reports_advanced')) && (isAdministrator || isGerente)) {
     baseItems.push({ icon: TrendingUp, label: "Relatórios", id: "reports" });
   }
@@ -78,7 +78,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   }
   
   // Integrations - requires both feature and role  
-  if (hasFeature('integrations') && (isAdministrator || isGerente)) {
+  if (hasFeature('integrations') && (isAdministrator || isGerente || isStaff)) {
     adminItems.push({ icon: Zap, label: "Integrações", id: "integrations" });
   }
   
