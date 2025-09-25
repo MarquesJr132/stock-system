@@ -52,7 +52,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   }
   
   // Reports - requires both feature and role (staff does NOT have access)
-  if ((hasFeature('reports_basic') || hasFeature('reports_advanced')) && (isAdministrator || isGerente)) {
+  if ((hasFeature('reports_basic') || hasFeature('reports_advanced')) && (profile?.role === 'administrator' || profile?.role === 'superuser' || profile?.role === 'gerente')) {
     baseItems.push({ icon: TrendingUp, label: "Relatórios", id: "reports" });
   }
   
