@@ -23,7 +23,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter basename="/stock-system">
+          <BrowserRouter basename={import.meta.env.PROD ? "/stock-system" : "/"}>
             <AuthProvider>
               <TenantFeaturesProvider>
                 <Routes>
