@@ -30,8 +30,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_SUPABASE_URL: 'https://dwlyjmgksmehgmpehzvj.supabase.co'
-          VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3bHlqbWdrc21laGdtcGVoenZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMjIzMzUsImV4cCI6MjA3MDU5ODMzNX0.oc5rkUBJfAJshr-fLx-tZ8WHLuTCXmmacnPWv-tn1pg'
+          VITE_SUPABASE_URL: 'https://fkthdlbljhhjutuywepc.supabase.co'
+          VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrdGhkbGJsamhoanV0dXl3ZXBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTIwMDgsImV4cCI6MjA3MDA4ODAwOH0.nOAh8oTgWmg5GLT15QmYhPfIM80w5WmX6fpwD3XyR7Y'
 
       - name: Add SPA 404 fallback
         run: |
