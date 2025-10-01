@@ -386,13 +386,15 @@ const SuperuserManagement = () => {
     } catch (error: any) {
       console.error('Error deleting company:', error);
       
-      // Build detailed error message
+      // Build detailed error message with code and message
       let errorMessage = "Não foi possível remover a empresa.";
       
-      if (error?.code === '23503') {
-        errorMessage = "A empresa possui dados relacionados (vendas, produtos, clientes, etc.) que impedem a remoção. Todos os dados estão sendo limpos automaticamente.";
+      if (error?.code) {
+        errorMessage = error?.message 
+          ? `${error.message} (Código: ${error.code})`
+          : `Erro de banco de dados (Código: ${error.code})`;
       } else if (error?.message) {
-        errorMessage = `${error.message} ${error.code ? `(Código: ${error.code})` : ''}`;
+        errorMessage = error.message;
       }
       
       toast({
