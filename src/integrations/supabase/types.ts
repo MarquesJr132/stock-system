@@ -1385,6 +1385,10 @@ export type Database = {
         }
         Returns: Json
       }
+      assign_basic_features_to_tenant: {
+        Args: { tenant_uuid: string }
+        Returns: undefined
+      }
       assign_user_to_admin_tenant: {
         Args: { admin_email: string; user_email: string }
         Returns: undefined
