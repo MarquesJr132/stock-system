@@ -145,7 +145,26 @@ export const SupplierManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este fornecedor?')) return;
+    const supplier = suppliers.find(s => s.id === id);
+    if (!supplier) return;
+
+    // Check for related purchase orders
+    const { data: purchaseOrders } = await supabase
+      .from('purchase_orders')
+      .select('id')
+      .eq('supplier_id', id)
+      .limit(1);
+
+    if (purchaseOrders && purchaseOrders.length > 0) {
+      toast({
+        title: "Não é possível eliminar",
+        description: `O fornecedor "${supplier.name}" tem ordens de compra associadas. Desative-o em vez de eliminar, ou elimine primeiro as ordens de compra relacionadas.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja excluir o fornecedor "${supplier.name}"?`)) return;
 
     try {
       const { error } = await supabase
@@ -165,7 +184,7 @@ export const SupplierManagement: React.FC = () => {
       console.error('Erro ao excluir fornecedor:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível excluir o fornecedor",
+        description: "Não foi possível excluir o fornecedor. Verifique se não há dados relacionados.",
         variant: "destructive",
       });
     }

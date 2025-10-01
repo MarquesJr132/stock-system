@@ -88,7 +88,24 @@ const CustomerManagement = () => {
     resetForm();
   };
 
-  const handleDelete = (customer: Customer) => {
+  const handleDelete = async (customer: Customer) => {
+    // Check for related sales
+    const customerSales = getCustomerSales(customer.id);
+    
+    // Check for special orders
+    const { data: specialOrders } = await (await import('@/integrations/supabase/client')).supabase
+      .from('special_orders')
+      .select('id')
+      .eq('customer_id', customer.id)
+      .limit(1);
+
+    if (customerSales.length > 0 || (specialOrders && specialOrders.length > 0)) {
+      toast.error(
+        `Não é possível eliminar o cliente "${customer.name}" porque tem ${customerSales.length > 0 ? 'vendas' : 'encomendas especiais'} associadas. Elimine primeiro os registos relacionados.`
+      );
+      return;
+    }
+
     if (window.confirm(`Tem certeza que deseja eliminar o cliente "${customer.name}"?`)) {
       deleteCustomer(customer.id);
     }
