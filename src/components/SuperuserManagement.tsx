@@ -383,11 +383,21 @@ const SuperuserManagement = () => {
         description: "A empresa foi removida com sucesso.",
       });
       fetchCompanies();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting company:', error);
+      
+      // Build detailed error message
+      let errorMessage = "Não foi possível remover a empresa.";
+      
+      if (error?.code === '23503') {
+        errorMessage = "A empresa possui dados relacionados (vendas, produtos, clientes, etc.) que impedem a remoção. Todos os dados estão sendo limpos automaticamente.";
+      } else if (error?.message) {
+        errorMessage = `${error.message} ${error.code ? `(Código: ${error.code})` : ''}`;
+      }
+      
       toast({
         title: "Erro ao remover empresa",
-        description: "Não foi possível remover a empresa.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
