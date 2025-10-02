@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Search, ShoppingCart, CreditCard, Banknote, Users, Printer, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Plus, Search, ShoppingCart, CreditCard, Banknote, Users, Printer, ChevronDown, ChevronUp, Trash2, FileText } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSupabaseData, SaleItem } from "@/hooks/useSupabaseData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import SaleItemForm from "./SaleItemForm";
 import InvoicePreview from "./InvoicePreview";
+import ReceiptPreview from "./ReceiptPreview";
 import { formatCurrency } from "@/lib/currency";
 
 const SalesManagement = () => {
@@ -22,6 +23,7 @@ const SalesManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [editingSale, setEditingSale] = useState<any>(null);
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
@@ -398,6 +400,19 @@ const SalesManagement = () => {
                         <Printer className="h-4 w-4" />
                         Gerar Fatura
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSale(sale);
+                          setReceiptOpen(true);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Gerar Recibo
+                      </Button>
                       {(isAdministrator || isGerente) && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -475,6 +490,16 @@ const SalesManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Receipt Preview Dialog */}
+      <ReceiptPreview 
+        sale={selectedSale}
+        products={products}
+        customers={customers}
+        isOpen={receiptOpen}
+        onClose={() => setReceiptOpen(false)}
+        onGeneratePDF={() => {}}
+      />
     </div>
   );
 };

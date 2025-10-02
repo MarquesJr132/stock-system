@@ -172,9 +172,9 @@ export function QuotationPreview({
                 <div className="space-y-1 text-sm">
                   <p className="text-base sm:text-lg font-bold text-black">{companySettings?.company_name || 'Empresa'}</p>
                   <p className="text-gray-700">{companySettings?.address || ''}</p>
-                  <p className="text-gray-700">{companySettings?.phone || ''}</p>
-                  <p className="text-gray-700">{companySettings?.email || ''}</p>
-                  <p className="text-gray-700">{companySettings?.nuit || ''}</p>
+                  {companySettings?.phone && <p className="text-gray-700">Contacto: {companySettings.phone}</p>}
+                  {companySettings?.email && <p className="text-gray-700">Email: {companySettings.email}</p>}
+                  {companySettings?.nuit && <p className="text-gray-700">NUIT: {companySettings.nuit}</p>}
                 </div>
               </div>
               <div>

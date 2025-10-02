@@ -1,15 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Printer, Download, Eye } from "lucide-react";
-import { formatCurrency, formatDateTime } from "@/lib/currency";
+import { formatCurrency } from "@/lib/currency";
 import { useSupabaseData, SaleItem } from "@/hooks/useSupabaseData";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-interface InvoicePreviewProps {
+interface ReceiptPreviewProps {
   sale: any;
   products: any[];
   customers: any[];
@@ -18,7 +15,7 @@ interface InvoicePreviewProps {
   onGeneratePDF: () => void;
 }
 
-const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGeneratePDF }: InvoicePreviewProps) => {
+const ReceiptPreview = ({ sale, products, customers, isOpen, onClose, onGeneratePDF }: ReceiptPreviewProps) => {
   const { fetchSaleItemsBySaleId, companySettings } = useSupabaseData();
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,7 +36,6 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
       console.log(`Loading sale items for sale ID: ${sale.id}`);
       let items = await fetchSaleItemsBySaleId(sale.id);
 
-      // Fallback: algumas vendas antigas podem ter os itens embutidos no objeto da venda
       if ((!items || items.length === 0) && Array.isArray((sale as any).sale_items) && (sale as any).sale_items.length > 0) {
         console.log(`Using embedded sale items for sale ${sale.id}`);
         items = (sale as any).sale_items.map((it: any) => ({
@@ -98,29 +94,9 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
     return methods[method] || method;
   };
 
-  const formatPaymentMethod = getPaymentLabel;
-
-  const getStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      completed: 'text-green-600',
-      pending: 'text-yellow-600',
-      cancelled: 'text-red-600'
-    };
-    return colors[status] || 'text-gray-600';
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: { [key: string]: string } = {
-      completed: 'Concluída',
-      pending: 'Pendente',
-      cancelled: 'Cancelada'
-    };
-    return labels[status] || status;
-  };
-
   const generatePDF = async () => {
     try {
-      const element = document.getElementById('invoice-content');
+      const element = document.getElementById('receipt-content');
       if (!element) return;
 
       const canvas = await html2canvas(element, {
@@ -150,19 +126,9 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
         heightLeft -= pageHeight;
       }
 
-      pdf.save(`factura-${sale.id.slice(-8)}.pdf`);
+      pdf.save(`recibo-${sale.id.slice(-8)}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-    }
-  };
-
-  const getPaymentStatusColor = (method: string) => {
-    switch (method) {
-      case 'Dinheiro': return 'bg-green-500';
-      case 'Cartão': return 'bg-blue-500';
-      case 'Transferência': return 'bg-purple-500';
-      case 'Mpesa': return 'bg-orange-500';
-      default: return 'bg-gray-500';
     }
   };
 
@@ -170,12 +136,12 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[95vh] overflow-y-auto p-0 m-2 sm:m-4">
         <DialogHeader className="p-4 sm:p-6 pb-0">
-          <DialogTitle className="text-lg sm:text-xl">Visualização da Factura</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Visualização do Recibo</DialogTitle>
         </DialogHeader>
         
         <div className="p-3 sm:p-6">
           {/* Content for PDF Generation */}
-          <div id="invoice-content" className="bg-white p-6 sm:p-12 text-black min-h-[600px]">
+          <div id="receipt-content" className="bg-white p-6 sm:p-12 text-black min-h-[600px]">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start mb-8 sm:mb-12 space-y-4 sm:space-y-0">
               <div className="flex items-center space-x-6">
@@ -188,7 +154,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                 )}
               </div>
               <div className="text-left sm:text-right">
-                <h1 className="text-2xl sm:text-3xl font-bold text-black">FACTURA</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-black">RECIBO</h1>
               </div>
             </div>
 
@@ -200,7 +166,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
                   <p className="text-gray-700">{companySettings?.address || ''}</p>
                   {companySettings?.phone && <p className="text-gray-700">Contacto: {companySettings.phone}</p>}
                   {companySettings?.email && <p className="text-gray-700">Email: {companySettings.email}</p>}
-                  {companySettings?.nuit && <p className="text-gray-700">NUIT: {companySettings.nuit}</p>}
+                  <p className="text-gray-700">{companySettings?.nuit || ''}</p>
                 </div>
               </div>
               <div>
@@ -324,7 +290,7 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
               </div>
             )}
 
-            {/* Banking Information - Bottom Left */}
+            {/* Banking Information */}
             {companySettings && (
               companySettings.bank_name || 
               companySettings.account_number || 
@@ -365,4 +331,4 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   );
 };
 
-export default InvoicePreview;
+export default ReceiptPreview;

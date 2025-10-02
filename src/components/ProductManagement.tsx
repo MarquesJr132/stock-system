@@ -18,7 +18,7 @@ import { MobileInput } from "@/components/mobile/MobileInput";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const ProductManagement = () => {
-  const { products, addProduct, updateProduct, deleteProduct, loading } = useSupabaseData();
+  const { products, addProduct, updateProduct, deleteProduct, productCategories, loading } = useSupabaseData();
   const { profile, isAdministrator, isGerente } = useAuth();
   
   // Check if user can manage products (admin or manager only)
@@ -230,12 +230,25 @@ const ProductManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="category">Categoria</Label>
-                    <Input
-                      id="category"
-                      value={formData.category}
-                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                      placeholder="Ex: Telemóveis, Computadores"
-                    />
+                    <Select 
+                      value={formData.category} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {productCategories.length === 0 ? (
+                          <SelectItem value="Geral">Geral</SelectItem>
+                        ) : (
+                          productCategories.map(cat => (
+                            <SelectItem key={cat.id} value={cat.name}>
+                              {cat.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

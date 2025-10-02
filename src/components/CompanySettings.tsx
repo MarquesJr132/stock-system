@@ -8,13 +8,15 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { Building2, MapPin, Image, CreditCard, Upload, X } from 'lucide-react';
+import { Building2, MapPin, Image, CreditCard, Upload, X, Plus, Edit, Trash2, Tag } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 
 interface CompanySettingsComponentProps {}
 
 const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => {
   const { profile, loading } = useAuth();
-  const { companySettings, updateCompanySettings } = useSupabaseData();
+  const { companySettings, updateCompanySettings, productCategories, addProductCategory, updateProductCategory, deleteProductCategory } = useSupabaseData();
   
   const [formData, setFormData] = useState({
     company_name: '',
@@ -27,6 +29,13 @@ const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => 
     account_holder: '',
     account_number: '',
     iban: ''
+  });
+
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: '',
+    description: ''
   });
 
   useEffect(() => {
@@ -354,6 +363,139 @@ const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => 
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Category Management Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Tag className="h-5 w-5 text-primary" />
+                <CardTitle>Gestão de Categorias de Produtos</CardTitle>
+              </div>
+              <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" onClick={() => {
+                    setEditingCategory(null);
+                    setCategoryFormData({ name: '', description: '' });
+                  }}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Nova Categoria
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingCategory ? 'Editar Categoria' : 'Nova Categoria'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    try {
+                      if (editingCategory) {
+                        await updateProductCategory(editingCategory.id, categoryFormData);
+                      } else {
+                        await addProductCategory(categoryFormData);
+                      }
+                      setCategoryDialogOpen(false);
+                      setCategoryFormData({ name: '', description: '' });
+                      setEditingCategory(null);
+                    } catch (error) {
+                      console.error('Error saving category:', error);
+                    }
+                  }}>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="categoryName">Nome da Categoria *</Label>
+                        <Input
+                          id="categoryName"
+                          value={categoryFormData.name}
+                          onChange={(e) => setCategoryFormData(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Ex: Electrónica"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="categoryDescription">Descrição</Label>
+                        <Textarea
+                          id="categoryDescription"
+                          value={categoryFormData.description}
+                          onChange={(e) => setCategoryFormData(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Descrição da categoria (opcional)"
+                          rows={3}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setCategoryDialogOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button type="submit">
+                          {editingCategory ? 'Atualizar' : 'Criar'}
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <CardDescription>
+              Gerencie as categorias de produtos usadas no sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {productCategories.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhuma categoria cadastrada. Crie uma categoria para organizar seus produtos.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead className="w-[100px]">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {productCategories.map(category => (
+                    <TableRow key={category.id}>
+                      <TableCell className="font-medium">{category.name}</TableCell>
+                      <TableCell>{category.description || '-'}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingCategory(category);
+                              setCategoryFormData({
+                                name: category.name,
+                                description: category.description || ''
+                              });
+                              setCategoryDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={async () => {
+                              if (confirm('Tem certeza que deseja eliminar esta categoria?')) {
+                                await deleteProductCategory(category.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 

@@ -104,6 +104,16 @@ export interface CompanySettings {
   updated_at: string;
 }
 
+export interface ProductCategory {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
 export const useSupabaseData = () => {
   const { saveData, getData, addPendingOperation, isInitialized } = useOfflineStorage();
   const { syncStatus } = useOfflineSync();
@@ -115,6 +125,7 @@ export const useSupabaseData = () => {
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [tenantLimits, setTenantLimits] = useState<TenantLimits | null>(null);
   const [dataUsage, setDataUsage] = useState<DataUsageLog[]>([]);
+  const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const { profile, user } = useAuth();
   const { toast } = useToast();
@@ -132,6 +143,7 @@ export const useSupabaseData = () => {
       setCompanySettings(null);
       setTenantLimits(null);
       setDataUsage([]);
+      setProductCategories([]);
     }
   }, [user, profile, isInitialized]);
 
@@ -159,12 +171,13 @@ export const useSupabaseData = () => {
         fetchSaleItems(),
         fetchCompanySettings(),
         fetchTenantLimits(),
-        fetchDataUsage()
+        fetchDataUsage(),
+        fetchProductCategories()
       ]);
 
       // Log any failures without stopping the process
       results.forEach((result, index) => {
-        const functionNames = ['fetchProducts', 'fetchCustomers', 'fetchSales', 'fetchSaleItems', 'fetchCompanySettings', 'fetchTenantLimits', 'fetchDataUsage'];
+        const functionNames = ['fetchProducts', 'fetchCustomers', 'fetchSales', 'fetchSaleItems', 'fetchCompanySettings', 'fetchTenantLimits', 'fetchDataUsage', 'fetchProductCategories'];
         if (result.status === 'rejected') {
           console.warn(`${functionNames[index]} failed:`, result.reason);
         }
@@ -455,6 +468,25 @@ export const useSupabaseData = () => {
       .limit(100);
     
     setDataUsage(data || []);
+  };
+
+  const fetchProductCategories = async () => {
+    if (!profile) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .select('*')
+        .eq('tenant_id', profile.tenant_id || profile.id)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      
+      setProductCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching product categories:', error);
+      setProductCategories([]);
+    }
   };
 
   // CRUD operations for products
@@ -1224,6 +1256,94 @@ export const useSupabaseData = () => {
     return { data };
   };
 
+  // Product Category CRUD operations
+  const addProductCategory = async (categoryData: Omit<ProductCategory, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'tenant_id'>) => {
+    if (!profile) return { error: 'User not authenticated' };
+
+    const tenantId = profile.tenant_id || profile.id;
+    const newCategory = {
+      ...categoryData,
+      created_by: profile.id,
+      tenant_id: tenantId,
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .insert([newCategory])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProductCategories(prev => [...prev, data]);
+      toast({
+        title: "Sucesso",
+        description: "Categoria criada com sucesso",
+      });
+      return { data };
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar categoria",
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+  };
+
+  const updateProductCategory = async (id: string, categoryData: Partial<ProductCategory>) => {
+    try {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .update(categoryData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProductCategories(prev => prev.map(c => c.id === id ? data : c));
+      toast({
+        title: "Sucesso",
+        description: "Categoria atualizada com sucesso",
+      });
+      return { data };
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar categoria",
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+  };
+
+  const deleteProductCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('product_categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setProductCategories(prev => prev.filter(c => c.id !== id));
+      toast({
+        title: "Sucesso",
+        description: "Categoria eliminada com sucesso",
+      });
+      return { data: true };
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao eliminar categoria",
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
+  };
+
   const updateTenantLimits = async (tenantId: string, limitsData: Partial<TenantLimits>) => {
     if (!profile?.role || profile.role !== 'superuser') {
       return { error: 'Apenas superusers podem alterar limites' };
@@ -1946,6 +2066,7 @@ export const useSupabaseData = () => {
     companySettings,
     tenantLimits,
     dataUsage,
+    productCategories,
     loading,
     
     // CRUD operations
@@ -1976,6 +2097,11 @@ export const useSupabaseData = () => {
     deleteQuotation,
     deleteQuotationComplete,
     getQuotationItems,
+    
+    // Category functions
+    addProductCategory,
+    updateProductCategory,
+    deleteProductCategory,
     
     // Helper functions
     getTotalStock,
