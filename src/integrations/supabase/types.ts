@@ -1400,6 +1400,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1559,6 +1586,10 @@ export type Database = {
           user_id: string
         }
       }
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
       get_user_tenant_features: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1576,7 +1607,9 @@ export type Database = {
         Returns: boolean
       }
       has_role: {
-        Args: { check_role: Database["public"]["Enums"]["user_role"] }
+        Args:
+          | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
+          | { check_role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
       }
       increment_user_count: {
@@ -1647,6 +1680,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "administrator" | "gerente" | "staff" | "user" | "superuser"
       user_role: "superuser" | "administrator" | "user" | "gerente" | "staff"
     }
     CompositeTypes: {
@@ -1775,6 +1809,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["administrator", "gerente", "staff", "user", "superuser"],
       user_role: ["superuser", "administrator", "user", "gerente", "staff"],
     },
   },

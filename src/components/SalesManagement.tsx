@@ -118,6 +118,12 @@ const SalesManagement = () => {
   };
 
   const handleSaveSale = async () => {
+    // CRITICAL: Enforce customer assignment
+    if (!currentSale.customer_id) {
+      toast.error("Selecione um cliente para a venda");
+      return;
+    }
+
     if (currentSale.items.length === 0) {
       toast.error("Adicione pelo menos um item à venda");
       return;
@@ -228,16 +234,15 @@ const SalesManagement = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label>Cliente (Opcional)</Label>
+                    <Label>Cliente *</Label>
                     <Select
-                      value={currentSale.customer_id || "none"}
-                      onValueChange={(value) => setCurrentSale(prev => ({ ...prev, customer_id: value === "none" ? "" : value }))}
+                      value={currentSale.customer_id || ""}
+                      onValueChange={(value) => setCurrentSale(prev => ({ ...prev, customer_id: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecionar cliente" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Cliente Geral</SelectItem>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>
                             {customer.name}

@@ -56,27 +56,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthProvider: fetchProfile called for user:', userId);
     try {
       console.log('AuthProvider: making profiles query...');
-      const { data, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.error('AuthContext: Error fetching profile', error);
+      if (profileError) {
+        console.error('AuthContext: Error fetching profile', profileError);
         setProfile(null);
         setLoading(false);
         return;
       }
 
-      if (!data) {
+      if (!profileData) {
         setProfile(null);
         setLoading(false);
         return;
       }
 
-      setProfile(data);
-      console.log('AuthContext: Profile loaded successfully:', data);
+      // Fetch user roles from the new user_roles table for enhanced security
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (rolesError) {
+        console.error('AuthContext: Error fetching roles', rolesError);
+      }
+
+      // Use role from user_roles table if available, otherwise fallback to profile role
+      const primaryRole = rolesData && rolesData.length > 0 
+        ? rolesData[0].role 
+        : profileData.role;
+
+      setProfile({
+        ...profileData,
+        role: primaryRole
+      });
+      console.log('AuthContext: Profile loaded successfully with role:', primaryRole);
       setLoading(false);
     } catch (error) {
       console.error('AuthContext: Error fetching profile:', error);

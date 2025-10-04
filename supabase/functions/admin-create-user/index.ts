@@ -87,10 +87,22 @@ serve(async (req) => {
 
     console.log('Profile found:', profile.email, 'Role:', profile.role)
 
-    // Check if user is administrator or superuser
-    if (!['administrator', 'superuser'].includes(profile.role)) {
+    // Check if user is administrator, superuser, or manager
+    // Staff CANNOT create users
+    if (!['administrator', 'superuser', 'gerente'].includes(profile.role)) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Apenas administradores podem criar usuários' }),
+        JSON.stringify({ success: false, error: 'Apenas administradores, gerentes e superusers podem criar usuários' }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+    
+    // Explicitly block staff role from creating users
+    if (profile.role === 'staff') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Staff não tem permissão para criar usuários' }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -183,6 +195,21 @@ serve(async (req) => {
     }
 
     console.log('User created successfully:', newUser.user.id)
+    
+    // Create role entry in user_roles table for proper security
+    const { error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .insert({
+        user_id: newUser.user.id,
+        role: role,
+        tenant_id: role === 'administrator' ? null : (profile.tenant_id || profile.id),
+        created_by: user.id
+      })
+
+    if (roleError) {
+      console.error('Error creating user role:', roleError)
+      // Continue anyway as the profile will have the role
+    }
     
     // Wait a bit longer for trigger to complete
     console.log('Waiting for trigger to complete...')

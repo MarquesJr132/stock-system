@@ -39,7 +39,21 @@ import { AuditLogs } from "@/components/AuditLogs";
 
 const Reports = () => {
   const { products, customers, sales, getTotalValue, getDailyProfit } = useSupabaseData();
-  const { user, profile } = useAuth();
+  const { user, profile, isStaff, isAdministrator, isSuperuser, isGerente } = useAuth();
+
+  // Block staff from accessing reports
+  if (isStaff && !isAdministrator && !isSuperuser && !isGerente) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <div className="p-6 bg-destructive/10 rounded-lg border border-destructive/20">
+          <h2 className="text-xl font-semibold text-destructive mb-2">Acesso Negado</h2>
+          <p className="text-muted-foreground">
+            A função Staff não tem permissão para aceder aos relatórios.
+          </p>
+        </div>
+      </div>
+    );
+  }
   const [period, setPeriod] = useState("30");
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedUser, setSelectedUser] = useState<string>("all");

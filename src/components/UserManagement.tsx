@@ -407,7 +407,11 @@ const UserManagement = () => {
   };
 
   // Show create button only for users who can create users
-  const canCreateUsers = isSuperuser || isAdministrator || isGerente;
+  // Staff CANNOT create users
+  const canCreateUsers = () => {
+    if (profile?.role === 'staff') return false;
+    return isSuperuser || isAdministrator || isGerente;
+  };
 
   // Filter users - superusers see all, others see only their tenant
   const filteredUsers = users.filter(user => {
@@ -452,7 +456,7 @@ const UserManagement = () => {
             }
           </CardDescription>
             </div>
-            {canCreateUsers && (
+            {canCreateUsers() && (
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="w-full sm:w-auto">
@@ -501,7 +505,7 @@ const UserManagement = () => {
                      {isSuperuser ? (
                        <Select 
                          value={newUser.role} 
-                         onValueChange={(value: 'administrator' | 'staff') => 
+                         onValueChange={(value: 'administrator' | 'staff' | 'gerente' | 'user') => 
                            setNewUser({ ...newUser, role: value })
                          }
                        >
@@ -510,13 +514,31 @@ const UserManagement = () => {
                          </SelectTrigger>
                          <SelectContent>
                            <SelectItem value="administrator">Administrador</SelectItem>
+                           <SelectItem value="gerente">Gerente</SelectItem>
                            <SelectItem value="staff">Staff</SelectItem>
+                           <SelectItem value="user">Utilizador</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     ) : (isAdministrator || isGerente) ? (
+                       <Select 
+                         value={newUser.role} 
+                         onValueChange={(value: 'staff' | 'gerente' | 'user') => 
+                           setNewUser({ ...newUser, role: value })
+                         }
+                       >
+                         <SelectTrigger>
+                           <SelectValue />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="gerente">Gerente</SelectItem>
+                           <SelectItem value="staff">Staff</SelectItem>
+                           <SelectItem value="user">Utilizador</SelectItem>
                          </SelectContent>
                        </Select>
                      ) : (
                        <Select 
                          value={newUser.role} 
-                         onValueChange={(value: 'staff') => 
+                         onValueChange={(value: 'staff' | 'user') => 
                            setNewUser({ ...newUser, role: value })
                          }
                        >
@@ -525,6 +547,7 @@ const UserManagement = () => {
                          </SelectTrigger>
                          <SelectContent>
                            <SelectItem value="staff">Staff</SelectItem>
+                           <SelectItem value="user">Utilizador</SelectItem>
                          </SelectContent>
                        </Select>
                      )}
