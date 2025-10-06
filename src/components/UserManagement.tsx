@@ -26,12 +26,12 @@ const UserManagement = () => {
     fullName: '',
     email: '',
     password: '',
-    role: 'staff' as 'administrator' | 'staff' | 'gerente' | 'user'
+    role: 'staff' as 'staff' | 'gerente' | 'user'
   });
   const [editUser, setEditUser] = useState({
     fullName: '',
     email: '',
-    role: 'staff' as 'administrator' | 'staff' | 'gerente' | 'user'
+    role: 'staff' as 'staff' | 'gerente' | 'user'
   });
   const { profile, isSuperuser, isAdministrator, isGerente, createUser } = useAuth();
   const { toast } = useToast();
@@ -111,22 +111,12 @@ const UserManagement = () => {
     }
 
     // Validate role permissions
-    if (!isSuperuser) {
-      // Administrators cannot create other administrators  
-      if (profile?.role === 'administrator' && newUser.role === 'administrator') {
+    if (!isGerente) {
+      // Staff cannot create gerentes
+      if (profile?.role === 'staff' && newUser.role === 'gerente') {
         toast({
           title: "Erro de permissão",
-          description: "Administradores não podem criar outros administradores.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Gerentes can create users now
-      if (profile?.role === 'gerente' && newUser.role === 'administrator') {
-        toast({
-          title: "Erro de permissão", 
-          description: "Gerentes não podem criar administradores.",
+          description: "Staff não podem criar gerentes.",
           variant: "destructive",
         });
         return;
@@ -220,10 +210,10 @@ const UserManagement = () => {
       return;
     }
 
-    if (userToDelete.role === 'superuser') {
+    if (userToDelete.role === 'gerente') {
       toast({
         title: "Ação não permitida",
-        description: "Não é possível eliminar superutilizadores.",
+        description: "Não é possível eliminar gerentes.",
         variant: "destructive",
       });
       return;
@@ -265,7 +255,7 @@ const UserManagement = () => {
     setEditUser({
       fullName: user.full_name,
       email: user.email,
-      role: user.role as 'administrator' | 'staff' | 'gerente' | 'user'
+      role: user.role as 'staff' | 'gerente' | 'user'
     });
     setIsEditDialogOpen(true);
   };
@@ -283,22 +273,12 @@ const UserManagement = () => {
     }
 
     // Validate role permissions for editing
-    if (!isSuperuser) {
-      // Administrators cannot promote users to administrator
-      if (profile?.role === 'administrator' && editUser.role === 'administrator') {
+    if (!isGerente) {
+      // Staff cannot promote to gerente
+      if (profile?.role === 'staff' && editUser.role === 'gerente') {
         toast({
           title: "Erro de permissão",
-          description: "Administradores não podem promover usuários a administradores.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Gerentes can edit users now
-      if (profile?.role === 'gerente' && editUser.role === 'administrator') {
-        toast({
-          title: "Erro de permissão", 
-          description: "Gerentes não podem promover usuários a administradores.",
+          description: "Staff não podem promover usuários a gerentes.",
           variant: "destructive",
         });
         return;
@@ -502,10 +482,10 @@ const UserManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="role">Função</Label>
-                     {isSuperuser ? (
+                     {isGerente ? (
                        <Select 
                          value={newUser.role} 
-                         onValueChange={(value: 'administrator' | 'staff' | 'gerente' | 'user') => 
+                         onValueChange={(value: 'staff' | 'gerente' | 'user') => 
                            setNewUser({ ...newUser, role: value })
                          }
                        >
@@ -513,7 +493,6 @@ const UserManagement = () => {
                            <SelectValue />
                          </SelectTrigger>
                          <SelectContent>
-                           <SelectItem value="administrator">Administrador</SelectItem>
                            <SelectItem value="gerente">Gerente</SelectItem>
                            <SelectItem value="staff">Staff</SelectItem>
                            <SelectItem value="user">Utilizador</SelectItem>
@@ -553,7 +532,7 @@ const UserManagement = () => {
                      )}
                   </div>
                    <Button onClick={handleCreateUser} className="w-full" disabled={isSubmitting}>
-                     {isSubmitting ? 'Criando...' : `Criar ${isSuperuser ? (newUser.role === 'administrator' ? 'Administrador' : 'Staff') : 'Staff'}`}
+                     {isSubmitting ? 'Criando...' : `Criar ${newUser.role === 'gerente' ? 'Gerente' : newUser.role === 'staff' ? 'Staff' : 'Utilizador'}`}
                    </Button>
                 </div>
               </DialogContent>
@@ -728,10 +707,10 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="edit-role">Função</Label>
-                   {isSuperuser ? (
+                   {isGerente ? (
                      <Select 
                        value={editUser.role} 
-                       onValueChange={(value: 'administrator' | 'staff' | 'gerente' | 'user') => 
+                       onValueChange={(value: 'staff' | 'gerente' | 'user') => 
                          setEditUser({ ...editUser, role: value })
                        }
                      >
@@ -739,9 +718,8 @@ const UserManagement = () => {
                          <SelectValue />
                        </SelectTrigger>
                        <SelectContent>
-                         <SelectItem value="administrator">Administrador</SelectItem>
-                         <SelectItem value="staff">Staff</SelectItem>
                          <SelectItem value="gerente">Gerente</SelectItem>
+                         <SelectItem value="staff">Staff</SelectItem>
                          <SelectItem value="user">Utilizador</SelectItem>
                        </SelectContent>
                      </Select>

@@ -146,7 +146,7 @@ const CompanySettingsComponent: React.FC<CompanySettingsComponentProps> = () => 
     );
   }
 
-  if (!profile || (profile.role !== 'administrator' && profile.role !== 'gerente')) {
+  if (!profile || profile.role !== 'gerente') {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">

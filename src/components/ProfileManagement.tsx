@@ -42,7 +42,7 @@ const ProfileManagement = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'superuser': return <Crown className="h-4 w-4" />;
-      case 'administrator': return <Shield className="h-4 w-4" />;
+      case 'gerente': return <Shield className="h-4 w-4" />;
       case 'user': return <User className="h-4 w-4" />;
       default: return <User className="h-4 w-4" />;
     }
@@ -51,7 +51,7 @@ const ProfileManagement = () => {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'superuser': return 'destructive';
-      case 'administrator': return 'default';
+      case 'gerente': return 'default';
       case 'user': return 'secondary';
       default: return 'secondary';
     }
@@ -60,7 +60,7 @@ const ProfileManagement = () => {
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'superuser': return 'Superutilizador';
-      case 'administrator': return 'Administrador';
+      case 'gerente': return 'Gerente';
       case 'user': return 'Utilizador';
       default: return role;
     }

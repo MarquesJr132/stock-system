@@ -21,6 +21,11 @@ const ReceiptPreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   const [loading, setLoading] = useState(false);
   const [dataIntegrityIssue, setDataIntegrityIssue] = useState(false);
 
+  // CRÍTICO: Não permitir recibo sem cliente
+  const customer = customers.find(c => c.id === sale?.customer_id);
+  const isGeneralCustomer = customer?.name === 'Cliente Geral';
+  const canPrint = sale?.customer_id && !isGeneralCustomer;
+
   useEffect(() => {
     if (sale?.id && isOpen) {
       loadSaleItems();
@@ -81,8 +86,6 @@ const ReceiptPreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   }, [saleItems]);
 
   if (!sale) return null;
-
-  const customer = sale.customer_id ? customers.find(c => c.id === sale.customer_id) : null;
   
   const getPaymentLabel = (method: string) => {
     const methods: Record<string, string> = {
@@ -95,6 +98,12 @@ const ReceiptPreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   };
 
   const generatePDF = async () => {
+    // VALIDAÇÃO: Não permitir gerar recibo sem cliente válido
+    if (!canPrint) {
+      alert('Para gerar um recibo, é necessário selecionar um cliente específico. Edite a venda e atribua um cliente.');
+      return;
+    }
+
     try {
       const element = document.getElementById('receipt-content');
       if (!element) return;
@@ -321,10 +330,20 @@ const ReceiptPreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             <Button variant="outline" onClick={onClose} className="order-2 sm:order-1">
               Fechar
             </Button>
-            <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700 order-1 sm:order-2">
+            <Button 
+              onClick={generatePDF} 
+              disabled={!canPrint}
+              className="bg-blue-600 hover:bg-blue-700 order-1 sm:order-2"
+              title={!canPrint ? "Selecione um cliente específico para gerar recibo" : ""}
+            >
               Gerar PDF
             </Button>
           </div>
+          {!canPrint && (
+            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+              ⚠️ Para gerar um recibo, edite a venda e selecione um cliente específico.
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -390,10 +390,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isSuperuserCheck = profile?.role === 'superuser';
-  const isAdminCheck = profile?.role === 'administrator' || profile?.role === 'superuser' || profile?.role === 'gerente' || profile?.role === 'staff';
+  // Agora temos apenas gerente, staff e user
   const isGerenteCheck = profile?.role === 'gerente';
   const isStaffCheck = profile?.role === 'staff';
+  const isSuperuserCheck = isGerenteCheck; // Gerente tem todos os poderes de superuser
+  const isAdminCheck = isGerenteCheck || isStaffCheck; // Ambos têm alguns acessos admin
 
   const value = {
     user,

@@ -165,6 +165,12 @@ export default function QuotationManagement() {
   };
 
   const handleSaveQuotation = async () => {
+    // CRÍTICO: Cotação SEMPRE precisa de cliente
+    if (!currentQuotation.customer_id) {
+      toast.error('Selecione um cliente para a cotação');
+      return;
+    }
+
     if (quotationItems.length === 0) {
       toast.error('Adicione pelo menos um item à cotação');
       return;
@@ -172,11 +178,6 @@ export default function QuotationManagement() {
 
     if (!currentQuotation.valid_until) {
       toast.error('Defina uma data de validade para a cotação');
-      return;
-    }
-
-    if (!currentQuotation.customer_id) {
-      toast.error('Selecione um cliente para a cotação');
       return;
     }
 

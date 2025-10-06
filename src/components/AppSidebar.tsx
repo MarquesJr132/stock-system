@@ -48,11 +48,11 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
   }
   
   if (hasFeature('quotations_management')) {
-    baseItems.push({ icon: FileText, label: "Orçamentos", id: "quotations" });
+    baseItems.push({ icon: FileText, label: "Cotações", id: "quotations" });
   }
   
-  // Reports - requires both feature and role (staff does NOT have access)
-  if ((hasFeature('reports_basic') || hasFeature('reports_advanced')) && (profile?.role === 'administrator' || profile?.role === 'superuser' || profile?.role === 'gerente')) {
+  // Reports - requires both feature and role (apenas gerente tem acesso)
+  if ((hasFeature('reports_basic') || hasFeature('reports_advanced')) && profile?.role === 'gerente') {
     baseItems.push({ icon: TrendingUp, label: "Relatórios", id: "reports" });
   }
   

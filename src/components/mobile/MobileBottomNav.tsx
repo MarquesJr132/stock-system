@@ -39,7 +39,7 @@ export const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps
   }
   
   if (hasFeature('quotations_management')) {
-    allTabs.push({ icon: FileText, label: "Orçamentos", id: "quotations" });
+    allTabs.push({ icon: FileText, label: "Cotações", id: "quotations" });
   }
 
   return (

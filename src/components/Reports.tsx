@@ -42,7 +42,7 @@ const Reports = () => {
   const { user, profile, isStaff, isAdministrator, isSuperuser, isGerente } = useAuth();
 
   // Block staff from accessing reports
-  if (isStaff && !isAdministrator && !isSuperuser && !isGerente) {
+  if (isStaff && !isGerente) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
         <div className="p-6 bg-destructive/10 rounded-lg border border-destructive/20">
@@ -62,7 +62,7 @@ const Reports = () => {
   // Fetch tenant users if administrator
   useEffect(() => {
     const fetchTenantUsers = async () => {
-      if (profile?.role === 'administrator' || profile?.role === 'superuser') {
+      if (profile?.role === 'gerente') {
         try {
           const { data, error } = await supabase
             .from('profiles')
@@ -197,7 +197,7 @@ const Reports = () => {
             </SelectContent>
           </Select>
 
-          {(profile?.role === 'administrator' || profile?.role === 'gerente' || profile?.role === 'superuser') && (
+          {profile?.role === 'gerente' && (
             <Button
               variant="outline"
               onClick={() => {

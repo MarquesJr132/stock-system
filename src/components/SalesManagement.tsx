@@ -118,11 +118,8 @@ const SalesManagement = () => {
   };
 
   const handleSaveSale = async () => {
-    // CRITICAL: Enforce customer assignment
-    if (!currentSale.customer_id) {
-      toast.error("Selecione um cliente para a venda");
-      return;
-    }
+    // Venda pode ser criada sem cliente (vai para Cliente Geral)
+    // MAS não pode gerar fatura/recibo sem cliente específico
 
     if (currentSale.items.length === 0) {
       toast.error("Adicione pelo menos um item à venda");

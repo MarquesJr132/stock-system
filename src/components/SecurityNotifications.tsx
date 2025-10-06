@@ -23,7 +23,7 @@ export const SecurityNotifications = () => {
   const { profile } = useAuth();
 
   useEffect(() => {
-    if (profile?.role === 'administrator' || profile?.role === 'superuser') {
+    if (profile?.role === 'gerente') {
       fetchSecurityAlerts();
     }
   }, [profile]);
@@ -113,7 +113,7 @@ export const SecurityNotifications = () => {
     }
   };
 
-  if (!profile || (profile.role !== 'administrator' && profile.role !== 'superuser')) {
+  if (!profile || profile.role !== 'gerente') {
     return null;
   }
 

@@ -24,6 +24,11 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   const [loading, setLoading] = useState(false);
   const [dataIntegrityIssue, setDataIntegrityIssue] = useState(false);
 
+  // CRÍTICO: Não permitir fatura sem cliente
+  const customer = customers.find(c => c.id === sale?.customer_id);
+  const isGeneralCustomer = customer?.name === 'Cliente Geral';
+  const canPrint = sale?.customer_id && !isGeneralCustomer;
+
   useEffect(() => {
     if (sale?.id && isOpen) {
       loadSaleItems();
@@ -85,8 +90,6 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   }, [saleItems]);
 
   if (!sale) return null;
-
-  const customer = sale.customer_id ? customers.find(c => c.id === sale.customer_id) : null;
   
   const getPaymentLabel = (method: string) => {
     const methods: Record<string, string> = {
@@ -119,6 +122,12 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
   };
 
   const generatePDF = async () => {
+    // VALIDAÇÃO: Não permitir gerar fatura sem cliente válido
+    if (!canPrint) {
+      alert('Para gerar uma fatura, é necessário selecionar um cliente específico. Edite a venda e atribua um cliente.');
+      return;
+    }
+
     try {
       const element = document.getElementById('invoice-content');
       if (!element) return;
@@ -355,10 +364,20 @@ const InvoicePreview = ({ sale, products, customers, isOpen, onClose, onGenerate
             <Button variant="outline" onClick={onClose} className="order-2 sm:order-1">
               Fechar
             </Button>
-            <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700 order-1 sm:order-2">
+            <Button 
+              onClick={generatePDF} 
+              disabled={!canPrint}
+              className="bg-blue-600 hover:bg-blue-700 order-1 sm:order-2"
+              title={!canPrint ? "Selecione um cliente específico para gerar fatura" : ""}
+            >
               Gerar PDF
             </Button>
           </div>
+          {!canPrint && (
+            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+              ⚠️ Para gerar uma fatura, edite a venda e selecione um cliente específico.
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
