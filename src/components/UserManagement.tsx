@@ -26,12 +26,12 @@ const UserManagement = () => {
     fullName: '',
     email: '',
     password: '',
-    role: 'staff' as 'staff' | 'gerente' | 'user'
+    role: 'staff' as 'staff' | 'gerente'
   });
   const [editUser, setEditUser] = useState({
     fullName: '',
     email: '',
-    role: 'staff' as 'staff' | 'gerente' | 'user'
+    role: 'staff' as 'staff' | 'gerente'
   });
   const { profile, isSuperuser, isAdministrator, isGerente, createUser } = useAuth();
   const { toast } = useToast();
@@ -134,26 +134,24 @@ const UserManagement = () => {
       return;
     }
 
-    // Check user limit before creating (only for regular users, not administrators)
-    if (newUser.role === 'user') {
-      try {
-        const tenantId = profile?.tenant_id || profile?.id;
-        const { data: canCreate, error: limitError } = await supabase
-          .rpc('check_user_limit', {
-            tenant_uuid: tenantId
-          });
+    // Check user limit before creating
+    try {
+      const tenantId = profile?.tenant_id || profile?.id;
+      const { data: canCreate, error: limitError } = await supabase
+        .rpc('check_user_limit', {
+          tenant_uuid: tenantId
+        });
 
-        if (limitError || !canCreate) {
-          toast({
-            title: "Limite Total de Usuários Atingido",
-            description: "Você atingiu o limite total de usuários. Entre em contato com o seu administrador para aumentar o limite.",
-            variant: "destructive",
-          });
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking user limit:', error);
+      if (limitError || !canCreate) {
+        toast({
+          title: "Limite Total de Usuários Atingido",
+          description: "Você atingiu o limite total de usuários. Entre em contato com o seu administrador para aumentar o limite.",
+          variant: "destructive",
+        });
+        return;
       }
+    } catch (error) {
+      console.error('Error checking user limit:', error);
     }
 
     setIsSubmitting(true);
@@ -255,7 +253,7 @@ const UserManagement = () => {
     setEditUser({
       fullName: user.full_name,
       email: user.email,
-      role: user.role as 'staff' | 'gerente' | 'user'
+      role: user.role as 'staff' | 'gerente'
     });
     setIsEditDialogOpen(true);
   };
@@ -482,57 +480,23 @@ const UserManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="role">Função</Label>
-                     {isGerente ? (
-                       <Select 
-                         value={newUser.role} 
-                         onValueChange={(value: 'staff' | 'gerente' | 'user') => 
-                           setNewUser({ ...newUser, role: value })
-                         }
-                       >
-                         <SelectTrigger>
-                           <SelectValue />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="gerente">Gerente</SelectItem>
-                           <SelectItem value="staff">Staff</SelectItem>
-                           <SelectItem value="user">Utilizador</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     ) : (isAdministrator || isGerente) ? (
-                       <Select 
-                         value={newUser.role} 
-                         onValueChange={(value: 'staff' | 'gerente' | 'user') => 
-                           setNewUser({ ...newUser, role: value })
-                         }
-                       >
-                         <SelectTrigger>
-                           <SelectValue />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="gerente">Gerente</SelectItem>
-                           <SelectItem value="staff">Staff</SelectItem>
-                           <SelectItem value="user">Utilizador</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     ) : (
-                       <Select 
-                         value={newUser.role} 
-                         onValueChange={(value: 'staff' | 'user') => 
-                           setNewUser({ ...newUser, role: value })
-                         }
-                       >
-                         <SelectTrigger>
-                           <SelectValue />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="staff">Staff</SelectItem>
-                           <SelectItem value="user">Utilizador</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     )}
+                    <Select 
+                      value={newUser.role} 
+                      onValueChange={(value: 'staff' | 'gerente') => 
+                        setNewUser({ ...newUser, role: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gerente">Gerente</SelectItem>
+                        <SelectItem value="staff">Staff</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                    <Button onClick={handleCreateUser} className="w-full" disabled={isSubmitting}>
-                     {isSubmitting ? 'Criando...' : `Criar ${newUser.role === 'gerente' ? 'Gerente' : newUser.role === 'staff' ? 'Staff' : 'Utilizador'}`}
+                     {isSubmitting ? 'Criando...' : `Criar ${newUser.role === 'gerente' ? 'Gerente' : 'Staff'}`}
                    </Button>
                 </div>
               </DialogContent>
@@ -710,18 +674,17 @@ const UserManagement = () => {
                    {isGerente ? (
                      <Select 
                        value={editUser.role} 
-                       onValueChange={(value: 'staff' | 'gerente' | 'user') => 
+                       onValueChange={(value: 'staff' | 'gerente') => 
                          setEditUser({ ...editUser, role: value })
                        }
                      >
                        <SelectTrigger>
                          <SelectValue />
                        </SelectTrigger>
-                       <SelectContent>
-                         <SelectItem value="gerente">Gerente</SelectItem>
-                         <SelectItem value="staff">Staff</SelectItem>
-                         <SelectItem value="user">Utilizador</SelectItem>
-                       </SelectContent>
+                        <SelectContent>
+                          <SelectItem value="gerente">Gerente</SelectItem>
+                          <SelectItem value="staff">Staff</SelectItem>
+                        </SelectContent>
                      </Select>
                    ) : (
                      <Select 

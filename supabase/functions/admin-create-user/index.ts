@@ -124,6 +124,35 @@ serve(async (req) => {
       )
     }
 
+    // Validate role - only staff and gerente are allowed for regular users
+    if (!['staff', 'gerente', 'administrator'].includes(role)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Função inválida. Apenas "staff" e "gerente" são permitidos.' }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Check if email already exists in profiles
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (existingProfile) {
+      console.log('Email already exists in profiles:', email)
+      return new Response(
+        JSON.stringify({ success: false, error: 'Este email já está registrado no sistema' }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
     console.log('Creating new user in auth...')
     
     // Validate that we have the service role key
