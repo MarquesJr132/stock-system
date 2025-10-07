@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Plus, Search, ShoppingCart, CreditCard, Banknote, Users, Printer, ChevronDown, ChevronUp, Trash2, FileText } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSupabaseData, SaleItem } from "@/hooks/useSupabaseData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -205,6 +206,12 @@ const SalesManagement = () => {
     return customer?.name || "Cliente Desconhecido";
   };
 
+  const hasSpecificCustomer = (sale: any) => {
+    if (!sale.customer_id) return false;
+    const customer = customers.find(c => c.id === sale.customer_id);
+    return customer && customer.name !== 'Cliente Geral';
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -375,79 +382,120 @@ const SalesManagement = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-wrap gap-2 pt-2 border-t">
-                      {(isAdministrator || isGerente) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            loadSaleForEdit(sale);
-                          }}
-                          className="flex items-center gap-2"
-                        >
-                          Editar Venda
-                        </Button>
+                    <div className="flex flex-col gap-3 pt-2 border-t">
+                      {!hasSpecificCustomer(sale) && (
+                        <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md">
+                          <span className="text-amber-600 dark:text-amber-400 text-sm">
+                            ⚠️ Edite a venda e adicione um cliente específico para gerar fatura/recibo
+                          </span>
+                        </div>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedSale(sale);
-                          setPreviewOpen(true);
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <Printer className="h-4 w-4" />
-                        Gerar Fatura
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedSale(sale);
-                          setReceiptOpen(true);
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Gerar Recibo
-                      </Button>
-                      {(isAdministrator || isGerente) && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex items-center gap-2 text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Apagar
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Confirmar Eliminação</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tem certeza que deseja eliminar esta venda? Esta ação não pode ser desfeita.
-                                O stock dos produtos será restaurado.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteSale(sale.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {(isAdministrator || isGerente) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              loadSaleForEdit(sale);
+                            }}
+                            className="flex items-center gap-2"
+                          >
+                            Editar Venda
+                          </Button>
+                        )}
+                        
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedSale(sale);
+                                    setPreviewOpen(true);
+                                  }}
+                                  className="flex items-center gap-2"
+                                  disabled={!hasSpecificCustomer(sale)}
+                                >
+                                  <Printer className="h-4 w-4" />
+                                  Gerar Fatura
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            {!hasSpecificCustomer(sale) && (
+                              <TooltipContent>
+                                <p>Adicione um cliente específico para gerar fatura</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedSale(sale);
+                                    setReceiptOpen(true);
+                                  }}
+                                  className="flex items-center gap-2"
+                                  disabled={!hasSpecificCustomer(sale)}
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  Gerar Recibo
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            {!hasSpecificCustomer(sale) && (
+                              <TooltipContent>
+                                <p>Adicione um cliente específico para gerar recibo</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        {(isAdministrator || isGerente) && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-2 text-destructive hover:bg-destructive/10"
                               >
-                                Eliminar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
+                                <Trash2 className="h-4 w-4" />
+                                Apagar
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar Eliminação</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja eliminar esta venda? Esta ação não pode ser desfeita.
+                                  O stock dos produtos será restaurado.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteSale(sale.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </CollapsibleContent>
