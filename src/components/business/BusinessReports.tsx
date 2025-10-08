@@ -17,7 +17,7 @@ export const BusinessReports = () => {
   return (
     <div className="flex flex-col items-center justify-center h-[70vh] text-center space-y-4">
       <div className="p-6 rounded-lg border border-destructive/20 bg-destructive/10 max-w-md">
-        {/* <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" /> */}
+        {/* <AlerttCircle className="w-8 h-8 text-destructive mx-auto mb-2" /> */}
         <h2 className="text-xl font-semibold text-destructive">Acesso Restrito</h2>
         <p className="text-muted-foreground">
           <strong>Staff</strong> não tem permissão para aceder à aba{" "}
