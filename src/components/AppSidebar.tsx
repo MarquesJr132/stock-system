@@ -106,7 +106,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
       <SidebarContent className="bg-transparent">
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/70 font-semibold text-sm tracking-wide">
-            Principall
+            Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
