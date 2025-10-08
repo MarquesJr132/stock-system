@@ -19,19 +19,18 @@ const UserManagement = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [userToDelete, setUserToDelete] = useState<Profile | null>(null);
   const [newUser, setNewUser] = useState({
     fullName: '',
     email: '',
     password: '',
-    role: 'staff' as 'staff' | 'gerente'
+    role: 'user' as 'administrator' | 'gerente' | 'user'
   });
   const [editUser, setEditUser] = useState({
     fullName: '',
     email: '',
-    role: 'staff' as 'staff' | 'gerente'
+    role: 'user' as 'administrator' | 'gerente' | 'user'
   });
   const { profile, isSuperuser, isAdministrator, isGerente, createUser } = useAuth();
   const { toast } = useToast();
@@ -46,8 +45,6 @@ const UserManagement = () => {
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
-
-      // Se for superuser, mostra todos. Senão, mostra apenas do próprio tenant
       if (!isSuperuser && profile) {
         const userTenant = profile.tenant_id || profile.id;
         query = query.or(`tenant_id.eq.${userTenant},user_id.eq.${profile.user_id}`);
@@ -70,8 +67,6 @@ const UserManagement = () => {
   };
 
   const handleCreateUser = async () => {
-    if (isSubmitting) return; // Prevent double submission
-    
     if (!newUser.fullName || !newUser.email || !newUser.password) {
       toast({
         title: "Erro",
@@ -79,26 +74,6 @@ const UserManagement = () => {
         variant: "destructive"
       });
       return;
-    }
-    
-    // Pre-check if email already exists
-    try {
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', newUser.email)
-        .maybeSingle();
-      
-      if (existingUser) {
-        toast({
-          title: "Email já existente",
-          description: "Este email já está registrado no sistema.",
-          variant: "destructive",
-        });
-        return;
-      }
-    } catch (error) {
-      console.error('Error checking existing email:', error);
     }
 
     if (newUser.password.length < 6) {
@@ -111,51 +86,50 @@ const UserManagement = () => {
     }
 
     // Validate role permissions
-    if (!isGerente) {
-      // Staff cannot create gerentes
-      if (profile?.role === 'staff' && newUser.role === 'gerente') {
+    if (!isSuperuser) {
+      // Administrators cannot create other administrators  
+      if (profile?.role === 'administrator' && newUser.role === 'administrator') {
         toast({
           title: "Erro de permissão",
-          description: "Staff não podem criar gerentes.",
+          description: "Administradores não podem criar outros administradores.",
           variant: "destructive",
         });
         return;
       }
-    }
-
-    // Validar email antes de criar usuário
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newUser.email)) {
-      toast({
-        title: "Email inválido",
-        description: "Por favor, insira um endereço de email válido.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check user limit before creating
-    try {
-      const tenantId = profile?.tenant_id || profile?.id;
-      const { data: canCreate, error: limitError } = await supabase
-        .rpc('check_user_limit', {
-          tenant_uuid: tenantId
-        });
-
-      if (limitError || !canCreate) {
+      
+      // Gerentes cannot create any users
+      if (profile?.role === 'gerente') {
         toast({
-          title: "Limite Total de Usuários Atingido",
-          description: "Você atingiu o limite total de usuários. Entre em contato com o seu administrador para aumentar o limite.",
+          title: "Erro de permissão", 
+          description: "Gerentes não têm permissão para criar usuários.",
           variant: "destructive",
         });
         return;
       }
-    } catch (error) {
-      console.error('Error checking user limit:', error);
     }
 
-    setIsSubmitting(true);
-    
+    // Check user limit before creating (only for regular users, not administrators)
+    if (newUser.role === 'user') {
+      try {
+        const tenantId = profile?.tenant_id || profile?.id;
+        const { data: canCreate, error: limitError } = await supabase
+          .rpc('check_user_limit', {
+            tenant_uuid: tenantId
+          });
+
+        if (limitError || !canCreate) {
+          toast({
+            title: "Limite de Usuários Atingido",
+            description: "Você atingiu o limite mensal de usuários. Entre em contato com o seu administrador para aumentar o limite.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking user limit:', error);
+      }
+    }
+
     try {
       const { error } = await createUser(
         newUser.email,
@@ -165,7 +139,6 @@ const UserManagement = () => {
       );
 
       if (error) {
-        console.error('UserManagement: Error creating user:', error);
         toast({
           title: "Erro ao criar utilizador",
           description: error,
@@ -174,27 +147,22 @@ const UserManagement = () => {
         return;
       }
 
-      console.log('UserManagement: User created successfully:', newUser.fullName);
       toast({
         title: "Utilizador criado com sucesso!",
         description: `${newUser.fullName} foi adicionado ao sistema.`,
       });
 
-      // Reset form and close dialog
-      setNewUser({ fullName: '', email: '', password: '', role: 'staff' });
+      // Just reset form and close dialog - don't log in the user
+      setNewUser({ fullName: '', email: '', password: '', role: 'user' });
       setIsCreateDialogOpen(false);
-      
-      // Refresh users list to show the new user
+      // Refresh users list
       fetchUsers();
     } catch (error) {
-      console.error('UserManagement: Unexpected error:', error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao criar o utilizador.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -208,10 +176,10 @@ const UserManagement = () => {
       return;
     }
 
-    if (userToDelete.role === 'gerente') {
+    if (userToDelete.role === 'superuser') {
       toast({
         title: "Ação não permitida",
-        description: "Não é possível eliminar gerentes.",
+        description: "Não é possível eliminar superutilizadores.",
         variant: "destructive",
       });
       return;
@@ -253,7 +221,7 @@ const UserManagement = () => {
     setEditUser({
       fullName: user.full_name,
       email: user.email,
-      role: user.role as 'staff' | 'gerente'
+      role: user.role as 'administrator' | 'gerente' | 'user'
     });
     setIsEditDialogOpen(true);
   };
@@ -271,12 +239,22 @@ const UserManagement = () => {
     }
 
     // Validate role permissions for editing
-    if (!isGerente) {
-      // Staff cannot promote to gerente
-      if (profile?.role === 'staff' && editUser.role === 'gerente') {
+    if (!isSuperuser) {
+      // Administrators cannot promote users to administrator
+      if (profile?.role === 'administrator' && editUser.role === 'administrator') {
         toast({
           title: "Erro de permissão",
-          description: "Staff não podem promover usuários a gerentes.",
+          description: "Administradores não podem promover usuários a administradores.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Gerentes cannot edit users
+      if (profile?.role === 'gerente') {
+        toast({
+          title: "Erro de permissão", 
+          description: "Gerentes não têm permissão para editar usuários.",
           variant: "destructive",
         });
         return;
@@ -355,7 +333,6 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return <Crown className="h-4 w-4" />;
       case 'administrator': return <Shield className="h-4 w-4" />;
-      case 'staff': return <Settings className="h-4 w-4" />;
       case 'gerente': return <Settings className="h-4 w-4" />;
       case 'user': return <User className="h-4 w-4" />;
       default: return <User className="h-4 w-4" />;
@@ -366,7 +343,6 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return 'destructive';
       case 'administrator': return 'default';
-      case 'staff': return 'outline';
       case 'gerente': return 'outline';
       case 'user': return 'secondary';
       default: return 'secondary';
@@ -377,7 +353,6 @@ const UserManagement = () => {
     switch (role) {
       case 'superuser': return 'Superutilizador';
       case 'administrator': return 'Administrador';
-      case 'staff': return 'Staff';
       case 'gerente': return 'Gerente';
       case 'user': return 'Utilizador';
       default: return role;
@@ -385,11 +360,7 @@ const UserManagement = () => {
   };
 
   // Show create button only for users who can create users
-  // Staff CANNOT create users
-  const canCreateUsers = () => {
-    if (profile?.role === 'staff') return false;
-    return isSuperuser || isAdministrator || isGerente;
-  };
+  const canCreateUsers = isSuperuser || (isAdministrator && !isGerente);
 
   // Filter users - superusers see all, others see only their tenant
   const filteredUsers = users.filter(user => {
@@ -434,7 +405,7 @@ const UserManagement = () => {
             }
           </CardDescription>
             </div>
-            {canCreateUsers() && (
+            {canCreateUsers && (
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="w-full sm:w-auto">
@@ -480,24 +451,41 @@ const UserManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="role">Função</Label>
-                    <Select 
-                      value={newUser.role} 
-                      onValueChange={(value: 'staff' | 'gerente') => 
-                        setNewUser({ ...newUser, role: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gerente">Gerente</SelectItem>
-                        <SelectItem value="staff">Staff</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {isSuperuser ? (
+                      <Select 
+                        value={newUser.role} 
+                        onValueChange={(value: 'administrator' | 'gerente' | 'user') => 
+                          setNewUser({ ...newUser, role: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="administrator">Administrador</SelectItem>
+                          <SelectItem value="gerente">Gerente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Select 
+                        value={newUser.role} 
+                        onValueChange={(value: 'gerente' | 'user') => 
+                          setNewUser({ ...newUser, role: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gerente">Gerente</SelectItem>
+                          <SelectItem value="staff">staff</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
-                   <Button onClick={handleCreateUser} className="w-full" disabled={isSubmitting}>
-                     {isSubmitting ? 'Criando...' : `Criar ${newUser.role === 'gerente' ? 'Gerente' : 'Staff'}`}
-                   </Button>
+                  <Button onClick={handleCreateUser} className="w-full">
+                    Criar {isSuperuser ? (newUser.role === 'administrator' ? 'Administrador' : newUser.role === 'gerente' ? 'Gerente' : 'Utilizador') : (newUser.role === 'gerente' ? 'Gerente' : 'Utilizador')}
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -671,36 +659,38 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="edit-role">Função</Label>
-                   {isGerente ? (
-                     <Select 
-                       value={editUser.role} 
-                       onValueChange={(value: 'staff' | 'gerente') => 
-                         setEditUser({ ...editUser, role: value })
-                       }
-                     >
-                       <SelectTrigger>
-                         <SelectValue />
-                       </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="gerente">Gerente</SelectItem>
-                          <SelectItem value="staff">Staff</SelectItem>
-                        </SelectContent>
-                     </Select>
-                   ) : (
-                     <Select 
-                       value={editUser.role} 
-                       onValueChange={(value: 'staff') => 
-                         setEditUser({ ...editUser, role: value })
-                       }
-                     >
-                       <SelectTrigger>
-                         <SelectValue />
-                       </SelectTrigger>
-                       <SelectContent>
-                         <SelectItem value="staff">Staff</SelectItem>
-                       </SelectContent>
-                     </Select>
-                   )}
+                  {isSuperuser ? (
+                    <Select 
+                      value={editUser.role} 
+                      onValueChange={(value: 'administrator' | 'gerente' | 'user') => 
+                        setEditUser({ ...editUser, role: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="administrator">Administrador</SelectItem>
+                        <SelectItem value="gerente">Gerente</SelectItem>
+                        <SelectItem value="staff">staff</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Select 
+                      value={editUser.role} 
+                      onValueChange={(value: 'gerente' | 'user') => 
+                        setEditUser({ ...editUser, role: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gerente">Gerente</SelectItem>
+                        <SelectItem value="user">Utilizador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button onClick={handleUpdateUser} className="flex-1">
